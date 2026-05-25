@@ -36,7 +36,7 @@ export default async function AdminSettingsPage() {
             <p>
               Fill in the SMTP details below and ensure{" "}
               <code className="bg-yellow-100 px-1 rounded font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-              is set in your <code className="bg-yellow-100 px-1 rounded font-mono text-xs">.env.local</code> file.
+              is set in <code className="bg-yellow-100 px-1 rounded font-mono text-xs">.env.local</code> (local) and in your Vercel project environment variables (production).
               Until then, form submissions are saved to the database but no email notifications are sent.
             </p>
           </div>
@@ -70,7 +70,7 @@ export default async function AdminSettingsPage() {
           </li>
           <li>
             Add <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY=your_key</code>{" "}
-            to your <code className="font-mono text-xs">.env.local</code> file and restart the server.
+            to <code className="font-mono text-xs">.env.local</code> and to Vercel → Project → Settings → Environment Variables, then redeploy.
           </li>
           <li>
             Create the <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs">email_settings</code> table in Supabase SQL editor (SQL provided in the setup guide).

@@ -28,15 +28,19 @@ export async function submitRegistrationAction(
 
   if (error) return { error: "Something went wrong. Please try again or WhatsApp us." };
 
-  // Fire-and-forget — email failure must not block the user
-  sendAdminEmail(
-    `📅 New Meeting Registration – ${data.name} — BNI Miracles`,
-    emailTemplate("📅 New Meeting Registration", [
-      { label: "Name",         value: data.name },
-      { label: "Phone",        value: `<a href="tel:${data.phone}" style="color:#C8102E;">${data.phone}</a>` },
-      { label: "Meeting Date", value: formatDate(data.meeting_date) },
-    ])
-  ).catch(console.error);
+  // Must await on Vercel — the function freezes when the response is sent
+  try {
+    await sendAdminEmail(
+      `📅 New Meeting Registration – ${data.name} — BNI Miracles`,
+      emailTemplate("📅 New Meeting Registration", [
+        { label: "Name",         value: data.name },
+        { label: "Phone",        value: `<a href="tel:${data.phone}" style="color:#C8102E;">${data.phone}</a>` },
+        { label: "Meeting Date", value: formatDate(data.meeting_date) },
+      ])
+    );
+  } catch (err) {
+    console.error("[submitRegistrationAction] Admin email failed:", err);
+  }
 
   return { success: true };
 }

@@ -16,16 +16,20 @@ export async function submitContactAction(
   const { error } = await supabase.from("contacts").insert([data]);
   if (error) return { error: "Something went wrong. Please WhatsApp us directly." };
 
-  // Fire-and-forget — email failure must not block the user
-  sendAdminEmail(
-    `📬 New Contact from ${data.name} — BNI Miracles`,
-    emailTemplate("📬 New Contact Form Submission", [
-      { label: "Name",    value: data.name },
-      { label: "Email",   value: `<a href="mailto:${data.email}" style="color:#C8102E;">${data.email}</a>` },
-      { label: "Phone",   value: data.phone || "—" },
-      { label: "Message", value: data.message.replace(/\n/g, "<br>") },
-    ])
-  ).catch(console.error);
+  // Must await on Vercel — the function freezes when the response is sent
+  try {
+    await sendAdminEmail(
+      `📬 New Contact from ${data.name} — BNI Miracles`,
+      emailTemplate("📬 New Contact Form Submission", [
+        { label: "Name",    value: data.name },
+        { label: "Email",   value: `<a href="mailto:${data.email}" style="color:#C8102E;">${data.email}</a>` },
+        { label: "Phone",   value: data.phone || "—" },
+        { label: "Message", value: data.message.replace(/\n/g, "<br>") },
+      ])
+    );
+  } catch (err) {
+    console.error("[submitContactAction] Admin email failed:", err);
+  }
 
   return { success: true };
 }

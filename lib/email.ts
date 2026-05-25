@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "./supabase-admin";
  * Reads SMTP settings from the email_settings table (via service-role client)
  * and sends an HTML email to all configured admin addresses.
  *
- * Silently returns if settings are incomplete — form submissions still succeed.
+ * Skips sending if settings are incomplete (logs reason). Form submissions still succeed.
  */
 export async function sendAdminEmail(subject: string, html: string): Promise<void> {
   const supabase = createSupabaseAdminClient();
@@ -15,8 +15,14 @@ export async function sendAdminEmail(subject: string, html: string): Promise<voi
     .eq("id", 1)
     .single();
 
-  if (error || !data) return;
-  if (!data.smtp_host || !data.smtp_user || !data.smtp_pass || !data.admin_emails) return;
+  if (error || !data) {
+    console.warn("[sendAdminEmail] Could not load email_settings:", error?.message ?? "no row");
+    return;
+  }
+  if (!data.smtp_host || !data.smtp_user || !data.smtp_pass || !data.admin_emails) {
+    console.warn("[sendAdminEmail] SMTP settings incomplete — configure in admin → Settings");
+    return;
+  }
 
   const to = (data.admin_emails as string)
     .split(",")
@@ -24,7 +30,10 @@ export async function sendAdminEmail(subject: string, html: string): Promise<voi
     .filter(Boolean)
     .join(", ");
 
-  if (!to) return;
+  if (!to) {
+    console.warn("[sendAdminEmail] No admin_emails configured");
+    return;
+  }
 
   const port = (data.smtp_port as number) ?? 465;
   const transporter = nodemailer.createTransport({
@@ -35,14 +44,19 @@ export async function sendAdminEmail(subject: string, html: string): Promise<voi
       user: data.smtp_user as string,
       pass: data.smtp_pass as string,
     },
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 15_000,
   });
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: `"BNI Miracles" <${data.smtp_user}>`,
     to,
     subject,
     html,
   });
+
+  console.info("[sendAdminEmail] Sent:", info.messageId ?? info.response);
 }
 
 /** Shared HTML wrapper matching BNI Miracles brand colours */
