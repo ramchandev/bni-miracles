@@ -1,21 +1,23 @@
 import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { initiatives } from "@/lib/initiatives";
+import { SITE_URL } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://bnimiracles.in";
+  const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
-    { url: base, lastModified: new Date(), priority: 1.0 },
-    { url: `${base}/about`, lastModified: new Date(), priority: 0.9 },
-    { url: `${base}/members`, lastModified: new Date(), priority: 0.9 },
-    { url: `${base}/attend-meeting`, lastModified: new Date(), priority: 0.9 },
-    { url: `${base}/initiatives`, lastModified: new Date(), priority: 0.8 },
-    { url: `${base}/contact`, lastModified: new Date(), priority: 0.7 },
+    { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
+    { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${SITE_URL}/members`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/attend-meeting`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/initiatives`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.7 },
     ...initiatives.map((i) => ({
-      url: `${base}/initiatives/${i.slug}`,
-      lastModified: new Date(),
-      priority: 0.7 as const,
+      url: `${SITE_URL}/initiatives/${i.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
   ];
 
@@ -27,8 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     members = [];
   }
   const memberPages: MetadataRoute.Sitemap = members.map((m) => ({
-    url: `${base}/members/${m.slug}`,
+    url: `${SITE_URL}/members/${m.slug}`,
     lastModified: new Date(m.updated_at),
+    changeFrequency: "monthly",
     priority: 0.6,
   }));
 

@@ -1,16 +1,25 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About BNI Miracles | Hybrid BNI Chapter Chennai",
+export const metadata = createPageMetadata({
+  title: "About Us",
   description:
-    "Learn about BNI Miracles, Chennai's hybrid BNI chapter. Discover our story, our hybrid meeting format, and why we're one of Tamil Nadu's most dynamic business networks.",
-};
+    "Learn about BNI Miracles, Chennai's hybrid BNI chapter. Discover our story, hybrid Thursday meetings, and why we're one of Tamil Nadu's most dynamic business networks.",
+  path: "/about",
+  keywords: ["about BNI Miracles", "BNI chapter Chennai", "hybrid BNI meeting"],
+});
 
 export default function AboutPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "About", path: "/about" },
+        ])}
+      />
       {/* Hero */}
       <section className="relative flex items-center justify-center py-32 px-6" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
         <div className="absolute inset-0 opacity-20">

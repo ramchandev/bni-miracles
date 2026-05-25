@@ -1,16 +1,28 @@
-import type { Metadata } from "next";
 import MeetingForm from "@/components/MeetingForm";
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, createPageMetadata, eventJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Attend a BNI Miracles Meeting | Book Your Seat | Chennai",
+export const metadata = createPageMetadata({
+  title: "Attend a Meeting — Book Your Seat",
   description:
-    "Book your seat at a BNI Miracles Thursday meeting in Chennai. Free for first-time visitors. Hybrid format — attend physically or online.",
-};
+    "Book your seat at a BNI Miracles Thursday meeting in Chennai. Free for first-time visitors online. Hybrid format — attend in person or on Zoom.",
+  path: "/attend-meeting",
+  keywords: ["attend BNI meeting Chennai", "BNI visitor", "Thursday networking Chennai"],
+});
 
 export default function AttendMeetingPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Attend a Meeting", path: "/attend-meeting" },
+          ]),
+          eventJsonLd(),
+        ]}
+      />
       {/* Hero */}
       <section
         className="py-24 px-6 text-center"
@@ -38,7 +50,7 @@ export default function AttendMeetingPage() {
             <div className="flex flex-col gap-5 mb-8">
               {[
                 { icon: "📅", label: "When", value: "Every Thursday" },
-                { icon: "🕖", label: "Time", value: "7:00 AM – 9:00 AM" },
+                { icon: "🕖", label: "Time", value: "7:30 AM – 9:40 AM" },
                 { icon: "📍", label: "Venue (Physical)", value: "Chennai — WhatsApp us for exact location" },
                 { icon: "💻", label: "Online", value: "Zoom link sent after registration" },
                 { icon: "💰", label: "Cost for Visitors", value: "Online is Free and just breakfast fee for In person meeting." },

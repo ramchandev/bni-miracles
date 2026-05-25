@@ -1,15 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { Metadata } from "next";
 import StatCounter from "@/components/StatCounter";
 import InitiativeCard from "@/components/InitiativeCard";
 import { initiatives } from "@/lib/initiatives";
+import { createPageMetadata, DEFAULT_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "BNI Miracles — Hybrid Business Networking Chapter | Chennai",
-  description:
-    "BNI Miracles is a hybrid BNI chapter meeting every Thursday in Chennai. Connect with 36+ business categories, pass referrals, and grow your business.",
-};
+export const metadata = createPageMetadata({
+  title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+  description: DEFAULT_DESCRIPTION,
+  path: "/",
+  absoluteTitle: true,
+});
 
 const globalStats = [
   { label: "Chapters Worldwide", value: "11,728", numericValue: 11728 },

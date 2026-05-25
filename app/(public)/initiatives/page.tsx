@@ -1,18 +1,30 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import InitiativeCard from "@/components/InitiativeCard";
+import JsonLd from "@/components/JsonLd";
 import { initiatives } from "@/lib/initiatives";
 import Link from "next/link";
+import { breadcrumbJsonLd, createPageMetadata, initiativesListJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Initiatives — ஆஹா ஆற்புதங்கள்! | BNI Miracles Chennai",
+export const metadata = createPageMetadata({
+  title: "Chapter Initiatives — ஆஹா ஆற்புதங்கள்!",
   description:
-    "Discover the 10 unique chapter initiatives of BNI Miracles that make us one of Chennai's most active and innovative BNI chapters.",
-};
+    "Discover the unique chapter initiatives of BNI Miracles that keep our Chennai BNI chapter active, connected, and growing through referrals and community programs.",
+  path: "/initiatives",
+  keywords: ["BNI initiatives", "BNI Miracles programs", "chapter activities Chennai"],
+});
 
 export default function InitiativesPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Initiatives", path: "/initiatives" },
+          ]),
+          initiativesListJsonLd(initiatives),
+        ]}
+      />
       <section className="relative flex items-center justify-center py-32 px-6 text-center" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
         <div className="absolute inset-0 opacity-20">
           <Image

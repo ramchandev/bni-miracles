@@ -1,15 +1,25 @@
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
 type Props = {
   tamilName: string;
   englishName: string;
   icon: string;
+  slug: string;
   fullDescription: string[];
 };
 
-export default function InitiativePageContent({ tamilName, englishName, icon, fullDescription }: Props) {
+export default function InitiativePageContent({ tamilName, englishName, icon, slug, fullDescription }: Props) {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Initiatives", path: "/initiatives" },
+          { name: englishName, path: `/initiatives/${slug}` },
+        ])}
+      />
       {/* Breadcrumb */}
       <div className="pt-24 pb-4 px-6" style={{ background: "var(--color-dark)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -24,6 +34,7 @@ export default function InitiativePageContent({ tamilName, englishName, icon, fu
       </div>
 
       {/* Hero */}
+      <article>
       <section className="py-16 px-6 text-center" style={{ background: "var(--color-dark)" }}>
         <div className="text-6xl mb-4">{icon}</div>
         <h1
@@ -68,6 +79,7 @@ export default function InitiativePageContent({ tamilName, englishName, icon, fu
           </div>
         </div>
       </section>
+      </article>
 
       {/* Navigation */}
       <section className="py-10 px-6" style={{ background: "var(--color-bg)" }}>

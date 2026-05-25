@@ -1,8 +1,10 @@
-import { supabase, type Member, type GiveAsk } from "@/lib/supabase";
 import type { Metadata } from "next";
+import { supabase, type Member, type GiveAsk } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -14,17 +16,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("slug", slug)
     .single();
 
-  if (!member) return { title: "Member Not Found" };
+  if (!member) {
+    return createPageMetadata({
+      title: "Member Not Found",
+      description: "This member profile could not be found on BNI Miracles Chennai.",
+      path: `/members/${slug}`,
+      noIndex: true,
+    });
+  }
 
-  return {
-    title: `${member.name} — ${member.business_name} | BNI Miracles`,
-    description: `${member.name} is a ${member.category} professional and member of BNI Miracles Chennai. ${member.services ? member.services.slice(0, 120) : ""}`,
-    openGraph: {
-      title: `${member.name} — ${member.business_name}`,
-      description: `${member.category} | BNI Miracles Chennai`,
-      images: member.profile_picture_url ? [{ url: member.profile_picture_url }] : [],
-    },
-  };
+  const description =
+    member.services?.trim() ||
+    `${member.name} is a ${member.category} professional at ${member.business_name}, member of BNI Miracles — Chennai's hybrid BNI chapter.`;
+
+  return createPageMetadata({
+    title: `${member.name} — ${member.business_name}`,
+    description: description.slice(0, 160),
+    path: `/members/${slug}`,
+    keywords: [member.name, member.business_name, member.category, "BNI Miracles member"],
+    ogImage: member.profile_picture_url ?? undefined,
+    ogType: "profile",
+  });
 }
 
 export const dynamicParams = true;
@@ -81,6 +93,16 @@ export default async function MemberDetailPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Members", path: "/members" },
+            { name: member.name, path: `/members/${member.slug}` },
+          ]),
+          personJsonLd(member),
+        ]}
+      />
       {/* Breadcrumb */}
       <div className="pt-24 pb-4 px-6" style={{ background: "var(--color-dark)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>

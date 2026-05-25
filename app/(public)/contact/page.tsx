@@ -78,7 +78,7 @@ export default function ContactPage() {
 
             <div className="flex flex-col gap-4 mb-8">
               {[
-                { icon: "📅", label: "Meetings", value: "Every Thursday, 7:00 AM – 9:00 AM" },
+                { icon: "📅", label: "Meetings", value: "Every Thursday, 7:30 AM – 9:40 AM" },
                 { icon: "🌐", label: "Format", value: "Hybrid — Physical + Online (Zoom)" },
                 { icon: "📍", label: "Location", value: "Chennai, Tamil Nadu, India" },
               ].map((item) => (

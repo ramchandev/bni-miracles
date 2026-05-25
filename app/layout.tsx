@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { rootMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -9,27 +9,7 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "BNI Miracles — Hybrid Business Networking Chapter | Chennai",
-  description:
-    "BNI Miracles is a hybrid BNI chapter meeting every Thursday in Chennai. Connect with 36+ business categories, pass referrals, and grow your business.",
-  keywords: [
-    "BNI Miracles",
-    "BNI Chennai",
-    "business networking Chennai",
-    "BNI chapter Tamil Nadu",
-  ],
-  openGraph: {
-    title: "BNI Miracles — Business Networking Chennai",
-    description:
-      "BNI Miracles is a hybrid BNI chapter meeting every Thursday in Chennai. Connect with 36+ business categories, pass referrals, and grow your business.",
-    url: "https://bnimiracles.in",
-    siteName: "BNI Miracles",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
-    locale: "en_IN",
-    type: "website",
-  },
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({
   children,

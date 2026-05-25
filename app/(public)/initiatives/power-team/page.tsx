@@ -1,16 +1,19 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { initiatives } from "@/lib/initiatives";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
 const init = initiatives.find((i) => i.slug === "power-team")!;
 
-export const metadata: Metadata = {
-  title: `${init.englishName} — ${init.tamilName} | BNI Miracles`,
+export const metadata = createPageMetadata({
+  title: `${init.englishName} — ${init.tamilName}`,
   description:
-    "Meet BNI Miracles' 5 Power Teams — 37 business professionals grouped by shared client base for maximum referral synergy.",
-};
+    "Meet BNI Miracles' Power Teams — business professionals grouped by shared client base for maximum referral synergy in Chennai.",
+  path: `/initiatives/${init.slug}`,
+  keywords: ["BNI Power Team", "referral synergy", "BNI Miracles teams"],
+});
 
 /* ── Static Power Team data (sourced from BNI_Power_Teams.xlsx) ─────────── */
 
@@ -169,6 +172,13 @@ export default async function PowerTeamPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Initiatives", path: "/initiatives" },
+          { name: init.englishName, path: `/initiatives/${init.slug}` },
+        ])}
+      />
       {/* ── Breadcrumb ────────────────────────────────────────────────── */}
       <div className="pt-24 pb-4 px-6" style={{ background: "var(--color-dark)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
