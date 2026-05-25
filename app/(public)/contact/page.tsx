@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { submitContactAction } from "@/app/admin/actions/contact";
 import Link from "next/link";
@@ -32,9 +33,20 @@ export default function ContactPage() {
 
   return (
     <>
-      <section className="py-24 px-6 text-center" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
-        <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">Contact Us</h1>
-        <p className="text-lg text-white/70">We&apos;d love to hear from you — reach out anytime.</p>
+      <section className="relative flex items-center justify-center py-32 px-6 text-center" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
+        <div className="absolute inset-0 opacity-20">
+          <Image
+            src="/Contact-Banner.JPG"
+            alt="Contact BNI Miracles"
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        </div>
+        <div className="relative z-10">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">Contact Us</h1>
+          <p className="text-lg text-white/70">We&apos;d love to hear from you — reach out anytime.</p>
+        </div>
       </section>
 
       <section className="py-16 px-6" style={{ background: "var(--color-bg)" }}>

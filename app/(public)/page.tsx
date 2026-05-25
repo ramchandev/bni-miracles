@@ -25,7 +25,6 @@ const indiaStats = [
   { label: "Members", value: "72,364", numericValue: 72364 },
   { label: "Referrals Passed", value: "49,31,926", numericValue: 4931926 },
   { label: "Business Generated", value: "₹55,770 Cr", numericValue: 55770, prefix: "₹", suffix: "Cr" },
-  { label: "Avg Seat Value", value: "₹79.96 L/yr", numericValue: 80, prefix: "₹", suffix: "L/yr" },
 ];
 
 const categories = [
@@ -134,8 +133,8 @@ export default function HomePage() {
           </div>
           <div className="relative">
             <Image
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80"
-              alt="Business handshake"
+              src="/Home-Page-Featured-2.JPG"
+              alt="BNI Miracles hybrid Thursday meeting"
               width={600}
               height={420}
               className="rounded-2xl"

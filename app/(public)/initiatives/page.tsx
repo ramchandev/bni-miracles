@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import InitiativeCard from "@/components/InitiativeCard";
 import { initiatives } from "@/lib/initiatives";
 import Link from "next/link";
@@ -12,19 +13,30 @@ export const metadata: Metadata = {
 export default function InitiativesPage() {
   return (
     <>
-      <section className="py-24 px-6 text-center" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
-        <p
-          className="text-3xl font-bold mb-3"
-          style={{ color: "var(--color-accent)", fontFamily: "Noto Sans Tamil, sans-serif" }}
-        >
-          ஆஹா ஆற்புதங்கள்!
-        </p>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-          Our Chapter Initiatives
-        </h1>
-        <p className="text-lg text-white/70 max-w-xl mx-auto">
-          Ten programs that keep BNI Miracles energised, connected, and growing.
-        </p>
+      <section className="relative flex items-center justify-center py-32 px-6 text-center" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
+        <div className="absolute inset-0 opacity-20">
+          <Image
+            src="/Initiative-Banner.JPG"
+            alt="BNI Miracles initiatives"
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        </div>
+        <div className="relative z-10" style={{ maxWidth: 700 }}>
+          <p
+            className="text-3xl font-bold mb-3"
+            style={{ color: "var(--color-accent)", fontFamily: "Noto Sans Tamil, sans-serif" }}
+          >
+            ஆஹா ஆற்புதங்கள்!
+          </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+            Our Chapter Initiatives
+          </h1>
+          <p className="text-lg text-white/70 max-w-xl mx-auto">
+            Ten programs that keep BNI Miracles energised, connected, and growing.
+          </p>
+        </div>
       </section>
 
       <section className="py-16 px-6" style={{ background: "var(--color-bg)" }}>

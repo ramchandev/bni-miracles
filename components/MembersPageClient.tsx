@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { supabase, type Member } from "@/lib/supabase";
 import MemberCard from "@/components/MemberCard";
 
@@ -110,10 +111,19 @@ export default function MembersPageClient() {
     <>
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section
-        className="relative flex items-center justify-center px-6"
-        style={{ background: "var(--color-dark)", paddingTop: 120, paddingBottom: 64 }}
+        className="relative flex items-center justify-center py-32 px-6"
+        style={{ background: "var(--color-dark)", paddingTop: 120 }}
       >
-        <div className="text-center">
+        <div className="absolute inset-0 opacity-20">
+          <Image
+            src="/Member-Banner.JPG"
+            alt="BNI Miracles members"
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        </div>
+        <div className="relative z-10 text-center">
           <p
             className="text-sm font-semibold tracking-widest uppercase mb-3"
             style={{ color: "var(--color-accent)" }}

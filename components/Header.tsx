@@ -3,17 +3,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { initiatives } from "@/lib/initiatives";
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/members", label: "Members" },
-  { href: "/initiatives", label: "Initiatives" },
   { href: "/contact", label: "Contact" },
 ];
 
+const linkClass =
+  "text-white font-medium text-sm transition-colors hover:text-yellow-400";
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [initiativesOpen, setInitiativesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -40,11 +44,82 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {navLinks.slice(0, 3).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-white font-medium text-sm transition-colors hover:text-yellow-400"
+                className={linkClass}
+                style={{ letterSpacing: "0.01em" }}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Initiatives hover dropdown */}
+            <div className="relative group">
+              <Link
+                href="/initiatives"
+                className={`${linkClass} inline-flex items-center gap-1`}
+                style={{ letterSpacing: "0.01em" }}
+              >
+                Initiatives
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  fill="currentColor"
+                  className="opacity-70 transition-transform group-hover:rotate-180"
+                  aria-hidden
+                >
+                  <path d="M2 3.5L5 7l3-3.5H2z" />
+                </svg>
+              </Link>
+              <div
+                className="absolute left-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                style={{ minWidth: 280 }}
+              >
+                <div
+                  className="rounded-xl py-2 shadow-xl overflow-hidden"
+                  style={{
+                    background: "rgba(26,26,46,0.98)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <Link
+                    href="/initiatives"
+                    className="block px-4 py-2.5 text-sm font-semibold text-yellow-400 hover:bg-white/5 border-b border-white/10"
+                  >
+                    All Initiatives
+                  </Link>
+                  {initiatives.map((init) => (
+                    <Link
+                      key={init.slug}
+                      href={`/initiatives/${init.slug}`}
+                      className="flex items-start gap-2.5 px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 hover:text-yellow-400 transition-colors"
+                    >
+                      <span className="shrink-0 text-base leading-none mt-0.5" aria-hidden>
+                        {init.icon}
+                      </span>
+                      <span>
+                        <span className="block font-medium leading-snug">{init.englishName}</span>
+                        <span
+                          className="block text-xs text-white/50 mt-0.5 leading-snug"
+                          style={{ fontFamily: "Noto Sans Tamil, sans-serif" }}
+                        >
+                          {init.tamilName}
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {navLinks.slice(3).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={linkClass}
                 style={{ letterSpacing: "0.01em" }}
               >
                 {link.label}
@@ -96,6 +171,49 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+
+            <div className="border-b border-white/10">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between text-white font-medium py-2 px-1"
+                onClick={() => setInitiativesOpen(!initiativesOpen)}
+                aria-expanded={initiativesOpen}
+              >
+                Initiatives
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 10 10"
+                  fill="currentColor"
+                  className={`transition-transform ${initiativesOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                >
+                  <path d="M2 3.5L5 7l3-3.5H2z" />
+                </svg>
+              </button>
+              {initiativesOpen && (
+                <div className="pb-2 pl-3 flex flex-col gap-0.5">
+                  <Link
+                    href="/initiatives"
+                    className="text-yellow-400 text-sm font-semibold py-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    All Initiatives
+                  </Link>
+                  {initiatives.map((init) => (
+                    <Link
+                      key={init.slug}
+                      href={`/initiatives/${init.slug}`}
+                      className="text-white/80 text-sm py-2 flex items-center gap-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <span aria-hidden>{init.icon}</span>
+                      {init.englishName}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link
               href="/attend-meeting"
               className="btn-primary mt-2 text-center"

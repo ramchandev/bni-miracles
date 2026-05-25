@@ -15,8 +15,8 @@ export default function AboutPage() {
       <section className="relative flex items-center justify-center py-32 px-6" style={{ background: "var(--color-dark)", paddingTop: 120 }}>
         <div className="absolute inset-0 opacity-20">
           <Image
-            src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1600&q=80"
-            alt="Business meeting"
+            src="/About-Banner.JPG"
+            alt="BNI Miracles chapter"
             fill
             style={{ objectFit: "cover" }}
           />
@@ -53,7 +53,7 @@ export default function AboutPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto" }} className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <Image
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80"
+              src="/About-BNI-Miracles.JPG"
               alt="BNI Miracles chapter meeting"
               width={600}
               height={440}
@@ -125,13 +125,13 @@ export default function AboutPage() {
           <h2 className="section-title mb-8 text-center">A Typical Thursday Meeting</h2>
           <div className="flex flex-col gap-4">
             {[
-              { time: "7:00 AM", activity: "Networking & Open Networking", desc: "Members mingle, catch up, and build connections before the formal meeting begins." },
-              { time: "7:30 AM", activity: "Formal Meeting Opens", desc: "Chapter President opens the meeting, welcomes visitors, and sets the agenda." },
-              { time: "7:40 AM", activity: "60-Second Infomercials", desc: "Every member has 60 seconds to present their business and ask for a specific referral." },
-              { time: "8:10 AM", activity: "Featured Presentation", desc: "One member gets 10 minutes to deep-dive into their business — the week's spotlight." },
-              { time: "8:20 AM", activity: "Referral & Testimony Round", desc: "Members pass referrals, share testimonials, and announce closed business (TYFCB)." },
-              { time: "8:45 AM", activity: "Education Slot & Announcements", desc: "A short, impactful business education segment followed by chapter announcements." },
-              { time: "9:00 AM", activity: "Networking Continues", desc: "Post-meeting networking where the real connections deepen." },
+              { time: "7:30 AM", activity: "Networking & Open Networking", desc: "Members mingle, catch up, and build connections before the formal meeting begins." },
+              { time: "8:00 AM", activity: "Formal Meeting Opens", desc: "Chapter President opens the meeting, welcomes visitors, and sets the agenda." },
+              { time: "8:40 AM", activity: "30-Second Infomercials", desc: "Every member has 30 seconds to present their business and ask for a specific referral." },
+              { time: "9:00 AM", activity: "Featured Presentation", desc: "Two members get 8 minutes each to deep-dive into their business." },
+              { time: "9:16 AM", activity: "Referral & Testimony Round", desc: "Members pass referrals, share testimonials, and announce closed business (TYFCB)." },
+              { time: "9:30 AM", activity: "Training & Announcements", desc: "A short training session followed by chapter announcements." },
+              { time: "9:40 AM", activity: "Networking Continues", desc: "Post-meeting networking where the real connections deepen." },
             ].map((step, i) => (
               <div key={i} className="flex gap-4 items-start p-5 rounded-xl" style={{ background: i % 2 === 0 ? "var(--color-bg)" : "white", border: "1px solid #F3F4F6" }}>
                 <div className="flex-shrink-0 w-20 text-sm font-bold" style={{ color: "var(--color-primary)" }}>{step.time}</div>
