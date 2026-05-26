@@ -12,6 +12,7 @@ export type Member = {
   business_name: string;
   category: string;
   phone: string | null;
+  email: string | null;
   business_location: string | null;
   website: string | null;
   services: string | null;

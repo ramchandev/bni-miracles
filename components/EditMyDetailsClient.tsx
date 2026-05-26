@@ -224,6 +224,7 @@ function EditForm({
   const [businessName, setBusinessName] = useState(member.business_name ?? "");
   const [businessLocation, setBusinessLocation] = useState(member.business_location ?? "");
   const [website, setWebsite] = useState(member.website ?? "");
+  const [email, setEmail] = useState(member.email ?? "");
   const [services, setServices] = useState(member.services ?? "");
   const [whyChooseUs, setWhyChooseUs] = useState(member.why_choose_us ?? "");
   const [successStories, setSuccessStories] = useState(member.success_stories ?? "");
@@ -248,6 +249,7 @@ function EditForm({
       business_name: businessName,
       business_location: businessLocation,
       website,
+      email,
       services,
       why_choose_us: whyChooseUs,
       success_stories: successStories,
@@ -354,6 +356,21 @@ function EditForm({
                 className={inputCls}
                 style={inputStyle}
               />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label style={labelStyle}>Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@yourbusiness.com"
+                className={inputCls}
+                style={inputStyle}
+                autoComplete="email"
+              />
+              <p style={hintStyle}>Shown on your public profile. Leave blank to hide.</p>
             </div>
           </div>
         </section>

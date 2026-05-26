@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { supabase, type Member } from "@/lib/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -21,9 +22,18 @@ function normalizePhone(raw: string): string {
 export type VerifiedMember = Pick<
   Member,
   | "id" | "name" | "slug" | "business_name" | "business_location"
-  | "website" | "services" | "why_choose_us" | "success_stories"
+  | "website" | "email" | "services" | "why_choose_us" | "success_stories"
   | "category" | "profile_picture_url"
 >;
+
+function normalizeEmail(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return "";
+  }
+  return trimmed.toLowerCase();
+}
 
 export type VerifyResult =
   | { ok: false; error: string }
@@ -47,7 +57,7 @@ export async function verifyMemberAction(
   const { data: members, error } = await supabase
     .from("members")
     .select(
-      "id, name, slug, business_name, business_location, website, services, why_choose_us, success_stories, category, profile_picture_url, phone"
+      "id, name, slug, business_name, business_location, website, email, services, why_choose_us, success_stories, category, profile_picture_url, phone"
     )
     .eq("is_active", true)
     .not("phone", "is", null);
@@ -94,6 +104,7 @@ export type SavePayload = {
   business_name: string;
   business_location: string;
   website: string;
+  email: string;
   services: string;
   why_choose_us: string;
   success_stories: string;
@@ -106,6 +117,11 @@ export async function saveMemberDetailsAction(
 ): Promise<{ error?: string }> {
   const admin = createSupabaseAdminClient();
 
+  const email = normalizeEmail(payload.email);
+  if (email === "") {
+    return { error: "Please enter a valid email address, or leave the field blank." };
+  }
+
   // Update core member fields
   const { error: updateError } = await admin
     .from("members")
@@ -113,6 +129,7 @@ export async function saveMemberDetailsAction(
       business_name:     payload.business_name.trim(),
       business_location: payload.business_location.trim() || null,
       website:           payload.website.trim() || null,
+      email,
       services:          payload.services.trim() || null,
       why_choose_us:     payload.why_choose_us.trim() || null,
       success_stories:   payload.success_stories.trim() || null,
@@ -138,6 +155,9 @@ export async function saveMemberDetailsAction(
     const { error: gaError } = await admin.from("member_gives_asks").insert(rows);
     if (gaError) return { error: gaError.message };
   }
+
+  revalidatePath(`/members/${payload.slug}`);
+  revalidatePath("/members");
 
   return {};
 }

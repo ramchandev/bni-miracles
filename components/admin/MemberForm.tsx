@@ -258,6 +258,22 @@ export default function MemberForm({ member, initialGives = [], initialAsks = []
             </p>
           </div>
 
+          {/* Email */}
+          <div>
+            <label style={labelStyle}>Email Address</label>
+            <input
+              name="email"
+              type="email"
+              defaultValue={member?.email ?? ''}
+              placeholder="e.g. you@yourbusiness.com"
+              style={inputStyle}
+              autoComplete="email"
+            />
+            <p style={{ fontSize: '0.7rem', color: 'var(--color-gray)', marginTop: 4 }}>
+              Shown on the public member profile with a mail link.
+            </p>
+          </div>
+
           {/* Location */}
           <div>
             <label style={labelStyle}>Business Location</label>

@@ -19,12 +19,22 @@ export async function saveMemberAction(
   const slugFromForm = (formData.get('slug') as string).trim();
   const slug = slugFromForm || generateSlug(name);
 
+  const emailRaw = (formData.get('email') as string)?.trim() ?? '';
+  let email: string | null = null;
+  if (emailRaw) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+      return { error: 'Invalid email address.' };
+    }
+    email = emailRaw.toLowerCase();
+  }
+
   const payload = {
     name,
     slug,
     business_name: (formData.get('business_name') as string).trim(),
     category: formData.get('category') as string,
     phone: (formData.get('phone') as string)?.trim() || null,
+    email,
     business_location: (formData.get('business_location') as string)?.trim() || null,
     website: (formData.get('website') as string)?.trim() || null,
     services: (formData.get('services') as string)?.trim() || null,
@@ -76,6 +86,7 @@ export async function saveMemberAction(
 
   revalidatePath('/admin/members');
   revalidatePath('/members');
+  revalidatePath(`/members/${slug}`);
   revalidatePath('/');
   redirect('/admin/members');
 }

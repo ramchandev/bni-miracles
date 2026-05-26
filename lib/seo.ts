@@ -204,6 +204,7 @@ export function personJsonLd(member: {
   profile_picture_url: string | null;
   website: string | null;
   phone: string | null;
+  email: string | null;
   business_location: string | null;
   services: string | null;
 }) {
@@ -219,6 +220,7 @@ export function personJsonLd(member: {
     url: `${SITE_URL}/members/${member.slug}`,
     image: member.profile_picture_url ?? undefined,
     telephone: member.phone ?? undefined,
+    email: member.email ?? undefined,
     description: member.services ?? undefined,
     address: member.business_location
       ? { "@type": "PostalAddress", addressLocality: member.business_location }
