@@ -101,3 +101,47 @@ export type PowerTeamMemberWithMember = PowerTeamMember & {
 export type PowerTeamWithMembers = PowerTeam & {
   power_team_members: PowerTeamMemberWithMember[];
 };
+
+export type LeadershipGroup = {
+  id: string;
+  name: string;
+  subtitle: string | null;
+  color: string;
+  non_members: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LeadershipRole = {
+  id: string;
+  group_id: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type LeadershipAssignment = {
+  id: string;
+  role_id: string;
+  member_id: string | null;
+  assignee_name: string | null;
+  assignee_profile_picture_url: string | null;
+  created_at: string;
+};
+
+export type LeadershipAssignmentWithMember = LeadershipAssignment & {
+  members: Pick<
+    Member,
+    "id" | "name" | "slug" | "category" | "business_name" | "profile_picture_url"
+  > | null;
+};
+
+export type LeadershipRoleWithAssignments = LeadershipRole & {
+  leadership_assignments: LeadershipAssignmentWithMember[];
+};
+
+export type LeadershipGroupWithRoles = LeadershipGroup & {
+  leadership_roles: LeadershipRoleWithAssignments[];
+};

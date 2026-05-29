@@ -250,6 +250,39 @@ export function initiativesListJsonLd(
   };
 }
 
+export function powerTeamsListJsonLd(items: { name: string; slug: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${SITE_NAME} Power Teams`,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: `${SITE_URL}/power-team/${item.slug}`,
+    })),
+  };
+}
+
+export function powerTeamMembersListJsonLd(input: {
+  teamName: string;
+  teamSlug: string;
+  members: { name: string; slug: string; category?: string | null }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${input.teamName} Power Team Members`,
+    url: `${SITE_URL}/power-team/${input.teamSlug}`,
+    itemListElement: input.members.map((m, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: m.category ? `${m.name} (${m.category})` : m.name,
+      url: `${SITE_URL}/members/${m.slug}`,
+    })),
+  };
+}
+
 export function eventJsonLd() {
   return {
     "@context": "https://schema.org",

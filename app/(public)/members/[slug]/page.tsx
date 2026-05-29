@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
+import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
+import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -80,11 +82,10 @@ export default async function MemberDetailPage({ params }: Props) {
 
   if (!member) notFound();
 
-  const { data: givesAsksData } = await supabase
-    .from("member_gives_asks")
-    .select("*")
-    .eq("member_id", member.id)
-    .order("sort_order");
+  const [{ data: givesAsksData }, leadershipRoles] = await Promise.all([
+    supabase.from("member_gives_asks").select("*").eq("member_id", member.id).order("sort_order"),
+    fetchMemberLeadershipRoles(member.id),
+  ]);
 
   const allItems = (givesAsksData as GiveAsk[] | null) ?? [];
   const gives = allItems.filter((r) => r.type === "give");
@@ -242,6 +243,8 @@ export default async function MemberDetailPage({ params }: Props) {
       {/* Details */}
       <section className="py-16 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }} className="flex flex-col gap-10">
+
+          <MemberLeadershipRoles roles={leadershipRoles} />
 
           {/* Gives & Asks */}
           {hasGivesAsks && (

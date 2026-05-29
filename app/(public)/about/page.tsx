@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ChapterLeadershipSection from "@/components/about/ChapterLeadershipSection";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
@@ -154,16 +155,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Leadership Placeholder */}
-      <section className="py-20 px-6" style={{ background: "var(--color-dark)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }} className="text-center">
-          <h2 className="text-3xl font-extrabold text-white mb-4">Our Leadership Team</h2>
-          <p className="text-white/60 mb-8">Details coming soon. Contact us to learn more about chapter leadership.</p>
-          <Link href="/contact" className="btn-primary">
-            Get in Touch
-          </Link>
-        </div>
-      </section>
+      <ChapterLeadershipSection />
 
       {/* CTA */}
       <section className="py-16 px-6 text-center" style={{ background: "var(--color-primary)" }}>

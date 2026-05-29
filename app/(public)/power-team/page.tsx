@@ -3,13 +3,21 @@ import JsonLd from "@/components/JsonLd";
 import PowerTeamOverviewCard from "@/components/power-team/PowerTeamOverviewCard";
 import { POWER_TEAM_PROGRAM } from "@/lib/power-teams-content";
 import { countTeamMembers, fetchPowerTeamsWithMembers } from "@/lib/power-teams-server";
-import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, createPageMetadata, powerTeamsListJsonLd } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
   title: `${POWER_TEAM_PROGRAM.englishName} — ${POWER_TEAM_PROGRAM.tamilName}`,
-  description: POWER_TEAM_PROGRAM.tagline,
+  description:
+    "Explore BNI Miracles Power Teams in Chennai — synergy groups built around a shared client base. Meet each team’s members and captain, and discover the referral chain.",
   path: "/power-team",
-  keywords: ["BNI Power Team", "referral synergy", "BNI Miracles Chennai"],
+  keywords: [
+    "BNI Power Team",
+    "Power Teams Chennai",
+    "referral synergy",
+    "BNI Miracles Chennai",
+    POWER_TEAM_PROGRAM.tamilName,
+  ],
+  ogType: "website",
 });
 
 export default async function PowerTeamOverviewPage() {
@@ -19,10 +27,13 @@ export default async function PowerTeamOverviewPage() {
   return (
     <>
       <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Power Team", path: "/power-team" },
-        ])}
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Power Team", path: "/power-team" },
+          ]),
+          powerTeamsListJsonLd(teams.filter((t) => t.slug).map((t) => ({ name: t.name, slug: t.slug }))),
+        ]}
       />
 
       <div className="pt-24 pb-4 px-6" style={{ background: "var(--color-dark)" }}>

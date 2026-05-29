@@ -9,6 +9,7 @@ const navLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/members', label: 'Members', icon: '👥' },
   { href: '/admin/power-teams', label: 'Power Teams', icon: '⚡' },
+  { href: '/admin/leadership', label: 'Leadership', icon: '👔' },
   { href: '/admin/categories', label: 'Categories', icon: '🏷️' },
   { href: '/admin/registrations', label: 'Registrations', icon: '📅' },
   { href: '/admin/contacts', label: 'Contacts', icon: '✉️' },

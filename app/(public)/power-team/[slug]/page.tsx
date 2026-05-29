@@ -12,7 +12,7 @@ import {
   sortTeamMembers,
 } from "@/lib/power-teams-server";
 import { teamLightBg } from "@/lib/power-teams";
-import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, createPageMetadata, powerTeamMembersListJsonLd } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -27,10 +27,14 @@ export async function generateMetadata({ params }: Props) {
   if (!team) return { title: "Team Not Found" };
 
   return createPageMetadata({
-    title: team.name,
-    description: team.focus_area ?? `Meet the ${team.name} Power Team at BNI Miracles Chennai.`,
+    title: `${team.name} Power Team`,
+    description:
+      team.focus_area
+        ? `${team.focus_area} — meet the members of the ${team.name} Power Team at BNI Miracles Chennai.`
+        : `Meet the members of the ${team.name} Power Team at BNI Miracles Chennai.`,
     path: `/power-team/${team.slug}`,
-    keywords: ["BNI Power Team", team.name, "BNI Miracles"],
+    keywords: ["BNI Power Team", "Power Teams Chennai", team.name, team.focus_area ?? "", "BNI Miracles"],
+    ogType: "article",
   });
 }
 
@@ -54,11 +58,24 @@ export default async function PowerTeamDetailPage({ params }: Props) {
   return (
     <>
       <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Power Team", path: "/power-team" },
-          { name: team.name, path: `/power-team/${team.slug}` },
-        ])}
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Power Team", path: "/power-team" },
+            { name: team.name, path: `/power-team/${team.slug}` },
+          ]),
+          powerTeamMembersListJsonLd({
+            teamName: team.name,
+            teamSlug: team.slug,
+            members: members
+              .filter((r) => r.members)
+              .map((r) => ({
+                name: r.members!.name,
+                slug: r.members!.slug,
+                category: r.members!.category,
+              })),
+          }),
+        ]}
       />
 
       <div className="pt-24 pb-4 px-6" style={{ background: "var(--color-dark)" }}>
