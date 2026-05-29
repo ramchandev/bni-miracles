@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { POWER_TEAM_PROGRAM } from "@/lib/power-teams-content";
+import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 
 const quickLinks = [
   { href: "/", label: "Home" },
@@ -10,11 +12,15 @@ const quickLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Footer() {
+type Props = {
+  powerTeams?: PowerTeamNavItem[];
+};
+
+export default function Footer({ powerTeams = [] }: Props) {
   return (
     <footer style={{ background: "var(--color-dark)", color: "white" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "3rem 1.5rem 2rem" }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
             <Image src="/BNI-Miracles-Logo.png" alt="BNI Miracles" width={130} height={55} style={{ objectFit: "contain" }} />
@@ -28,7 +34,9 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-700 mb-4" style={{ fontWeight: 700, color: "var(--color-accent)" }}>Quick Links</h3>
+            <h3 className="font-700 mb-4" style={{ fontWeight: 700, color: "var(--color-accent)" }}>
+              Quick Links
+            </h3>
             <ul className="flex flex-col gap-2">
               {quickLinks.map((l) => (
                 <li key={l.href}>
@@ -44,9 +52,50 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Power Team */}
+          <div>
+            <h3 className="font-700 mb-1" style={{ fontWeight: 700, color: "var(--color-accent)" }}>
+              {POWER_TEAM_PROGRAM.englishName}
+            </h3>
+            <p
+              className="text-xs mb-3"
+              style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Noto Sans Tamil, sans-serif" }}
+            >
+              {POWER_TEAM_PROGRAM.tamilName}
+            </p>
+            <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.55 }}>
+              {POWER_TEAM_PROGRAM.tagline}
+            </p>
+            <ul className="flex flex-col gap-2">
+              <li>
+                <Link
+                  href="/power-team"
+                  className="text-sm font-semibold transition-colors hover:text-yellow-400"
+                  style={{ color: "rgba(255,255,255,0.9)" }}
+                >
+                  {POWER_TEAM_PROGRAM.icon} All Power Teams
+                </Link>
+              </li>
+              {powerTeams.map((team) => (
+                <li key={team.slug}>
+                  <Link
+                    href={`/power-team/${team.slug}`}
+                    className="text-sm transition-colors hover:text-yellow-400 flex items-center gap-2"
+                    style={{ color: "rgba(255,255,255,0.7)" }}
+                  >
+                    <span aria-hidden>{team.emoji}</span>
+                    {team.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
-            <h3 className="font-700 mb-4" style={{ fontWeight: 700, color: "var(--color-accent)" }}>Get In Touch</h3>
+            <h3 className="font-700 mb-4" style={{ fontWeight: 700, color: "var(--color-accent)" }}>
+              Get In Touch
+            </h3>
             <div className="flex flex-col gap-3">
               <a
                 href="https://wa.me/919841767641"
@@ -61,7 +110,9 @@ export default function Footer() {
                 +91 98417 67641
               </a>
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                Meetings every Thursday<br />Hybrid (Physical + Online)
+                Meetings every Thursday
+                <br />
+                Hybrid (Physical + Online)
               </p>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { logoutAction } from '@/app/admin/actions/auth';
 const navLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/members', label: 'Members', icon: '👥' },
+  { href: '/admin/power-teams', label: 'Power Teams', icon: '⚡' },
   { href: '/admin/categories', label: 'Categories', icon: '🏷️' },
   { href: '/admin/registrations', label: 'Registrations', icon: '📅' },
   { href: '/admin/contacts', label: 'Contacts', icon: '✉️' },

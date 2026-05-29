@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import StatCounter from "@/components/StatCounter";
+import HomePowerTeamsSection from "@/components/home/HomePowerTeamsSection";
 import InitiativeCard from "@/components/InitiativeCard";
 import { initiatives } from "@/lib/initiatives";
+import { fetchPowerTeamsWithMembers } from "@/lib/power-teams-server";
 import { createPageMetadata, DEFAULT_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -40,7 +42,9 @@ const categories = [
   "Legal & Professional", "Intellectual Property", "Money Recovery", "Specialist Dentist",
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const powerTeams = await fetchPowerTeamsWithMembers();
+
   return (
     <>
       {/* Hero */}
@@ -183,6 +187,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <HomePowerTeamsSection teams={powerTeams} />
 
       {/* Initiatives */}
       <section className="py-20 px-6" style={{ background: "var(--color-bg)" }}>

@@ -26,9 +26,22 @@ interface MemberCardProps {
   categoryIcon?: string;
   gives?: string[];
   asks?: string[];
+  isCaptain?: boolean;
+  /** When set (e.g. Power Team page), primary CTAs use this colour instead of chapter red */
+  accentColor?: string;
 }
 
-export default function MemberCard({ member, categoryIcon, gives = [], asks = [] }: MemberCardProps) {
+export default function MemberCard({
+  member,
+  categoryIcon,
+  gives = [],
+  asks = [],
+  isCaptain = false,
+  accentColor,
+}: MemberCardProps) {
+  const ctaStyle = accentColor
+    ? { background: accentColor, color: "#fff", border: `2px solid ${accentColor}` }
+    : undefined;
   const [flipped, setFlipped] = useState(false);
 
   const hasGivesAsks = gives.length > 0 || asks.length > 0;
@@ -69,7 +82,17 @@ export default function MemberCard({ member, categoryIcon, gives = [], asks = []
         >
           <div className="p-6 flex flex-col items-center text-center flex-1">
             {/* Avatar */}
-            <div className="mb-4">
+            <div className="mb-4 relative inline-block">
+              {isCaptain && (
+                <span
+                  className="absolute -top-1 -right-1 z-10 flex items-center justify-center w-7 h-7 rounded-full shadow-md text-sm leading-none"
+                  style={{ background: "#FBBF24", color: "#78350F" }}
+                  title="Team Captain"
+                  aria-label="Team Captain"
+                >
+                  ★
+                </span>
+              )}
               {member.profile_picture_url ? (
                 <Image
                   src={member.profile_picture_url}
@@ -117,8 +140,12 @@ export default function MemberCard({ member, categoryIcon, gives = [], asks = []
           <div className="px-6 pb-6 flex flex-col gap-2">
             <Link
               href={`/members/${member.slug}`}
-              className="btn-outline w-full text-center text-sm"
-              style={{ padding: "0.6rem 1rem" }}
+              className={
+                accentColor
+                  ? "block w-full text-center text-sm font-semibold rounded-lg transition-opacity hover:opacity-90"
+                  : "btn-outline w-full text-center text-sm"
+              }
+              style={{ padding: "0.6rem 1rem", ...ctaStyle }}
               onClick={(e) => e.stopPropagation()}
             >
               View Profile
@@ -224,7 +251,7 @@ export default function MemberCard({ member, categoryIcon, gives = [], asks = []
             <Link
               href={`/members/${member.slug}`}
               className="block w-full text-center text-sm font-semibold rounded-lg py-2.5 transition-opacity hover:opacity-90"
-              style={{ background: "var(--color-primary)", color: "#fff" }}
+              style={ctaStyle ?? { background: "var(--color-primary)", color: "#fff" }}
               onClick={(e) => e.stopPropagation()}
             >
               View Full Profile →

@@ -67,3 +67,37 @@ export type Contact = {
   message: string;
   created_at: string;
 };
+
+export type PowerTeam = {
+  id: string;
+  slug: string;
+  name: string;
+  focus_area: string | null;
+  description: string | null;
+  emoji: string;
+  color: string;
+  sort_order: number;
+  captain_member_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PowerTeamMember = {
+  id: string;
+  power_team_id: string;
+  member_id: string;
+  role_notes: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type PowerTeamMemberWithMember = PowerTeamMember & {
+  members: Pick<
+    Member,
+    "id" | "name" | "slug" | "category" | "business_name" | "business_location" | "profile_picture_url" | "is_active"
+  > | null;
+};
+
+export type PowerTeamWithMembers = PowerTeam & {
+  power_team_members: PowerTeamMemberWithMember[];
+};

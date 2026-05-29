@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { initiatives } from "@/lib/initiatives";
+import { fetchPowerTeamsNav } from "@/lib/power-teams-server";
 import { SITE_URL } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -12,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/members`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/attend-meeting`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/initiatives`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/power-team`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.7 },
     ...initiatives.map((i) => ({
       url: `${SITE_URL}/initiatives/${i.slug}`,
@@ -35,5 +37,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...memberPages];
+  const powerTeams = await fetchPowerTeamsNav();
+  const powerTeamPages: MetadataRoute.Sitemap = powerTeams.map((t) => ({
+    url: `${SITE_URL}/power-team/${t.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...powerTeamPages, ...memberPages];
 }

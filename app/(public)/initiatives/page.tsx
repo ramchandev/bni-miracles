@@ -2,6 +2,7 @@ import Image from "next/image";
 import InitiativeCard from "@/components/InitiativeCard";
 import JsonLd from "@/components/JsonLd";
 import { initiatives } from "@/lib/initiatives";
+import { POWER_TEAM_PROGRAM } from "@/lib/power-teams-content";
 import Link from "next/link";
 import { breadcrumbJsonLd, createPageMetadata, initiativesListJsonLd } from "@/lib/seo";
 
@@ -46,7 +47,7 @@ export default function InitiativesPage() {
             Our Chapter Initiatives
           </h1>
           <p className="text-lg text-white/70 max-w-xl mx-auto">
-            Ten programs that keep BNI Miracles energised, connected, and growing.
+            Chapter programs that keep BNI Miracles energised, connected, and growing.
           </p>
         </div>
       </section>
@@ -54,6 +55,34 @@ export default function InitiativesPage() {
       <section className="py-16 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article
+              className="card p-6 flex flex-col md:col-span-2 lg:col-span-1"
+              style={{ border: "2px solid var(--color-accent)" }}
+            >
+              <div className="text-4xl mb-4">{POWER_TEAM_PROGRAM.icon}</div>
+              <h3
+                className="text-base font-bold mb-1"
+                style={{ color: "var(--color-dark)", fontFamily: "Noto Sans Tamil, sans-serif" }}
+              >
+                {POWER_TEAM_PROGRAM.tamilName}
+              </h3>
+              <p className="text-xs font-semibold mb-3" style={{ color: "var(--color-primary)" }}>
+                {POWER_TEAM_PROGRAM.englishName}
+              </p>
+              <p className="text-sm flex-1" style={{ color: "var(--color-gray)", lineHeight: 1.65 }}>
+                {POWER_TEAM_PROGRAM.tagline}
+              </p>
+              <Link
+                href="/power-team"
+                className="mt-4 text-sm font-semibold inline-flex items-center gap-1 transition-colors hover:gap-2"
+                style={{ color: "var(--color-primary)" }}
+              >
+                View Power Teams
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </article>
             {initiatives.map((init) => (
               <InitiativeCard key={init.slug} initiative={init} />
             ))}
