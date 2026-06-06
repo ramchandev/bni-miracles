@@ -145,3 +145,81 @@ export type LeadershipRoleWithAssignments = LeadershipRole & {
 export type LeadershipGroupWithRoles = LeadershipGroup & {
   leadership_roles: LeadershipRoleWithAssignments[];
 };
+
+/* ── BizRox ──────────────────────────────────────────────────────────── */
+
+export type PostType = "need" | "give" | "promo" | "announcement";
+export type MediaType = "image" | "youtube" | "instagram";
+
+export type BizRoxPost = {
+  id: string;
+  member_id: string;
+  post_type: PostType;
+  content: string;
+  media_url: string | null;
+  media_type: MediaType | null;
+  comments_count: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BizRoxComment = {
+  id: string;
+  post_id: string;
+  member_id: string;
+  content: string;
+  created_at: string;
+};
+
+export type BizRoxSession = {
+  id: string;
+  member_id: string;
+  expires_at: string;
+  created_at: string;
+};
+
+export type BizRoxReaction = {
+  id: string;
+  post_id: string;
+  member_id: string;
+  reaction: string;
+  created_at: string;
+};
+
+/** Aggregated reaction summary per emoji for a post */
+export type ReactionSummary = {
+  reaction: string;
+  count: number;
+  memberIds: string[];
+};
+
+/** Post row as returned by Supabase join (members FK → object) */
+export type PostWithMember = BizRoxPost & {
+  members: {
+    name: string;
+    slug: string;
+    category: string;
+    profile_picture_url: string | null;
+    phone: string | null;
+  };
+  reactions: ReactionSummary[];
+};
+
+export type CommentWithMember = BizRoxComment & {
+  members: {
+    name: string;
+    slug: string;
+    profile_picture_url: string | null;
+  };
+};
+
+/** Minimal member shape kept in the BizRox session context */
+export type SessionMember = {
+  id: string;
+  name: string;
+  slug: string;
+  profile_picture_url: string | null;
+  phone: string | null;
+  email: string | null;
+};

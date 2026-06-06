@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
+import { useMemberSession } from "@/components/MemberSessionContext";
+import LoginModal from "@/components/LoginModal";
+import { logoutMemberAction } from "@/app/actions/session";
 
 const navLinksBeforeDropdowns = [
   { href: "/", label: "Home" },
@@ -85,10 +89,34 @@ function NavMegaDropdown<T extends { key: string }>({
 }
 
 export default function Header({ powerTeams = [] }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen]           = useState(false);
   const [initiativesOpen, setInitiativesOpen] = useState(false);
-  const [powerTeamsOpen, setPowerTeamsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [powerTeamsOpen, setPowerTeamsOpen]   = useState(false);
+  const [scrolled, setScrolled]           = useState(false);
+  const [showLogin, setShowLogin]         = useState(false);
+  const [memberMenuOpen, setMemberMenuOpen] = useState(false);
+  const memberMenuRef = useRef<HTMLDivElement>(null);
+
+  const { member } = useMemberSession();
+  const router = useRouter();
+
+  // Close member dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (memberMenuRef.current && !memberMenuRef.current.contains(e.target as Node)) {
+        setMemberMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Allow any component to trigger the login modal via custom event
+  useEffect(() => {
+    const handler = () => { if (!member) setShowLogin(true); };
+    document.addEventListener("open-login", handler);
+    return () => document.removeEventListener("open-login", handler);
+  }, [member]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -174,9 +202,80 @@ export default function Header({ powerTeams = [] }: Props) {
                 {link.label}
               </Link>
             ))}
+
+            {/* BizRox */}
+            <Link
+              href="/bizrox"
+              className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-all"
+              style={{ background: "rgba(124,58,237,0.18)", color: "#C4B5FD", border: "1px solid rgba(167,139,250,0.3)" }}
+            >
+              📣 BizRox
+            </Link>
+
             <Link href="/attend-meeting" className="btn-primary text-sm" style={{ padding: "0.5rem 1.25rem" }}>
               Attend a Meeting
             </Link>
+
+            {/* Login / Member */}
+            {!member ? (
+              <button
+                onClick={() => setShowLogin(true)}
+                className="text-sm font-semibold px-3 py-1.5 rounded-full transition-all hover:bg-white/10"
+                style={{ color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.25)" }}
+              >
+                Log In
+              </button>
+            ) : (
+              <div className="relative" ref={memberMenuRef}>
+                <button
+                  onClick={() => setMemberMenuOpen((o) => !o)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all hover:bg-white/10"
+                  style={{ border: "1px solid rgba(255,255,255,0.2)" }}
+                >
+                  {member.profile_picture_url ? (
+                    <Image
+                      src={member.profile_picture_url}
+                      alt={member.name}
+                      width={28} height={28}
+                      className="rounded-full object-cover"
+                      style={{ width: 28, height: 28 }}
+                    />
+                  ) : (
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ background: "var(--color-primary)" }}
+                    >
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold text-white max-w-[80px] truncate">
+                    {member.name.split(" ")[0]}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="white" className={`transition-transform opacity-60 ${memberMenuOpen ? "rotate-180" : ""}`}>
+                    <path d="M2 3.5L5 7l3-3.5H2z" />
+                  </svg>
+                </button>
+
+                {memberMenuOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden shadow-xl z-50"
+                    style={{ background: "rgba(26,26,46,0.98)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  >
+                    <Link href="/bizrox" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📣 BizRox Feed</Link>
+                    <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>✏️ New Post</Link>
+                    <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>👤 Edit Profile</Link>
+                    <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                    <button
+                      onClick={() => { setMemberMenuOpen(false); logoutMemberAction(); }}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-sm text-white/50 hover:bg-white/5 hover:text-white border-t border-white/10"
+                    >
+                      🚪 Log Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <a
               href="https://wa.me/919841767641"
               target="_blank"
@@ -293,9 +392,54 @@ export default function Header({ powerTeams = [] }: Props) {
             <Link href="/attend-meeting" className="btn-primary mt-2 text-center" onClick={() => setMenuOpen(false)}>
               Attend a Meeting
             </Link>
+
+            {/* BizRox */}
+            <Link
+              href="/bizrox"
+              className="flex items-center gap-2 py-2 px-3 mt-1 rounded-lg font-semibold text-sm"
+              style={{ background: "rgba(124,58,237,0.2)", color: "#C4B5FD" }}
+              onClick={() => setMenuOpen(false)}
+            >
+              📣 BizRox Feed
+            </Link>
+
+            {/* Mobile login / member */}
+            {!member ? (
+              <button
+                onClick={() => { setMenuOpen(false); setShowLogin(true); }}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mt-1"
+                style={{ background: "rgba(255,255,255,0.08)", color: "white", border: "1px solid rgba(255,255,255,0.2)" }}
+              >
+                🔐 Member Login
+              </button>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 py-2 px-1 mt-1 border-t border-white/10">
+                  {member.profile_picture_url ? (
+                    <Image src={member.profile_picture_url} alt={member.name} width={32} height={32} className="rounded-full object-cover" style={{ width: 32, height: 32 }} />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "var(--color-primary)" }}>
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-white font-semibold text-sm">{member.name}</span>
+                </div>
+                <Link href="/edit-my-details" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>👤 Edit Profile</Link>
+                <Link href="/gives-asks" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                <button
+                  onClick={() => { setMenuOpen(false); logoutMemberAction(); }}
+                  className="text-left text-white/50 text-sm py-2 px-1"
+                >
+                  🚪 Log Out
+                </button>
+              </>
+            )}
           </nav>
         )}
       </div>
+
+      {/* Login modal — rendered outside the nav so it can cover the full screen */}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </header>
   );
 }

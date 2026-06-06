@@ -59,6 +59,48 @@ export async function sendAdminEmail(subject: string, html: string): Promise<voi
   console.info("[sendAdminEmail] Sent:", info.messageId ?? info.response);
 }
 
+/**
+ * Sends an HTML email to a specific member's address.
+ * Reuses the same SMTP settings from email_settings row.
+ * Silently skips if settings are incomplete.
+ */
+export async function sendMemberEmail(
+  to: string,
+  subject: string,
+  html: string
+): Promise<void> {
+  if (!to || !to.includes("@")) return;
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("email_settings")
+    .select("smtp_host, smtp_port, smtp_user, smtp_pass")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data?.smtp_host || !data?.smtp_user || !data?.smtp_pass) return;
+
+  const port = (data.smtp_port as number) ?? 465;
+  const transporter = nodemailer.createTransport({
+    host: data.smtp_host as string,
+    port,
+    secure: port === 465,
+    auth: { user: data.smtp_user as string, pass: data.smtp_pass as string },
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 15_000,
+  });
+
+  const info = await transporter.sendMail({
+    from: `"BNI Miracles" <${data.smtp_user}>`,
+    to,
+    subject,
+    html,
+  });
+
+  console.info("[sendMemberEmail] Sent to", to, ":", info.messageId ?? info.response);
+}
+
 /** Shared HTML wrapper matching BNI Miracles brand colours */
 export function emailTemplate(title: string, rows: { label: string; value: string }[]): string {
   const rowsHtml = rows
