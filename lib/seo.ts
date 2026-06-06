@@ -28,6 +28,14 @@ export type PageSeoInput = {
   path: string;
   keywords?: string[];
   ogImage?: string;
+  /** Alt text for the OG image — defaults to site tagline if not set */
+  ogImageAlt?: string;
+  /** OG image width in px — defaults to 1200 */
+  ogImageWidth?: number;
+  /** OG image height in px — defaults to 630 */
+  ogImageHeight?: number;
+  /** Twitter card type — defaults to summary_large_image */
+  twitterCard?: "summary" | "summary_large_image";
   noIndex?: boolean;
   ogType?: "website" | "article" | "profile";
   /** Use full title as-is without the `%s | BNI Miracles` template */
@@ -47,6 +55,11 @@ export function createPageMetadata(input: PageSeoInput): Metadata {
     ? { absolute: input.title }
     : input.title;
 
+  const imageWidth  = input.ogImageWidth  ?? DEFAULT_OG_IMAGE_WIDTH;
+  const imageHeight = input.ogImageHeight ?? DEFAULT_OG_IMAGE_HEIGHT;
+  const imageAlt    = input.ogImageAlt    ?? `${SITE_NAME} — ${SITE_TAGLINE}`;
+  const twitterCard = input.twitterCard   ?? "summary_large_image";
+
   return {
     title,
     description: input.description,
@@ -65,14 +78,14 @@ export function createPageMetadata(input: PageSeoInput): Metadata {
       images: [
         {
           url: image,
-          width: DEFAULT_OG_IMAGE_WIDTH,
-          height: DEFAULT_OG_IMAGE_HEIGHT,
-          alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
+          width: imageWidth,
+          height: imageHeight,
+          alt: imageAlt,
         },
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: twitterCard,
       title: input.title,
       description: input.description,
       images: [image],

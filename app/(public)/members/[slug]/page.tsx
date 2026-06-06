@@ -36,7 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: description.slice(0, 160),
     path: `/members/${slug}`,
     keywords: [member.name, member.business_name, member.category, "BNI Miracles member"],
-    ogImage: member.profile_picture_url ?? undefined,
+    ogImage:       member.profile_picture_url ?? undefined,
+    ogImageAlt:    `${member.name} — ${member.business_name} | BNI Miracles`,
+    // Profile photos are square — declare 1:1 so platforms don't letterbox them
+    ogImageWidth:  400,
+    ogImageHeight: 400,
+    twitterCard:   member.profile_picture_url ? "summary" : "summary_large_image",
     ogType: "profile",
   });
 }
