@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Explicitly set the workspace root to this project directory so Turbopack
+    // doesn't get confused by a package-lock.json in a parent directory.
+    root: process.cwd(),
+  },
   images: {
     remotePatterns: [
       {

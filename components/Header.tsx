@@ -265,6 +265,7 @@ export default function Header({ powerTeams = [] }: Props) {
                     <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>✏️ New Post</Link>
                     <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>👤 Edit Profile</Link>
                     <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                    <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🎴 Dance Card</Link>
                     <button
                       onClick={() => { setMemberMenuOpen(false); logoutMemberAction(); }}
                       className="flex items-center gap-2 w-full px-4 py-3 text-sm text-white/50 hover:bg-white/5 hover:text-white border-t border-white/10"
@@ -426,6 +427,7 @@ export default function Header({ powerTeams = [] }: Props) {
                 </div>
                 <Link href="/edit-my-details" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>👤 Edit Profile</Link>
                 <Link href="/gives-asks" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                <Link href="/dance-card" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎴 Dance Card</Link>
                 <button
                   onClick={() => { setMenuOpen(false); logoutMemberAction(); }}
                   className="text-left text-white/50 text-sm py-2 px-1"
