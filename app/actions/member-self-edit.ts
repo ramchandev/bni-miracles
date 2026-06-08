@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { supabase, type Member } from "@/lib/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getMemberSession } from "@/lib/member-session";
 import {
   fetchAllGivesAsksCategories,
   mapMemberGiveAskRowsToEntries,
@@ -123,6 +124,11 @@ export type SavePayload = {
 export async function saveMemberDetailsAction(
   payload: SavePayload
 ): Promise<{ error?: string }> {
+  const session = await getMemberSession();
+  if (!session || session.id !== payload.memberId) {
+    return { error: "You must be logged in to save changes." };
+  }
+
   const admin = createSupabaseAdminClient();
 
   const email = normalizeEmail(payload.email);

@@ -9,6 +9,7 @@ import {
 } from "@/lib/gives-asks-categories";
 import { revalidatePath } from "next/cache";
 import { fetchMemberCollaborations, type MemberCollaborations } from "@/lib/gives-asks-collaboration";
+import { getMemberSession } from "@/lib/member-session";
 
 function normalizePhone(raw: string): string {
   let p = raw.replace(/[\s\-\(\)\.]/g, "").replace(/^\+/, "");
@@ -79,6 +80,11 @@ export async function saveGivesAsksAction(
   gives: GiveAskEntry[],
   asks: GiveAskEntry[]
 ): Promise<{ error?: string }> {
+  const session = await getMemberSession();
+  if (!session || session.id !== memberId) {
+    return { error: "You must be logged in to save changes." };
+  }
+
   const categories = await fetchAllGivesAsksCategories();
   const result = await replaceMemberGivesAsks(memberId, gives, asks, categories);
   if (result.error) return result;

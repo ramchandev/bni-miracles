@@ -4,15 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  verifyMemberAction,
   saveMemberDetailsAction,
   type VerifiedMember,
 } from "@/app/actions/member-self-edit";
 import GivesAsksCategoryLineItems from "@/components/GivesAsksCategoryLineItems";
 import type { GiveAskEntry } from "@/lib/gives-asks-categories";
 import type { GivesAsksCategory } from "@/lib/supabase";
-
-/* ── Styles shared across the form ──────────────────────────────────────── */
 
 const inputCls =
   "w-full px-4 py-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-200";
@@ -26,132 +23,14 @@ const labelStyle: React.CSSProperties = {
 };
 const hintStyle: React.CSSProperties = { fontSize: 12, color: "var(--color-gray)", marginTop: 3 };
 
-/* ── Verify phase ────────────────────────────────────────────────────────── */
-
-function VerifyForm({
-  onVerified,
-}: {
-  onVerified: (member: VerifiedMember, gives: GiveAskEntry[], asks: GiveAskEntry[]) => void;
-}) {
-  const [phone, setPhone] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    const result = await verifyMemberAction(phone, answer);
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.error);
-    } else {
-      onVerified(result.member, result.gives, result.asks);
-    }
-  };
-
-  return (
-    <div style={{ maxWidth: 480, margin: "0 auto" }}>
-      <div className="card p-8">
-        {/* Icon */}
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5 mx-auto"
-          style={{ background: "#FEE2E2" }}
-        >
-          ✏️
-        </div>
-
-        <h2
-          className="text-xl font-extrabold text-center mb-1"
-          style={{ color: "var(--color-dark)" }}
-        >
-          Edit Your Profile
-        </h2>
-        <p className="text-sm text-center mb-6" style={{ color: "var(--color-gray)" }}>
-          Verify your identity to update your business details.
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Phone */}
-          <div>
-            <label style={labelStyle}>
-              Your Phone Number{" "}
-              <span style={{ color: "var(--color-primary)" }}>*</span>
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. 9841767641 or 91 98417 67641"
-              required
-              className={inputCls}
-              style={inputStyle}
-            />
-            <p style={hintStyle}>
-              Enter the number registered with BNI Miracles — with or without the country code.
-            </p>
-          </div>
-
-          {/* Security question */}
-          <div>
-            <label style={labelStyle}>
-              Where does BNI Miracles usually meet in person?{" "}
-              <span style={{ color: "var(--color-primary)" }}>*</span>
-            </label>
-            <input
-              type="text"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Hotel name…"
-              required
-              className={inputCls}
-              style={inputStyle}
-            />
-            <p style={hintStyle}>This is a quick security check — not case sensitive.</p>
-          </div>
-
-          {error && (
-            <div
-              className="flex gap-2 items-start px-4 py-3 rounded-lg text-sm"
-              style={{ background: "#FEE2E2", color: "#991B1B" }}
-            >
-              <span className="shrink-0">❌</span>
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full"
-            style={{ opacity: loading ? 0.7 : 1 }}
-          >
-            {loading ? "Verifying…" : "Continue →"}
-          </button>
-        </form>
-      </div>
-
-      <p className="text-center text-xs mt-4" style={{ color: "var(--color-gray)" }}>
-        Having trouble? Contact the chapter admin on WhatsApp.
-      </p>
-    </div>
-  );
-}
-
-/* ── Edit phase ──────────────────────────────────────────────────────────── */
-
-function EditForm({
-  member,
-  initialGives,
-  initialAsks,
-  categories,
-}: {
+type Props = {
   member: VerifiedMember;
-  initialGives: GiveAskEntry[];
-  initialAsks: GiveAskEntry[];
+  gives: GiveAskEntry[];
+  asks: GiveAskEntry[];
   categories: GivesAsksCategory[];
-}) {
+};
+
+export default function EditMyDetailsClient({ member, gives: initialGives, asks: initialAsks, categories }: Props) {
   const router = useRouter();
 
   const [businessName, setBusinessName] = useState(member.business_name ?? "");
@@ -200,265 +79,7 @@ function EditForm({
   };
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
-      {/* Welcome strip */}
-      <div
-        className="flex items-center gap-4 rounded-2xl p-5 mb-6"
-        style={{ background: "white", border: "1.5px solid #E5E7EB" }}
-      >
-        {member.profile_picture_url ? (
-          <Image
-            src={member.profile_picture_url}
-            alt={member.name}
-            width={56}
-            height={56}
-            className="rounded-full object-cover shrink-0"
-            style={{ width: 56, height: 56 }}
-          />
-        ) : (
-          <div
-            className="flex items-center justify-center rounded-full shrink-0 text-white font-bold text-lg"
-            style={{ width: 56, height: 56, background: "var(--color-primary)" }}
-          >
-            {member.name.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div>
-          <p className="font-extrabold" style={{ color: "var(--color-dark)" }}>
-            Hi, {member.name.split(" ")[0]}! 👋
-          </p>
-          <p className="text-sm" style={{ color: "var(--color-gray)" }}>
-            {member.category} · Update your details below and save.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSave} className="flex flex-col gap-8">
-
-        {/* ── Business Details ─────────────────────────────────────────── */}
-        <section
-          className="rounded-2xl p-6"
-          style={{ background: "white", border: "1.5px solid #E5E7EB" }}
-        >
-          <h3
-            className="text-base font-extrabold mb-5 pb-3"
-            style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
-          >
-            🏢 Business Details
-          </h3>
-
-          <div className="flex flex-col gap-5">
-            {/* Business Name */}
-            <div>
-              <label style={labelStyle}>
-                Business Name{" "}
-                <span style={{ color: "var(--color-primary)" }}>*</span>
-              </label>
-              <input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Your business name"
-                required
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Business Location */}
-            <div>
-              <label style={labelStyle}>Business Location</label>
-              <input
-                type="text"
-                value={businessLocation}
-                onChange={(e) => setBusinessLocation(e.target.value)}
-                placeholder="e.g. Anna Nagar, Chennai"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Website */}
-            <div>
-              <label style={labelStyle}>Website</label>
-              <input
-                type="url"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://yourbusiness.com"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label style={labelStyle}>Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@yourbusiness.com"
-                className={inputCls}
-                style={inputStyle}
-                autoComplete="email"
-              />
-              <p style={hintStyle}>Shown on your public profile. Leave blank to hide.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Gives & Asks ─────────────────────────────────────────────── */}
-        <section
-          className="rounded-2xl p-6"
-          style={{ background: "white", border: "1.5px solid #E5E7EB" }}
-        >
-          <h3
-            className="text-base font-extrabold mb-5 pb-3"
-            style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
-          >
-            🤝 Gives &amp; Asks
-          </h3>
-          <p className="text-xs mb-5" style={{ color: "var(--color-gray)" }}>
-            What referrals can you give? What referrals are you looking for?
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <GivesAsksCategoryLineItems
-              label="Gives"
-              emoji="✅"
-              accentColor="#16A34A"
-              kind="give"
-              textFieldName="gives"
-              categoryFieldName="give_categories"
-              categories={categories}
-              items={gives}
-              onChange={setGives}
-              textPlaceholder="e.g. VJN Systems"
-            />
-            <GivesAsksCategoryLineItems
-              label="Asks"
-              emoji="🙏"
-              accentColor="#DC2626"
-              kind="ask"
-              textFieldName="asks"
-              categoryFieldName="ask_categories"
-              categories={categories}
-              items={asks}
-              onChange={setAsks}
-              textPlaceholder="e.g. Hardware retailers"
-            />
-          </div>
-        </section>
-
-        {/* ── Profile Details ───────────────────────────────────────────── */}
-        <section
-          className="rounded-2xl p-6"
-          style={{ background: "white", border: "1.5px solid #E5E7EB" }}
-        >
-          <h3
-            className="text-base font-extrabold mb-5 pb-3"
-            style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
-          >
-            📝 Profile Details
-          </h3>
-
-          <div className="flex flex-col gap-5">
-            {/* Services */}
-            <div>
-              <label style={labelStyle}>
-                Services / Products Offered{" "}
-                <span style={{ color: "var(--color-primary)" }}>*</span>
-              </label>
-              <textarea
-                value={services}
-                onChange={(e) => setServices(e.target.value)}
-                placeholder="Describe what you offer — this appears on your public profile."
-                rows={4}
-                className={inputCls}
-                style={{ ...inputStyle, resize: "vertical" }}
-              />
-            </div>
-
-            {/* Why Choose Us */}
-            <div>
-              <label style={labelStyle}>
-                Why Choose Us{" "}
-                <span style={{ color: "var(--color-primary)" }}>*</span>
-              </label>
-              <textarea
-                value={whyChooseUs}
-                onChange={(e) => setWhyChooseUs(e.target.value)}
-                placeholder="What sets you apart from others in your field?"
-                rows={3}
-                className={inputCls}
-                style={{ ...inputStyle, resize: "vertical" }}
-              />
-            </div>
-
-            {/* Success Stories */}
-            <div>
-              <label style={labelStyle}>Success Stories</label>
-              <textarea
-                value={successStories}
-                onChange={(e) => setSuccessStories(e.target.value)}
-                placeholder="Share a testimonial or a referral win — builds trust with visitors."
-                rows={3}
-                className={inputCls}
-                style={{ ...inputStyle, resize: "vertical" }}
-              />
-              <p style={hintStyle}>Optional but recommended — shows social proof.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Error & Save ─────────────────────────────────────────────── */}
-        {error && (
-          <div
-            className="flex gap-2 items-start px-4 py-3 rounded-lg text-sm"
-            style={{ background: "#FEE2E2", color: "#991B1B" }}
-          >
-            <span className="shrink-0">❌</span>
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn-primary w-full sm:w-auto px-10"
-            style={{ opacity: saving ? 0.7 : 1 }}
-          >
-            {saving ? "Saving…" : "💾 Save & View Profile"}
-          </button>
-          <p className="text-xs text-center" style={{ color: "var(--color-gray)" }}>
-            You&apos;ll be taken to your public member profile after saving.
-          </p>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-/* ── Root component ──────────────────────────────────────────────────────── */
-
-export default function EditMyDetailsClient({ categories }: { categories: GivesAsksCategory[] }) {
-  const [phase, setPhase] = useState<"verify" | "edit">("verify");
-  const [member, setMember] = useState<VerifiedMember | null>(null);
-  const [gives, setGives] = useState<GiveAskEntry[]>([]);
-  const [asks, setAsks] = useState<GiveAskEntry[]>([]);
-
-  const handleVerified = (m: VerifiedMember, g: GiveAskEntry[], a: GiveAskEntry[]) => {
-    setMember(m);
-    setGives(g);
-    setAsks(a);
-    setPhase("edit");
-  };
-
-  return (
     <>
-      {/* ── Hero ────────────────────────────────────────────────────── */}
       <section
         className="px-6 text-center"
         style={{ background: "var(--color-dark)", paddingTop: 100, paddingBottom: 48 }}
@@ -469,58 +90,235 @@ export default function EditMyDetailsClient({ categories }: { categories: GivesA
         >
           Member Portal
         </p>
-        <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">
-          {phase === "verify" ? "Edit My Details" : `Update Your Profile`}
-        </h1>
+        <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">Update Your Profile</h1>
         <p className="text-white/60 text-sm max-w-md mx-auto">
-          {phase === "verify"
-            ? "Verify your identity, then update your business profile directly."
-            : "Changes are live on your public member page immediately after saving."}
+          Changes are live on your public member page immediately after saving.
         </p>
-
-        {/* Step indicator */}
-        <div className="flex items-center justify-center gap-3 mt-6">
-          {["Verify", "Edit"].map((step, i) => {
-            const active = (i === 0 && phase === "verify") || (i === 1 && phase === "edit");
-            const done   = i === 0 && phase === "edit";
-            return (
-              <div key={step} className="flex items-center gap-2">
-                <div
-                  className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors"
-                  style={{
-                    background: done ? "#16A34A" : active ? "var(--color-primary)" : "rgba(255,255,255,0.15)",
-                    color: "white",
-                  }}
-                >
-                  {done ? "✓" : i + 1}
-                </div>
-                <span
-                  className="text-xs font-semibold"
-                  style={{ color: active ? "white" : done ? "#86EFAC" : "rgba(255,255,255,0.4)" }}
-                >
-                  {step}
-                </span>
-                {i < 1 && (
-                  <div
-                    className="w-8 h-px"
-                    style={{ background: done ? "#86EFAC" : "rgba(255,255,255,0.2)" }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
       </section>
 
-      {/* ── Content ─────────────────────────────────────────────────── */}
       <section className="py-12 px-6" style={{ background: "var(--color-bg)" }}>
-        {phase === "verify" ? (
-          <VerifyForm onVerified={handleVerified} />
-        ) : (
-          member && (
-            <EditForm member={member} initialGives={gives} initialAsks={asks} categories={categories} />
-          )
-        )}
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div
+            className="flex items-center gap-4 rounded-2xl p-5 mb-6"
+            style={{ background: "white", border: "1.5px solid #E5E7EB" }}
+          >
+            {member.profile_picture_url ? (
+              <Image
+                src={member.profile_picture_url}
+                alt={member.name}
+                width={56}
+                height={56}
+                className="rounded-full object-cover shrink-0"
+                style={{ width: 56, height: 56 }}
+              />
+            ) : (
+              <div
+                className="flex items-center justify-center rounded-full shrink-0 text-white font-bold text-lg"
+                style={{ width: 56, height: 56, background: "var(--color-primary)" }}
+              >
+                {member.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p className="font-extrabold" style={{ color: "var(--color-dark)" }}>
+                Hi, {member.name.split(" ")[0]}! 👋
+              </p>
+              <p className="text-sm" style={{ color: "var(--color-gray)" }}>
+                {member.category} · Update your details below and save.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSave} className="flex flex-col gap-8">
+            <section
+              className="rounded-2xl p-6"
+              style={{ background: "white", border: "1.5px solid #E5E7EB" }}
+            >
+              <h3
+                className="text-base font-extrabold mb-5 pb-3"
+                style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
+              >
+                🏢 Business Details
+              </h3>
+
+              <div className="flex flex-col gap-5">
+                <div>
+                  <label style={labelStyle}>
+                    Business Name <span style={{ color: "var(--color-primary)" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Your business name"
+                    required
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Business Location</label>
+                  <input
+                    type="text"
+                    value={businessLocation}
+                    onChange={(e) => setBusinessLocation(e.target.value)}
+                    placeholder="e.g. Anna Nagar, Chennai"
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Website</label>
+                  <input
+                    type="url"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://yourbusiness.com"
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@yourbusiness.com"
+                    className={inputCls}
+                    style={inputStyle}
+                    autoComplete="email"
+                  />
+                  <p style={hintStyle}>Shown on your public profile. Leave blank to hide.</p>
+                </div>
+              </div>
+            </section>
+
+            <section
+              className="rounded-2xl p-6"
+              style={{ background: "white", border: "1.5px solid #E5E7EB" }}
+            >
+              <h3
+                className="text-base font-extrabold mb-5 pb-3"
+                style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
+              >
+                🤝 Gives &amp; Asks
+              </h3>
+              <p className="text-xs mb-5" style={{ color: "var(--color-gray)" }}>
+                What referrals can you give? What referrals are you looking for?
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <GivesAsksCategoryLineItems
+                  label="Gives"
+                  emoji="✅"
+                  accentColor="#16A34A"
+                  kind="give"
+                  textFieldName="gives"
+                  categoryFieldName="give_categories"
+                  categories={categories}
+                  items={gives}
+                  onChange={setGives}
+                  textPlaceholder="e.g. VJN Systems"
+                />
+                <GivesAsksCategoryLineItems
+                  label="Asks"
+                  emoji="🙏"
+                  accentColor="#DC2626"
+                  kind="ask"
+                  textFieldName="asks"
+                  categoryFieldName="ask_categories"
+                  categories={categories}
+                  items={asks}
+                  onChange={setAsks}
+                  textPlaceholder="e.g. Hardware retailers"
+                />
+              </div>
+            </section>
+
+            <section
+              className="rounded-2xl p-6"
+              style={{ background: "white", border: "1.5px solid #E5E7EB" }}
+            >
+              <h3
+                className="text-base font-extrabold mb-5 pb-3"
+                style={{ color: "var(--color-dark)", borderBottom: "1px solid #F3F4F6" }}
+              >
+                📝 Profile Details
+              </h3>
+
+              <div className="flex flex-col gap-5">
+                <div>
+                  <label style={labelStyle}>
+                    Services / Products Offered <span style={{ color: "var(--color-primary)" }}>*</span>
+                  </label>
+                  <textarea
+                    value={services}
+                    onChange={(e) => setServices(e.target.value)}
+                    placeholder="Describe what you offer — this appears on your public profile."
+                    rows={4}
+                    className={inputCls}
+                    style={{ ...inputStyle, resize: "vertical" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>
+                    Why Choose Us <span style={{ color: "var(--color-primary)" }}>*</span>
+                  </label>
+                  <textarea
+                    value={whyChooseUs}
+                    onChange={(e) => setWhyChooseUs(e.target.value)}
+                    placeholder="What sets you apart from others in your field?"
+                    rows={3}
+                    className={inputCls}
+                    style={{ ...inputStyle, resize: "vertical" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Success Stories</label>
+                  <textarea
+                    value={successStories}
+                    onChange={(e) => setSuccessStories(e.target.value)}
+                    placeholder="Share a testimonial or a referral win — builds trust with visitors."
+                    rows={3}
+                    className={inputCls}
+                    style={{ ...inputStyle, resize: "vertical" }}
+                  />
+                  <p style={hintStyle}>Optional but recommended — shows social proof.</p>
+                </div>
+              </div>
+            </section>
+
+            {error && (
+              <div
+                className="flex gap-2 items-start px-4 py-3 rounded-lg text-sm"
+                style={{ background: "#FEE2E2", color: "#991B1B" }}
+              >
+                <span className="shrink-0">❌</span>
+                {error}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn-primary w-full sm:w-auto px-10"
+                style={{ opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? "Saving…" : "💾 Save & View Profile"}
+              </button>
+              <p className="text-xs text-center" style={{ color: "var(--color-gray)" }}>
+                You&apos;ll be taken to your public member profile after saving.
+              </p>
+            </div>
+          </form>
+        </div>
       </section>
     </>
   );

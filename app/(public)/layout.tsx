@@ -8,6 +8,7 @@ import { fetchPowerTeamsNav } from "@/lib/power-teams-server";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { getMemberSession } from "@/lib/member-session";
 import { MemberSessionProvider } from "@/components/MemberSessionContext";
+import MemberLoginHost from "@/components/MemberLoginHost";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const [powerTeams, initialMember] = await Promise.all([
@@ -22,6 +23,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="flex-1">{children}</main>
       <Footer powerTeams={powerTeams} />
       <WhatsAppButton />
+      <MemberLoginHost />
       <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </MemberSessionProvider>
   );

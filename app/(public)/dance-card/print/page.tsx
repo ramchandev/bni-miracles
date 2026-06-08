@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DanceCardPrintPage() {
   const member = await getMemberSession();
-  if (!member) redirect("/");
+  if (!member) redirect("/dance-card");
 
   // Fetch dance card data + full member details in parallel
   const admin = createSupabaseAdminClient();

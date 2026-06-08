@@ -5,10 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
-import MemberCollaborationSection from "@/components/members/MemberCollaborationSection";
-import { fetchMemberCollaborations } from "@/lib/gives-asks-collaboration";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
-import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
 
 function giveAskCategoryName(row: GiveAsk): string | null {
@@ -130,14 +127,10 @@ export default async function MemberDetailPage({ params }: Props) {
 
   if (!member) notFound();
 
-  const [{ data: givesAsksData }, leadershipRoles, sessionMember] = await Promise.all([
+  const [{ data: givesAsksData }, leadershipRoles] = await Promise.all([
     supabase.from("member_gives_asks").select("*, gives_asks_categories(name)").eq("member_id", member.id).order("sort_order"),
     fetchMemberLeadershipRoles(member.id),
-    getMemberSession(),
   ]);
-
-  const isOwnProfile = sessionMember?.id === member.id;
-  const collaborations = isOwnProfile ? await fetchMemberCollaborations(member.id) : null;
 
   const allItems = (givesAsksData as GiveAsk[] | null) ?? [];
   const gives = allItems.filter((r) => r.type === "give");
@@ -356,10 +349,6 @@ export default async function MemberDetailPage({ params }: Props) {
                 )}
               </div>
             </div>
-          )}
-
-          {isOwnProfile && collaborations && (
-            <MemberCollaborationSection collaborations={collaborations} />
           )}
 
           {member.services && (

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchPostByIdAction, fetchCommentsAction } from "@/app/actions/bizrox";
 import PostCard from "@/components/bizrox/PostCard";
+import MemberPageGate from "@/components/MemberPageGate";
+import { getMemberSession } from "@/lib/member-session";
 
 type Props = { params: Promise<{ postId: string }> };
 
@@ -18,6 +20,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SinglePostPage({ params }: Props) {
   const { postId } = await params;
+  const member = await getMemberSession();
+
+  if (!member) {
+    return (
+      <>
+        <section className="px-6 pt-24 pb-6" style={{ background: "var(--color-dark)" }}>
+          <div style={{ maxWidth: 680, margin: "0 auto" }}>
+            <h1 className="text-2xl font-extrabold text-white">BizRox Post</h1>
+          </div>
+        </section>
+        <MemberPageGate title="BizRox" />
+      </>
+    );
+  }
+
   const [post, comments] = await Promise.all([
     fetchPostByIdAction(postId),
     fetchCommentsAction(postId),

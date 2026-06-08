@@ -73,7 +73,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           Member Login
         </h2>
         <p className="text-sm text-center mb-6" style={{ color: "var(--color-gray)" }}>
-          Enter your registered phone number to access BizRox and edit your profile.
+          Access BizRox, Gives &amp; Asks, your profile, and the Dance Card.
         </p>
 
         <form onSubmit={submit} className="flex flex-col gap-4">

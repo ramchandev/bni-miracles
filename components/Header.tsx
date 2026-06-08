@@ -3,17 +3,19 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 import { useMemberSession } from "@/components/MemberSessionContext";
-import LoginModal from "@/components/LoginModal";
 import { logoutMemberAction } from "@/app/actions/session";
 
 const navLinksBeforeDropdowns = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
-  { href: "/members", label: "Members" },
+];
+
+const memberNavItems = [
+  { key: "all-gives", href: "/members/all-gives", label: "All Gives", icon: "✅", hint: "Grouped by category" },
+  { key: "all-asks", href: "/members/all-asks", label: "All Asks", icon: "🙏", hint: "Grouped by category" },
 ];
 
 const navLinksAfterDropdowns = [{ href: "/contact", label: "Contact" }];
@@ -90,15 +92,14 @@ function NavMegaDropdown<T extends { key: string }>({
 
 export default function Header({ powerTeams = [] }: Props) {
   const [menuOpen, setMenuOpen]           = useState(false);
+  const [membersOpen, setMembersOpen]     = useState(false);
   const [initiativesOpen, setInitiativesOpen] = useState(false);
   const [powerTeamsOpen, setPowerTeamsOpen]   = useState(false);
   const [scrolled, setScrolled]           = useState(false);
-  const [showLogin, setShowLogin]         = useState(false);
   const [memberMenuOpen, setMemberMenuOpen] = useState(false);
   const memberMenuRef = useRef<HTMLDivElement>(null);
 
   const { member } = useMemberSession();
-  const router = useRouter();
 
   // Close member dropdown on outside click
   useEffect(() => {
@@ -111,13 +112,6 @@ export default function Header({ powerTeams = [] }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Allow any component to trigger the login modal via custom event
-  useEffect(() => {
-    const handler = () => { if (!member) setShowLogin(true); };
-    document.addEventListener("open-login", handler);
-    return () => document.removeEventListener("open-login", handler);
-  }, [member]);
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
@@ -126,6 +120,8 @@ export default function Header({ powerTeams = [] }: Props) {
 
   const initiativeItems = initiatives.map((i) => ({ ...i, key: i.slug }));
   const powerTeamItems = powerTeams.map((t) => ({ ...t, key: t.slug }));
+
+  const openLogin = () => document.dispatchEvent(new CustomEvent("open-login"));
 
   return (
     <header
@@ -148,6 +144,29 @@ export default function Header({ powerTeams = [] }: Props) {
                 {link.label}
               </Link>
             ))}
+
+            <NavMegaDropdown
+              label="Members"
+              href="/members"
+              overviewHref="/members"
+              overviewLabel="All Members"
+              items={memberNavItems}
+              panelMinWidth={320}
+              renderItem={(item) => (
+                <Link
+                  href={item.href}
+                  className="flex items-start gap-2.5 px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 hover:text-yellow-400 transition-colors"
+                >
+                  <span className="shrink-0 text-base leading-none mt-0.5" aria-hidden>
+                    {item.icon}
+                  </span>
+                  <span>
+                    <span className="block font-medium leading-snug">{item.label}</span>
+                    <span className="block text-xs text-white/50 mt-0.5 leading-snug">{item.hint}</span>
+                  </span>
+                </Link>
+              )}
+            />
 
             <NavMegaDropdown
               label="Power Team"
@@ -219,7 +238,7 @@ export default function Header({ powerTeams = [] }: Props) {
             {/* Login / Member */}
             {!member ? (
               <button
-                onClick={() => setShowLogin(true)}
+                onClick={openLogin}
                 className="text-sm font-semibold px-3 py-1.5 rounded-full transition-all hover:bg-white/10"
                 style={{ color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.25)" }}
               >
@@ -319,6 +338,38 @@ export default function Header({ powerTeams = [] }: Props) {
               <button
                 type="button"
                 className="w-full flex items-center justify-between text-white font-medium py-2 px-1"
+                onClick={() => setMembersOpen(!membersOpen)}
+                aria-expanded={membersOpen}
+              >
+                Members
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor" className={`transition-transform ${membersOpen ? "rotate-180" : ""}`} aria-hidden>
+                  <path d="M2 3.5L5 7l3-3.5H2z" />
+                </svg>
+              </button>
+              {membersOpen && (
+                <div className="pb-2 pl-3 flex flex-col gap-0.5">
+                  <Link href="/members" className="text-yellow-400 text-sm font-semibold py-2" onClick={() => setMenuOpen(false)}>
+                    All Members
+                  </Link>
+                  {memberNavItems.map((item) => (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      className="text-white/80 text-sm py-2 flex items-center gap-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <span aria-hidden>{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-b border-white/10">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between text-white font-medium py-2 px-1"
                 onClick={() => setPowerTeamsOpen(!powerTeamsOpen)}
                 aria-expanded={powerTeamsOpen}
               >
@@ -407,7 +458,7 @@ export default function Header({ powerTeams = [] }: Props) {
             {/* Mobile login / member */}
             {!member ? (
               <button
-                onClick={() => { setMenuOpen(false); setShowLogin(true); }}
+                onClick={() => { setMenuOpen(false); openLogin(); }}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mt-1"
                 style={{ background: "rgba(255,255,255,0.08)", color: "white", border: "1px solid rgba(255,255,255,0.2)" }}
               >
@@ -439,9 +490,6 @@ export default function Header({ powerTeams = [] }: Props) {
           </nav>
         )}
       </div>
-
-      {/* Login modal — rendered outside the nav so it can cover the full screen */}
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </header>
   );
 }
