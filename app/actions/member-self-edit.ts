@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { supabase, type Member } from "@/lib/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import {
+  fetchAllGivesAsksCategories,
+  mapMemberGiveAskRowsToEntries,
+  replaceMemberGivesAsks,
+  type GiveAskEntry,
+} from "@/lib/gives-asks-categories";
 
 /* ── Phone normalisation ─────────────────────────────────────────────────── */
 
@@ -37,7 +43,7 @@ function normalizeEmail(raw: string): string | null {
 
 export type VerifyResult =
   | { ok: false; error: string }
-  | { ok: true; member: VerifiedMember; gives: string[]; asks: string[] };
+  | { ok: true; member: VerifiedMember; gives: GiveAskEntry[]; asks: GiveAskEntry[] };
 
 export async function verifyMemberAction(
   phone: string,
@@ -76,18 +82,20 @@ export async function verifyMemberAction(
   }
 
   // Fetch gives & asks
-  const { data: gaData } = await supabase
-    .from("member_gives_asks")
-    .select("type, item")
-    .eq("member_id", matched.id)
-    .order("sort_order");
+  const [{ data: gaData }, categories] = await Promise.all([
+    supabase
+      .from("member_gives_asks")
+      .select("type, item, category_id")
+      .eq("member_id", matched.id)
+      .order("sort_order"),
+    (async () => {
+      const { fetchAllGivesAsksCategories } = await import("@/lib/gives-asks-categories");
+      return fetchAllGivesAsksCategories();
+    })(),
+  ]);
 
-  const gives = (gaData ?? [])
-    .filter((g) => g.type === "give")
-    .map((g) => g.item as string);
-  const asks = (gaData ?? [])
-    .filter((g) => g.type === "ask")
-    .map((g) => g.item as string);
+  const gives = mapMemberGiveAskRowsToEntries(gaData ?? [], categories, "give");
+  const asks = mapMemberGiveAskRowsToEntries(gaData ?? [], categories, "ask");
 
   // Exclude the raw phone from the returned payload
   const { phone: _ignored, ...rest } = matched;
@@ -108,8 +116,8 @@ export type SavePayload = {
   services: string;
   why_choose_us: string;
   success_stories: string;
-  gives: string[];
-  asks: string[];
+  gives: GiveAskEntry[];
+  asks: GiveAskEntry[];
 };
 
 export async function saveMemberDetailsAction(
@@ -139,22 +147,14 @@ export async function saveMemberDetailsAction(
 
   if (updateError) return { error: updateError.message };
 
-  // Replace gives & asks (delete then re-insert)
-  await admin.from("member_gives_asks").delete().eq("member_id", payload.memberId);
-
-  const rows = [
-    ...payload.gives
-      .map((item, i) => ({ member_id: payload.memberId, type: "give" as const, item: item.trim(), sort_order: i }))
-      .filter((r) => r.item.length > 0),
-    ...payload.asks
-      .map((item, i) => ({ member_id: payload.memberId, type: "ask" as const, item: item.trim(), sort_order: i }))
-      .filter((r) => r.item.length > 0),
-  ];
-
-  if (rows.length > 0) {
-    const { error: gaError } = await admin.from("member_gives_asks").insert(rows);
-    if (gaError) return { error: gaError.message };
-  }
+  const categories = await fetchAllGivesAsksCategories();
+  const gaResult = await replaceMemberGivesAsks(
+    payload.memberId,
+    payload.gives,
+    payload.asks,
+    categories
+  );
+  if (gaResult.error) return gaResult;
 
   revalidatePath(`/members/${payload.slug}`);
   revalidatePath("/members");

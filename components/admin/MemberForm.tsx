@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { saveMemberAction } from '@/app/admin/actions/members';
+import GivesAsksCategoryLineItems from '@/components/GivesAsksCategoryLineItems';
 import ImageUploadWidget from './ImageUploadWidget';
-import type { Member } from '@/lib/supabase';
+import type { GiveAskEntry } from '@/lib/gives-asks-categories';
+import type { GivesAsksCategory, Member } from '@/lib/supabase';
 
 type CategoryOption = {
   id: string;
@@ -27,102 +29,21 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   );
 }
 
-// Dynamic line-item list for Gives / Asks
-function LineItems({
-  label,
-  color,
-  name,
-  items,
-  onChange,
-}: {
-  label: string;
-  color: string;
-  name: string;
-  items: string[];
-  onChange: (items: string[]) => void;
-}) {
-  function update(index: number, value: string) {
-    const next = [...items];
-    next[index] = value;
-    onChange(next);
-  }
-  function remove(index: number) {
-    onChange(items.filter((_, i) => i !== index));
-  }
-  function add() {
-    onChange([...items, '']);
-  }
-
-  return (
-    <div
-      className="flex-1 rounded-xl p-5"
-      style={{ border: `1.5px solid ${color}44`, background: `${color}08` }}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-          style={{ background: color }}
-        >
-          {label[0]}
-        </div>
-        <span className="font-bold text-sm" style={{ color: 'var(--color-dark)' }}>{label}</span>
-        <span
-          className="text-xs px-2 py-0.5 rounded-full font-medium ml-auto"
-          style={{ background: `${color}22`, color }}
-        >
-          {items.length} item{items.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2">
-            {/* Hidden input so FormData picks it up with the right name */}
-            <input type="hidden" name={name} value={item} />
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => update(i, e.target.value)}
-              placeholder={
-                label === 'Gives'
-                  ? 'e.g. Referrals to IT companies'
-                  : 'e.g. Interior design projects'
-              }
-              className="flex-1 px-3 py-2 text-sm rounded-lg"
-              style={{ border: '1.5px solid #E5E7EB', outline: 'none', background: 'white' }}
-            />
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors text-lg leading-none"
-              title="Remove"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <button
-        type="button"
-        onClick={add}
-        className="mt-3 text-xs font-semibold flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:opacity-80"
-        style={{ color, background: `${color}15` }}
-      >
-        + Add {label === 'Gives' ? 'Give' : 'Ask'}
-      </button>
-    </div>
-  );
-}
-
 type Props = {
   member?: Member;
-  initialGives?: string[];
-  initialAsks?: string[];
+  initialGives?: GiveAskEntry[];
+  initialAsks?: GiveAskEntry[];
   categories?: CategoryOption[];
+  givesAsksCategories?: GivesAsksCategory[];
 };
 
-export default function MemberForm({ member, initialGives = [], initialAsks = [], categories = [] }: Props) {
+export default function MemberForm({
+  member,
+  initialGives = [],
+  initialAsks = [],
+  categories = [],
+  givesAsksCategories = [],
+}: Props) {
   const isEdit = !!member;
   const [state, formAction] = useActionState(saveMemberAction, null);
 
@@ -130,8 +51,8 @@ export default function MemberForm({ member, initialGives = [], initialAsks = []
   const [slug, setSlug] = useState(member?.slug ?? '');
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [profileUrl, setProfileUrl] = useState(member?.profile_picture_url ?? '');
-  const [gives, setGives] = useState<string[]>(initialGives.length > 0 ? initialGives : ['']);
-  const [asks, setAsks] = useState<string[]>(initialAsks.length > 0 ? initialAsks : ['']);
+  const [gives, setGives] = useState<GiveAskEntry[]>(initialGives);
+  const [asks, setAsks] = useState<GiveAskEntry[]>(initialAsks);
 
   const nameRef = useRef(name);
   nameRef.current = name;
@@ -304,22 +225,34 @@ export default function MemberForm({ member, initialGives = [], initialAsks = []
       <div className="card p-6 mb-6">
         <h2 className="font-bold text-base mb-1" style={{ color: 'var(--color-dark)' }}>Gives &amp; Asks</h2>
         <p className="text-xs mb-5" style={{ color: 'var(--color-gray)' }}>
-          What this member can refer to others (Gives) and what kind of referrals they are looking for (Asks).
+          Pick referral categories this member can give and what they are looking for.
         </p>
         <div className="flex flex-col md:flex-row gap-5">
-          <LineItems
+          <GivesAsksCategoryLineItems
             label="Gives"
-            color="#16A34A"
-            name="gives"
+            emoji="✅"
+            accentColor="#16A34A"
+            kind="give"
+            textFieldName="gives"
+            categoryFieldName="give_categories"
+            categories={givesAsksCategories}
             items={gives}
             onChange={setGives}
+            textPlaceholder="e.g. VJN Systems"
+            compact
           />
-          <LineItems
+          <GivesAsksCategoryLineItems
             label="Asks"
-            color="#C8102E"
-            name="asks"
+            emoji="🙏"
+            accentColor="#C8102E"
+            kind="ask"
+            textFieldName="asks"
+            categoryFieldName="ask_categories"
+            categories={givesAsksCategories}
             items={asks}
             onChange={setAsks}
+            textPlaceholder="e.g. Hardware retailers"
+            compact
           />
         </div>
       </div>

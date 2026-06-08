@@ -8,6 +8,9 @@ import {
   saveMemberDetailsAction,
   type VerifiedMember,
 } from "@/app/actions/member-self-edit";
+import GivesAsksCategoryLineItems from "@/components/GivesAsksCategoryLineItems";
+import type { GiveAskEntry } from "@/lib/gives-asks-categories";
+import type { GivesAsksCategory } from "@/lib/supabase";
 
 /* ── Styles shared across the form ──────────────────────────────────────── */
 
@@ -23,84 +26,12 @@ const labelStyle: React.CSSProperties = {
 };
 const hintStyle: React.CSSProperties = { fontSize: 12, color: "var(--color-gray)", marginTop: 3 };
 
-/* ── Line items (Gives / Asks) ───────────────────────────────────────────── */
-
-function LineItems({
-  label,
-  emoji,
-  color,
-  items,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  emoji: string;
-  color: string;
-  items: string[];
-  onChange: (next: string[]) => void;
-  placeholder: string;
-}) {
-  const add = () => onChange([...items, ""]);
-  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
-  const update = (i: number, val: string) =>
-    onChange(items.map((item, idx) => (idx === i ? val : item)));
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-base">{emoji}</span>
-        <p className="text-sm font-bold" style={{ color }}>
-          {label}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {items.map((item, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => update(i, e.target.value)}
-              placeholder={placeholder}
-              className={inputCls + " flex-1"}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              className="px-3 py-2 rounded-lg text-sm font-bold transition-colors hover:bg-red-50"
-              style={{ color: "var(--color-primary)", border: "1.5px solid #FCA5A5" }}
-              title="Remove"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-        {items.length === 0 && (
-          <p className="text-xs italic" style={{ color: "var(--color-gray)" }}>
-            No {label.toLowerCase()} added yet.
-          </p>
-        )}
-      </div>
-
-      <button
-        type="button"
-        onClick={add}
-        className="mt-3 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:opacity-80"
-        style={{ background: color + "15", color, border: `1px solid ${color}40` }}
-      >
-        + Add {label.slice(0, -1)}
-      </button>
-    </div>
-  );
-}
-
 /* ── Verify phase ────────────────────────────────────────────────────────── */
 
 function VerifyForm({
   onVerified,
 }: {
-  onVerified: (member: VerifiedMember, gives: string[], asks: string[]) => void;
+  onVerified: (member: VerifiedMember, gives: GiveAskEntry[], asks: GiveAskEntry[]) => void;
 }) {
   const [phone, setPhone] = useState("");
   const [answer, setAnswer] = useState("");
@@ -214,10 +145,12 @@ function EditForm({
   member,
   initialGives,
   initialAsks,
+  categories,
 }: {
   member: VerifiedMember;
-  initialGives: string[];
-  initialAsks: string[];
+  initialGives: GiveAskEntry[];
+  initialAsks: GiveAskEntry[];
+  categories: GivesAsksCategory[];
 }) {
   const router = useRouter();
 
@@ -228,8 +161,8 @@ function EditForm({
   const [services, setServices] = useState(member.services ?? "");
   const [whyChooseUs, setWhyChooseUs] = useState(member.why_choose_us ?? "");
   const [successStories, setSuccessStories] = useState(member.success_stories ?? "");
-  const [gives, setGives] = useState<string[]>(initialGives.length ? initialGives : [""]);
-  const [asks, setAsks] = useState<string[]>(initialAsks.length ? initialAsks : [""]);
+  const [gives, setGives] = useState<GiveAskEntry[]>(initialGives);
+  const [asks, setAsks] = useState<GiveAskEntry[]>(initialAsks);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -253,8 +186,8 @@ function EditForm({
       services,
       why_choose_us: whyChooseUs,
       success_stories: successStories,
-      gives: gives.filter((g) => g.trim()),
-      asks: asks.filter((a) => a.trim()),
+      gives: gives.filter((g) => g.text.trim()),
+      asks: asks.filter((a) => a.text.trim()),
     });
 
     setSaving(false);
@@ -391,21 +324,29 @@ function EditForm({
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <LineItems
+            <GivesAsksCategoryLineItems
               label="Gives"
               emoji="✅"
-              color="#16A34A"
+              accentColor="#16A34A"
+              kind="give"
+              textFieldName="gives"
+              categoryFieldName="give_categories"
+              categories={categories}
               items={gives}
               onChange={setGives}
-              placeholder="e.g. Interior design clients"
+              textPlaceholder="e.g. VJN Systems"
             />
-            <LineItems
+            <GivesAsksCategoryLineItems
               label="Asks"
               emoji="🙏"
-              color="#DC2626"
+              accentColor="#DC2626"
+              kind="ask"
+              textFieldName="asks"
+              categoryFieldName="ask_categories"
+              categories={categories}
               items={asks}
               onChange={setAsks}
-              placeholder="e.g. New home owners"
+              textPlaceholder="e.g. Hardware retailers"
             />
           </div>
         </section>
@@ -502,13 +443,13 @@ function EditForm({
 
 /* ── Root component ──────────────────────────────────────────────────────── */
 
-export default function EditMyDetailsClient() {
+export default function EditMyDetailsClient({ categories }: { categories: GivesAsksCategory[] }) {
   const [phase, setPhase] = useState<"verify" | "edit">("verify");
   const [member, setMember] = useState<VerifiedMember | null>(null);
-  const [gives, setGives] = useState<string[]>([]);
-  const [asks, setAsks] = useState<string[]>([]);
+  const [gives, setGives] = useState<GiveAskEntry[]>([]);
+  const [asks, setAsks] = useState<GiveAskEntry[]>([]);
 
-  const handleVerified = (m: VerifiedMember, g: string[], a: string[]) => {
+  const handleVerified = (m: VerifiedMember, g: GiveAskEntry[], a: GiveAskEntry[]) => {
     setMember(m);
     setGives(g);
     setAsks(a);
@@ -577,7 +518,7 @@ export default function EditMyDetailsClient() {
           <VerifyForm onVerified={handleVerified} />
         ) : (
           member && (
-            <EditForm member={member} initialGives={gives} initialAsks={asks} />
+            <EditForm member={member} initialGives={gives} initialAsks={asks} categories={categories} />
           )
         )}
       </section>

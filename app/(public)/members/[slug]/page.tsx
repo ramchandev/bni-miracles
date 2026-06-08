@@ -5,8 +5,51 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
+import MemberCollaborationSection from "@/components/members/MemberCollaborationSection";
+import { fetchMemberCollaborations } from "@/lib/gives-asks-collaboration";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
+import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
+
+function giveAskCategoryName(row: GiveAsk): string | null {
+  const raw = row.gives_asks_categories;
+  if (!raw) return null;
+  if (Array.isArray(raw)) return raw[0]?.name ?? null;
+  return raw.name ?? null;
+}
+
+function GiveAskListItem({
+  row,
+  accentColor,
+  icon,
+}: {
+  row: GiveAsk;
+  accentColor: string;
+  icon: string;
+}) {
+  const typeName = giveAskCategoryName(row);
+  return (
+    <li key={row.id} className="flex items-start gap-2 text-sm" style={{ color: "var(--color-dark)" }}>
+      <span
+        className="mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-white text-xs"
+        style={{ background: accentColor }}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="font-medium">{row.item}</span>
+        {typeName && (
+          <span
+            className="ml-2 inline-flex text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full align-middle"
+            style={{ background: `${accentColor}18`, color: accentColor }}
+          >
+            {typeName}
+          </span>
+        )}
+      </span>
+    </li>
+  );
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -87,10 +130,14 @@ export default async function MemberDetailPage({ params }: Props) {
 
   if (!member) notFound();
 
-  const [{ data: givesAsksData }, leadershipRoles] = await Promise.all([
-    supabase.from("member_gives_asks").select("*").eq("member_id", member.id).order("sort_order"),
+  const [{ data: givesAsksData }, leadershipRoles, sessionMember] = await Promise.all([
+    supabase.from("member_gives_asks").select("*, gives_asks_categories(name)").eq("member_id", member.id).order("sort_order"),
     fetchMemberLeadershipRoles(member.id),
+    getMemberSession(),
   ]);
+
+  const isOwnProfile = sessionMember?.id === member.id;
+  const collaborations = isOwnProfile ? await fetchMemberCollaborations(member.id) : null;
 
   const allItems = (givesAsksData as GiveAsk[] | null) ?? [];
   const gives = allItems.filter((r) => r.type === "give");
@@ -254,7 +301,6 @@ export default async function MemberDetailPage({ params }: Props) {
           {/* Gives & Asks */}
           {hasGivesAsks && (
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Gives */}
               <div
                 className="rounded-2xl p-6"
                 style={{ border: "1.5px solid #16A34A33", background: "#16A34A08" }}
@@ -274,10 +320,7 @@ export default async function MemberDetailPage({ params }: Props) {
                 {gives.length > 0 ? (
                   <ul className="flex flex-col gap-2">
                     {gives.map((g) => (
-                      <li key={g.id} className="flex items-start gap-2 text-sm" style={{ color: "var(--color-dark)" }}>
-                        <span className="mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-white text-xs" style={{ background: "#16A34A" }}>✓</span>
-                        {g.item}
-                      </li>
+                      <GiveAskListItem key={g.id} row={g} accentColor="#16A34A" icon="✓" />
                     ))}
                   </ul>
                 ) : (
@@ -305,10 +348,7 @@ export default async function MemberDetailPage({ params }: Props) {
                 {asks.length > 0 ? (
                   <ul className="flex flex-col gap-2">
                     {asks.map((a) => (
-                      <li key={a.id} className="flex items-start gap-2 text-sm" style={{ color: "var(--color-dark)" }}>
-                        <span className="mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-white text-xs" style={{ background: "var(--color-primary)" }}>→</span>
-                        {a.item}
-                      </li>
+                      <GiveAskListItem key={a.id} row={a} accentColor="var(--color-primary)" icon="→" />
                     ))}
                   </ul>
                 ) : (
@@ -316,6 +356,10 @@ export default async function MemberDetailPage({ params }: Props) {
                 )}
               </div>
             </div>
+          )}
+
+          {isOwnProfile && collaborations && (
+            <MemberCollaborationSection collaborations={collaborations} />
           )}
 
           {member.services && (

@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import {
+  fetchAllGivesAsksCategories,
+  replaceMemberGivesAsks,
+  type GiveAskEntry,
+} from '@/lib/gives-asks-categories';
 
 function generateSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -67,24 +72,28 @@ export async function saveMemberAction(
     return { error: error.message };
   }
 
-  // Save gives & asks — delete existing then re-insert
+  // Save gives & asks by category
   if (memberId) {
-    await supabase.from('member_gives_asks').delete().eq('member_id', memberId);
+    const giveTexts = formData.getAll('gives') as string[];
+    const giveCategories = formData.getAll('give_categories') as string[];
+    const askTexts = formData.getAll('asks') as string[];
+    const askCategories = formData.getAll('ask_categories') as string[];
 
-    const gives = formData.getAll('gives') as string[];
-    const asks = formData.getAll('asks') as string[];
+    const gives: GiveAskEntry[] = giveTexts.map((text, i) => ({
+      text,
+      categoryId: giveCategories[i] ?? '',
+    }));
+    const asks: GiveAskEntry[] = askTexts.map((text, i) => ({
+      text,
+      categoryId: askCategories[i] ?? '',
+    }));
 
-    const rows = [
-      ...gives.map((item, i) => ({ member_id: memberId, type: 'give' as const, item: item.trim(), sort_order: i })),
-      ...asks.map((item, i) => ({ member_id: memberId, type: 'ask' as const, item: item.trim(), sort_order: i })),
-    ].filter((r) => r.item.length > 0);
-
-    if (rows.length > 0) {
-      await supabase.from('member_gives_asks').insert(rows);
-    }
+    const categories = await fetchAllGivesAsksCategories();
+    await replaceMemberGivesAsks(memberId, gives, asks, categories);
   }
 
   revalidatePath('/admin/members');
+  revalidatePath('/admin/gives-asks');
   revalidatePath('/members');
   revalidatePath(`/members/${slug}`);
   revalidatePath('/');

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ReferralPairsSection from "@/components/admin/ReferralPairsSection";
+import AllGivesAsksTable from "@/components/admin/AllGivesAsksTable";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const metadata: Metadata = { title: "Gives & Asks Intelligence — BNI Miracles Admin" };
@@ -85,9 +87,10 @@ function combinedSim(a: string, b: string): number {
   return Math.min(1, j + clusterBoost * (1 - j));
 }
 
-/* ── Greedy clustering ─────────────────────────────────────────────────── */
+/* ── Group by GA category ─────────────────────────────────────────────── */
 
 type GiveAskRow = {
+  id: string;
   member_id: string;
   member_name: string;
   member_slug: string;
@@ -95,58 +98,60 @@ type GiveAskRow = {
   member_photo: string | null;
   type: "give" | "ask";
   item: string;
+  category_id: string | null;
+  category_name: string | null;
 };
 
-type Cluster = { label: string; items: GiveAskRow[] };
+type CategoryGroup = { label: string; items: GiveAskRow[] };
 
-function clusterItems(items: GiveAskRow[], threshold = 0.14): Cluster[] {
-  const used = new Set<number>();
-  const groups: Cluster[] = [];
+function groupByCategory(items: GiveAskRow[]): CategoryGroup[] {
+  const byCategory = new Map<string, GiveAskRow[]>();
+  const uncategorized: GiveAskRow[] = [];
 
-  for (let i = 0; i < items.length; i++) {
-    if (used.has(i)) continue;
-    const group: GiveAskRow[] = [items[i]];
-    used.add(i);
-
-    for (let j = i + 1; j < items.length; j++) {
-      if (used.has(j)) continue;
-      if (combinedSim(items[i].item, items[j].item) >= threshold) {
-        group.push(items[j]);
-        used.add(j);
-      }
+  for (const item of items) {
+    if (item.category_id && item.category_name) {
+      const bucket = byCategory.get(item.category_id) ?? [];
+      bucket.push(item);
+      byCategory.set(item.category_id, bucket);
+    } else {
+      uncategorized.push(item);
     }
-
-    // Derive group label from most common tokens across all group items
-    const freq = new Map<string, number>();
-    group.forEach((g) =>
-      tokenize(g.item).forEach((t) => freq.set(t, (freq.get(t) ?? 0) + 1))
-    );
-    const topTokens = [...freq.entries()]
-      .filter(([, c]) => c > 1 || group.length === 1)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([t]) => t);
-
-    const label = topTokens.length
-      ? topTokens.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")
-      : tokenize(items[i].item).slice(0, 2).join(" / ") || items[i].item;
-
-    groups.push({ label, items: group });
   }
 
-  return groups.sort((a, b) => b.items.length - a.items.length);
+  const groups: CategoryGroup[] = [...byCategory.entries()]
+    .map(([, rows]) => ({
+      label: rows[0].category_name!,
+      items: rows.sort((a, b) => a.member_name.localeCompare(b.member_name)),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
+  if (uncategorized.length > 0) {
+    groups.push({
+      label: "Uncategorized",
+      items: uncategorized.sort((a, b) => a.member_name.localeCompare(b.member_name)),
+    });
+  }
+
+  return groups;
 }
 
 /* ── Cross-match: give ↔ ask from different members ──────────────────── */
 
 type Match = { score: number; give: GiveAskRow; ask: GiveAskRow };
 
+function matchScore(give: GiveAskRow, ask: GiveAskRow): number {
+  if (give.category_id && ask.category_id && give.category_id === ask.category_id) {
+    return 1;
+  }
+  return combinedSim(give.item, ask.item);
+}
+
 function findMatches(gives: GiveAskRow[], asks: GiveAskRow[], threshold = 0.13): Match[] {
   const pairs: Match[] = [];
   for (const give of gives) {
     for (const ask of asks) {
       if (give.member_id === ask.member_id) continue;
-      const score = combinedSim(give.item, ask.item);
+      const score = matchScore(give, ask);
       if (score >= threshold) pairs.push({ score, give, ask });
     }
   }
@@ -163,12 +168,6 @@ function findMatches(gives: GiveAskRow[], asks: GiveAskRow[], threshold = 0.13):
    HELPERS / UI ATOMS
    ══════════════════════════════════════════════════════════════════════════ */
 
-function scoreLabel(s: number): { label: string; bg: string; color: string } {
-  if (s >= 0.55) return { label: "Strong", bg: "#DCFCE7", color: "#166534" };
-  if (s >= 0.35) return { label: "Good",   bg: "#FEF9C3", color: "#854D0E" };
-  return               { label: "Possible",bg: "#EFF6FF", color: "#1E40AF" };
-}
-
 function Avatar({ name, photo, size = 36 }: { name: string; photo: string | null; size?: number }) {
   if (photo) {
     return (
@@ -181,33 +180,6 @@ function Avatar({ name, photo, size = 36 }: { name: string; photo: string | null
     <div className="flex items-center justify-center rounded-full shrink-0 text-white font-bold"
       style={{ width: size, height: size, background: "var(--color-primary)", fontSize: size * 0.35 }}>
       {name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
-
-function MemberChip({ row, side }: { row: GiveAskRow; side: "give" | "ask" }) {
-  const color = side === "give" ? "#16A34A" : "#DC2626";
-  return (
-    <div className="flex items-start gap-3 p-3 rounded-xl flex-1 min-w-0"
-      style={{ background: color + "0C", border: `1px solid ${color}25` }}>
-      <Avatar name={row.member_name} photo={row.member_photo} size={36} />
-      <div className="min-w-0">
-        <p className="text-xs font-bold truncate" style={{ color: "var(--color-dark)" }}>
-          {row.member_name}
-        </p>
-        <p className="text-xs truncate" style={{ color }}>
-          {row.member_category}
-        </p>
-        <p className="text-xs mt-1 leading-relaxed line-clamp-2"
-          style={{ color: "var(--color-gray)" }}>
-          {side === "give" ? "✅" : "🙏"} {row.item}
-        </p>
-      </div>
-      <Link href={`/members/${row.member_slug}`}
-        className="shrink-0 text-xs px-2 py-1 rounded font-semibold"
-        style={{ background: color + "20", color }}>
-        →
-      </Link>
     </div>
   );
 }
@@ -226,10 +198,19 @@ export default async function AdminGivesAsksPage() {
     .eq("is_active", true);
 
   // Fetch all gives & asks
-  const { data: gaRows } = await supabase
-    .from("member_gives_asks")
-    .select("member_id, type, item")
-    .order("sort_order");
+  const [{ data: gaRows }, { data: gaCategories }] = await Promise.all([
+    supabase
+      .from("member_gives_asks")
+      .select("id, member_id, type, item, category_id, gives_asks_categories(name)")
+      .order("sort_order"),
+    supabase.from("gives_asks_categories").select("*").order("sort_order"),
+  ]);
+
+  const categoryNameFromRow = (raw: unknown): string | null => {
+    if (!raw || typeof raw !== "object") return null;
+    if (Array.isArray(raw)) return (raw[0] as { name?: string })?.name ?? null;
+    return (raw as { name?: string }).name ?? null;
+  };
 
   const memberMap = new Map(
     (members ?? []).map((m) => [m.id, m])
@@ -240,6 +221,7 @@ export default async function AdminGivesAsksPage() {
     .map((r) => {
       const m = memberMap.get(r.member_id)!;
       return {
+        id:              r.id as string,
         member_id:       m.id,
         member_name:     m.name,
         member_slug:     m.slug,
@@ -247,6 +229,8 @@ export default async function AdminGivesAsksPage() {
         member_photo:    m.profile_picture_url,
         type:            r.type as "give" | "ask",
         item:            r.item as string,
+        category_id:     (r.category_id as string | null) ?? null,
+        category_name:   categoryNameFromRow((r as { gives_asks_categories?: unknown }).gives_asks_categories),
       };
     });
 
@@ -254,9 +238,10 @@ export default async function AdminGivesAsksPage() {
   const asks  = allRows.filter((r) => r.type === "ask");
 
   // Run intelligence
-  const matches     = findMatches(gives, asks);
-  const giveClusters = clusterItems(gives);
-  const askClusters  = clusterItems(asks);
+  const matches      = findMatches(gives, asks);
+  const giveGroups   = groupByCategory(gives);
+  const askGroups    = groupByCategory(asks);
+  const categories   = gaCategories ?? [];
 
   // Stats
   const membersWithGives = new Set(gives.map((g) => g.member_id)).size;
@@ -264,16 +249,35 @@ export default async function AdminGivesAsksPage() {
   const totalMembers     = members?.length ?? 0;
   const strongMatches    = matches.filter((m) => m.score >= 0.55).length;
 
+  const memberIdsWithGivesOrAsks = new Set([
+    ...gives.map((g) => g.member_id),
+    ...asks.map((a) => a.member_id),
+  ]);
+  const filterMembers = (members ?? [])
+    .filter((m) => memberIdsWithGivesOrAsks.has(m.id))
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      category: m.category,
+      profile_picture_url: m.profile_picture_url,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <div className="p-8">
       {/* ── Page header ──────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--color-dark)" }}>
-          🤝 Gives &amp; Asks Intelligence
-        </h1>
-        <p className="text-sm" style={{ color: "var(--color-gray)" }}>
-          AI-powered matching of what members can give with what others are asking for.
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--color-dark)" }}>
+            🤝 Gives &amp; Asks Intelligence
+          </h1>
+          <p className="text-sm" style={{ color: "var(--color-gray)" }}>
+            AI-powered matching of what members can give with what others are asking for.
+          </p>
+        </div>
+        <Link href="/admin/gives-asks/categories" className="btn-outline text-sm">
+          Manage Categories
+        </Link>
       </div>
 
       {/* ── Summary stats ────────────────────────────────────────────── */}
@@ -298,8 +302,8 @@ export default async function AdminGivesAsksPage() {
       <div className="flex flex-wrap gap-2 mb-8">
         {[
           { href: "#matches",    label: "🎯 Referral Pairs" },
-          { href: "#gives",      label: "✅ Gives Clusters" },
-          { href: "#asks",       label: "🙏 Asks Clusters" },
+          { href: "#gives",      label: "✅ Gives by Category" },
+          { href: "#asks",       label: "🙏 Asks by Category" },
           { href: "#all-gives",  label: "📋 All Gives" },
           { href: "#all-asks",   label: "📋 All Asks" },
         ].map(({ href, label }) => (
@@ -311,94 +315,43 @@ export default async function AdminGivesAsksPage() {
         ))}
       </div>
 
-      {/* ══ SECTION 1: Potential Referral Pairs ══════════════════════════ */}
-      <section id="matches" className="mb-14">
-        <div className="flex items-center gap-3 mb-5">
-          <h2 className="text-lg font-extrabold" style={{ color: "var(--color-dark)" }}>
-            🎯 Potential Referral Pairs
-          </h2>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-            style={{ background: "#EDE9FE", color: "#7C3AED" }}>
-            {matches.length} pairs
-          </span>
-        </div>
-        <p className="text-sm mb-5" style={{ color: "var(--color-gray)" }}>
-          Member A&apos;s <strong>give</strong> closely matches Member B&apos;s <strong>ask</strong>.
-          Connect them — this is where referrals happen.
-        </p>
+      <ReferralPairsSection matches={matches} members={filterMembers} />
 
-        {matches.length === 0 ? (
-          <div className="text-center py-12 rounded-xl" style={{ background: "#F9FAFB", border: "1px dashed #E5E7EB" }}>
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-sm font-semibold" style={{ color: "var(--color-gray)" }}>
-              No strong matches yet — encourage members to add more specific gives &amp; asks.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {matches.map((m, i) => {
-              const { label: sl, bg, color } = scoreLabel(m.score);
-              return (
-                <div key={i} className="rounded-2xl overflow-hidden"
-                  style={{ border: `1.5px solid ${color}30`, background: "white" }}>
-                  {/* Match header */}
-                  <div className="flex items-center gap-3 px-5 py-3"
-                    style={{ background: bg, borderBottom: `1px solid ${color}25` }}>
-                    <span
-                      className="text-xs font-extrabold px-2.5 py-1 rounded-full"
-                      style={{ background: color + "20", color }}>
-                      {sl} — {Math.round(m.score * 100)}% match
-                    </span>
-                    <span className="text-xs" style={{ color }}>
-                      {m.give.member_name.split(" ")[0]} can refer to {m.ask.member_name.split(" ")[0]}
-                    </span>
-                  </div>
-
-                  {/* Give ↔ Ask chips */}
-                  <div className="flex flex-col sm:flex-row gap-3 p-4 items-stretch">
-                    <MemberChip row={m.give} side="give" />
-                    <div className="flex items-center justify-center text-lg shrink-0">⟷</div>
-                    <MemberChip row={m.ask} side="ask" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* ══ SECTION 2: Gives — Clusters ══════════════════════════════════ */}
+      {/* ══ SECTION 2: Gives — by Category ═════════════════════════════ */}
       <section id="gives" className="mb-14">
         <div className="flex items-center gap-3 mb-5">
           <h2 className="text-lg font-extrabold" style={{ color: "var(--color-dark)" }}>
-            ✅ Gives — Grouped by Topic
+            ✅ Gives — Grouped by Category
           </h2>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
             style={{ background: "#DCFCE7", color: "#166534" }}>
-            {giveClusters.length} clusters
+            {giveGroups.length} categories
           </span>
         </div>
         <p className="text-sm mb-5" style={{ color: "var(--color-gray)" }}>
-          Members whose gives are in similar domains — they naturally refer to the same pool of contacts.
+          Members grouped by their give category — assign categories in All Gives below to organise this view.
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {giveClusters.map((cluster, ci) => (
+          {giveGroups.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--color-gray)" }}>No gives recorded yet.</p>
+          ) : (
+          giveGroups.map((group, ci) => (
             <div key={ci} className="rounded-xl overflow-hidden"
               style={{ border: "1px solid #D1FAE5", background: "white" }}>
               <div className="px-4 py-3 flex items-center gap-2"
                 style={{ background: "#ECFDF5", borderBottom: "1px solid #D1FAE5" }}>
                 <p className="text-sm font-extrabold truncate flex-1" style={{ color: "#065F46" }}>
-                  {cluster.label}
+                  {group.label}
                 </p>
                 <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{ background: "#16A34A", color: "white" }}>
-                  {cluster.items.length}
+                  {group.items.length}
                 </span>
               </div>
               <div className="p-3 flex flex-col gap-2">
-                {cluster.items.map((row, ri) => (
-                  <div key={ri} className="flex items-center gap-2.5">
+                {group.items.map((row) => (
+                  <div key={row.id} className="flex items-center gap-2.5">
                     <Avatar name={row.member_name} photo={row.member_photo} size={28} />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--color-dark)" }}>
@@ -416,42 +369,45 @@ export default async function AdminGivesAsksPage() {
                 ))}
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </section>
 
-      {/* ══ SECTION 3: Asks — Clusters ═══════════════════════════════════ */}
+      {/* ══ SECTION 3: Asks — by Category ════════════════════════════════ */}
       <section id="asks" className="mb-14">
         <div className="flex items-center gap-3 mb-5">
           <h2 className="text-lg font-extrabold" style={{ color: "var(--color-dark)" }}>
-            🙏 Asks — Grouped by Topic
+            🙏 Asks — Grouped by Category
           </h2>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
             style={{ background: "#FEE2E2", color: "#991B1B" }}>
-            {askClusters.length} clusters
+            {askGroups.length} categories
           </span>
         </div>
         <p className="text-sm mb-5" style={{ color: "var(--color-gray)" }}>
-          Members who are looking for similar types of referrals — they likely share the same target audience.
+          Members grouped by their ask category — assign categories in All Asks below to organise this view.
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {askClusters.map((cluster, ci) => (
+          {askGroups.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--color-gray)" }}>No asks recorded yet.</p>
+          ) : (
+          askGroups.map((group, ci) => (
             <div key={ci} className="rounded-xl overflow-hidden"
               style={{ border: "1px solid #FECACA", background: "white" }}>
               <div className="px-4 py-3 flex items-center gap-2"
                 style={{ background: "#FEF2F2", borderBottom: "1px solid #FECACA" }}>
                 <p className="text-sm font-extrabold truncate flex-1" style={{ color: "#991B1B" }}>
-                  {cluster.label}
+                  {group.label}
                 </p>
                 <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{ background: "#DC2626", color: "white" }}>
-                  {cluster.items.length}
+                  {group.items.length}
                 </span>
               </div>
               <div className="p-3 flex flex-col gap-2">
-                {cluster.items.map((row, ri) => (
-                  <div key={ri} className="flex items-center gap-2.5">
+                {group.items.map((row) => (
+                  <div key={row.id} className="flex items-center gap-2.5">
                     <Avatar name={row.member_name} photo={row.member_photo} size={28} />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--color-dark)" }}>
@@ -469,7 +425,7 @@ export default async function AdminGivesAsksPage() {
                 ))}
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </section>
 
@@ -485,43 +441,7 @@ export default async function AdminGivesAsksPage() {
           </span>
         </div>
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E5E7EB" }}>
-          {gives.length === 0 ? (
-            <p className="text-sm text-center py-8" style={{ color: "var(--color-gray)" }}>
-              No gives recorded yet.
-            </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Member</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Category</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Give</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gives.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar name={row.member_name} photo={row.member_photo} size={28} />
-                        <Link href={`/members/${row.member_slug}`}
-                          className="font-semibold hover:underline text-xs"
-                          style={{ color: "var(--color-dark)" }}>
-                          {row.member_name}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-gray)" }}>
-                      {row.member_category}
-                    </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-dark)" }}>
-                      ✅ {row.item}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <AllGivesAsksTable kind="give" rows={gives} categories={categories} />
         </div>
       </section>
 
@@ -537,43 +457,7 @@ export default async function AdminGivesAsksPage() {
           </span>
         </div>
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E5E7EB" }}>
-          {asks.length === 0 ? (
-            <p className="text-sm text-center py-8" style={{ color: "var(--color-gray)" }}>
-              No asks recorded yet.
-            </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Member</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Category</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: "var(--color-gray)" }}>Ask</th>
-                </tr>
-              </thead>
-              <tbody>
-                {asks.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar name={row.member_name} photo={row.member_photo} size={28} />
-                        <Link href={`/members/${row.member_slug}`}
-                          className="font-semibold hover:underline text-xs"
-                          style={{ color: "var(--color-dark)" }}>
-                          {row.member_name}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-gray)" }}>
-                      {row.member_category}
-                    </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-dark)" }}>
-                      🙏 {row.item}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <AllGivesAsksTable kind="ask" rows={asks} categories={categories} />
         </div>
       </section>
     </div>

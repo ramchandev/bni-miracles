@@ -1,4 +1,5 @@
 import EditMyDetailsClient from "@/components/EditMyDetailsClient";
+import { fetchActiveGivesAsksCategories } from "@/lib/gives-asks-categories";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -8,6 +9,7 @@ export const metadata = createPageMetadata({
   noIndex: true,
 });
 
-export default function EditMyDetailsPage() {
-  return <EditMyDetailsClient />;
+export default async function EditMyDetailsPage() {
+  const categories = await fetchActiveGivesAsksCategories();
+  return <EditMyDetailsClient categories={categories} />;
 }

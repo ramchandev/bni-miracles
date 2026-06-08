@@ -2,15 +2,19 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import MemberForm from '@/components/admin/MemberForm';
+import { fetchAllGivesAsksCategories } from '@/lib/gives-asks-categories';
 
 export const metadata: Metadata = { title: 'Add Member — BNI Miracles Admin' };
 
 export default async function NewMemberPage() {
   const supabase = await createSupabaseServerClient();
-  const { data: catData } = await supabase
-    .from('business_categories')
-    .select('id, name, icon, group_id, category_groups(name)')
-    .order('sort_order');
+  const [{ data: catData }, givesAsksCategories] = await Promise.all([
+    supabase
+      .from('business_categories')
+      .select('id, name, icon, group_id, category_groups(name)')
+      .order('sort_order'),
+    fetchAllGivesAsksCategories(),
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const categories = (catData ?? []).map((c: any) => ({
@@ -30,7 +34,7 @@ export default async function NewMemberPage() {
         <span style={{ color: '#E5E7EB' }}>/</span>
         <h1 className="text-2xl font-extrabold" style={{ color: 'var(--color-dark)' }}>Add Member</h1>
       </div>
-      <MemberForm categories={categories} />
+      <MemberForm categories={categories} givesAsksCategories={givesAsksCategories} />
     </div>
   );
 }

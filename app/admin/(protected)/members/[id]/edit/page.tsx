@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import MemberForm from '@/components/admin/MemberForm';
+import { mapMemberGiveAskRowsToEntries, fetchAllGivesAsksCategories } from '@/lib/gives-asks-categories';
 import type { Member } from '@/lib/supabase';
 
 type Props = { params: Promise<{ id: string }> };
@@ -17,6 +18,7 @@ export default async function EditMemberPage({ params }: Props) {
     { data: member },
     { data: givesAsksData },
     { data: catData },
+    givesAsksCategories,
   ] = await Promise.all([
     supabase.from('members').select('*').eq('id', id).single<Member>(),
     supabase.from('member_gives_asks').select('*').eq('member_id', id).order('sort_order'),
@@ -24,12 +26,13 @@ export default async function EditMemberPage({ params }: Props) {
       .from('business_categories')
       .select('id, name, icon, group_id, category_groups(name)')
       .order('sort_order'),
+    fetchAllGivesAsksCategories(),
   ]);
 
   if (!member) notFound();
 
-  const gives = (givesAsksData ?? []).filter((r) => r.type === 'give').map((r) => r.item as string);
-  const asks = (givesAsksData ?? []).filter((r) => r.type === 'ask').map((r) => r.item as string);
+  const gives = mapMemberGiveAskRowsToEntries(givesAsksData ?? [], givesAsksCategories, 'give');
+  const asks = mapMemberGiveAskRowsToEntries(givesAsksData ?? [], givesAsksCategories, 'ask');
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const categories = (catData ?? []).map((c: any) => ({
@@ -51,7 +54,13 @@ export default async function EditMemberPage({ params }: Props) {
           Edit: {member.name}
         </h1>
       </div>
-      <MemberForm member={member} initialGives={gives} initialAsks={asks} categories={categories} />
+      <MemberForm
+        member={member}
+        initialGives={gives}
+        initialAsks={asks}
+        categories={categories}
+        givesAsksCategories={givesAsksCategories}
+      />
     </div>
   );
 }

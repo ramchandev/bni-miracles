@@ -1,10 +1,14 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
-import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import {
+  fetchAllGivesAsksCategories,
+  mapMemberGiveAskRowsToEntries,
+  replaceMemberGivesAsks,
+  type GiveAskEntry,
+} from "@/lib/gives-asks-categories";
 import { revalidatePath } from "next/cache";
-
-/* ── Phone normalisation (shared logic) ──────────────────────────────────── */
+import { fetchMemberCollaborations, type MemberCollaborations } from "@/lib/gives-asks-collaboration";
 
 function normalizePhone(raw: string): string {
   let p = raw.replace(/[\s\-\(\)\.]/g, "").replace(/^\+/, "");
@@ -12,8 +16,6 @@ function normalizePhone(raw: string): string {
   if (p.startsWith("0") && p.length === 11) p = p.slice(1);
   return p;
 }
-
-/* ── Types ───────────────────────────────────────────────────────────────── */
 
 export type GivesAsksBasicMember = {
   id: string;
@@ -25,9 +27,7 @@ export type GivesAsksBasicMember = {
 
 export type PhoneVerifyResult =
   | { ok: false; error: string }
-  | { ok: true; member: GivesAsksBasicMember; gives: string[]; asks: string[] };
-
-/* ── Verify by phone only ────────────────────────────────────────────────── */
+  | { ok: true; member: GivesAsksBasicMember; gives: GiveAskEntry[]; asks: GiveAskEntry[] };
 
 export async function verifyPhoneAction(phone: string): Promise<PhoneVerifyResult> {
   const normalized = normalizePhone(phone.trim());
@@ -54,18 +54,18 @@ export async function verifyPhoneAction(phone: string): Promise<PhoneVerifyResul
     };
   }
 
-  const { data: gaData } = await supabase
-    .from("member_gives_asks")
-    .select("type, item")
-    .eq("member_id", matched.id)
-    .order("sort_order");
+  const [{ data: gaData }, categories] = await Promise.all([
+    supabase
+      .from("member_gives_asks")
+      .select("type, item, category_id")
+      .eq("member_id", matched.id)
+      .order("sort_order"),
+    fetchAllGivesAsksCategories(),
+  ]);
 
-  const gives = (gaData ?? [])
-    .filter((g) => g.type === "give")
-    .map((g) => g.item as string);
-  const asks = (gaData ?? [])
-    .filter((g) => g.type === "ask")
-    .map((g) => g.item as string);
+  const rows = gaData ?? [];
+  const gives = mapMemberGiveAskRowsToEntries(rows, categories, "give");
+  const asks = mapMemberGiveAskRowsToEntries(rows, categories, "ask");
 
   const { phone: _ph, ...rest } = matched;
   void _ph;
@@ -73,45 +73,25 @@ export async function verifyPhoneAction(phone: string): Promise<PhoneVerifyResul
   return { ok: true, member: rest as GivesAsksBasicMember, gives, asks };
 }
 
-/* ── Save gives & asks ───────────────────────────────────────────────────── */
-
 export async function saveGivesAsksAction(
   memberId: string,
   slug: string,
-  gives: string[],
-  asks: string[]
+  gives: GiveAskEntry[],
+  asks: GiveAskEntry[]
 ): Promise<{ error?: string }> {
-  const admin = createSupabaseAdminClient();
-
-  await admin.from("member_gives_asks").delete().eq("member_id", memberId);
-
-  const rows = [
-    ...gives
-      .map((item, i) => ({
-        member_id: memberId,
-        type: "give" as const,
-        item: item.trim(),
-        sort_order: i,
-      }))
-      .filter((r) => r.item.length > 0),
-    ...asks
-      .map((item, i) => ({
-        member_id: memberId,
-        type: "ask" as const,
-        item: item.trim(),
-        sort_order: i,
-      }))
-      .filter((r) => r.item.length > 0),
-  ];
-
-  if (rows.length > 0) {
-    const { error } = await admin.from("member_gives_asks").insert(rows);
-    if (error) return { error: error.message };
-  }
+  const categories = await fetchAllGivesAsksCategories();
+  const result = await replaceMemberGivesAsks(memberId, gives, asks, categories);
+  if (result.error) return result;
 
   revalidatePath(`/members/${slug}`);
   revalidatePath("/members");
   revalidatePath("/admin/gives-asks");
 
   return {};
+}
+
+export async function fetchMemberCollaborationsAction(
+  memberId: string
+): Promise<MemberCollaborations> {
+  return fetchMemberCollaborations(memberId);
 }

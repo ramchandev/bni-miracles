@@ -47,6 +47,8 @@ type Props = {
   onChange: (memberId: string | null) => void;
   disabled?: boolean;
   placeholder?: string;
+  clearLabel?: string;
+  emptyButtonLabel?: string;
 };
 
 export default function MemberAssignPicker({
@@ -55,6 +57,8 @@ export default function MemberAssignPicker({
   onChange,
   disabled = false,
   placeholder = "Search member to assign…",
+  clearLabel = "— Unassigned —",
+  emptyButtonLabel = "Assign member…",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -133,7 +137,7 @@ export default function MemberAssignPicker({
           style={{ color: "var(--color-gray)" }}
         >
           <span className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg shrink-0">+</span>
-          Assign member…
+          {emptyButtonLabel}
         </button>
       )}
 
@@ -161,7 +165,7 @@ export default function MemberAssignPicker({
                 style={{ color: "var(--color-gray)" }}
                 onClick={() => pick(null)}
               >
-                — Unassigned —
+                {clearLabel}
               </button>
             </li>
             {filtered.length === 0 ? (

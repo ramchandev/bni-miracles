@@ -14,6 +14,7 @@ const navLinks = [
   { href: '/admin/registrations', label: 'Registrations', icon: '📅' },
   { href: '/admin/contacts', label: 'Contacts', icon: '✉️' },
   { href: '/admin/gives-asks', label: 'Gives & Asks', icon: '🤝' },
+  { href: '/admin/gives-asks/categories', label: 'GA Categories', icon: '🏷️' },
   { href: '/admin/bizrox', label: 'BizRox', icon: '📣' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];

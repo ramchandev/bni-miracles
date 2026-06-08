@@ -47,8 +47,10 @@ export type GiveAsk = {
   member_id: string;
   type: 'give' | 'ask';
   item: string;
+  category_id: string | null;
   sort_order: number;
   created_at: string;
+  gives_asks_categories?: { name: string } | { name: string }[] | null;
 };
 
 export type MeetingRegistration = {
@@ -144,6 +146,28 @@ export type LeadershipRoleWithAssignments = LeadershipRole & {
 
 export type LeadershipGroupWithRoles = LeadershipGroup & {
   leadership_roles: LeadershipRoleWithAssignments[];
+};
+
+export type GivesAsksCategoryType = "give" | "ask" | "both";
+
+export type GivesAsksCategory = {
+  id: string;
+  name: string;
+  type: GivesAsksCategoryType;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MemberGiveAsk = {
+  id: string;
+  member_id: string;
+  type: "give" | "ask";
+  item: string;
+  category_id: string | null;
+  sort_order: number;
+  created_at: string;
 };
 
 /* ── BizRox ──────────────────────────────────────────────────────────── */
