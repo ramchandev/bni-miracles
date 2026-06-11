@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { uploadGuestDanceCardPdf, GUEST_DANCE_CARD_BUCKET } from "@/lib/121-dance-card-upload";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getMemberSession } from "@/lib/member-session";
-import { sendMemberEmail, emailTemplate } from "@/lib/email";
+import { sendAdminEmail, sendMemberEmail, emailTemplate } from "@/lib/email";
 import {
   formatHourOption,
   formatSlotSummary,
@@ -25,6 +25,101 @@ import type {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bnimiracles.in";
 const GUEST_BUCKET = GUEST_DANCE_CARD_BUCKET;
+
+async function sendNew121RequestEmails(params: {
+  hostName: string;
+  hostEmail: string;
+  requesterName: string;
+  requesterChapter: string;
+  requesterEmail: string;
+  summary: string;
+  acceptUrl: string;
+  declineUrl: string;
+  profileUrl: string;
+}): Promise<void> {
+  const hostHtml = emailTemplate("New 1-2-1 Request", [
+    { label: "Requester", value: params.requesterName },
+    { label: "Chapter", value: params.requesterChapter },
+    { label: "Email", value: params.requesterEmail },
+    { label: "When", value: params.summary },
+    {
+      label: "Actions",
+      value: `<a href="${params.acceptUrl}" style="color:#16A34A;font-weight:600;">Accept</a> · <a href="${params.declineUrl}" style="color:#C8102E;font-weight:600;">Decline</a>`,
+    },
+    {
+      label: "Profile",
+      value: `<a href="${params.profileUrl}" style="color:#C8102E;">View on your profile</a>`,
+    },
+    {
+      label: "Calendar",
+      value: `<a href="${SITE_URL}/my-121" style="color:#C8102E;">My 1-2-1 Calendar</a>`,
+    },
+  ]);
+
+  const hostEmail = params.hostEmail.trim();
+  let hostNotified = false;
+
+  if (hostEmail) {
+    const hostResult = await sendMemberEmail(
+      hostEmail,
+      `New 1-2-1 request from ${params.requesterName}`,
+      hostHtml
+    );
+    hostNotified = hostResult.sent;
+    if (!hostResult.sent) {
+      console.error("[121] Host notification failed:", hostResult.error);
+    }
+  } else {
+    console.warn("[121] Host has no email on profile:", params.hostName);
+  }
+
+  if (!hostNotified) {
+    const adminResult = await sendAdminEmail(
+      `[121] New request for ${params.hostName}`,
+      emailTemplate("1-2-1 Request — host notify failed", [
+        { label: "Host", value: params.hostName },
+        {
+          label: "Host email",
+          value: hostEmail || "Not set on member profile — please ask them to add it.",
+        },
+        { label: "Requester", value: `${params.requesterName} (${params.requesterChapter})` },
+        { label: "Requester email", value: params.requesterEmail },
+        { label: "When", value: params.summary },
+        {
+          label: "Accept",
+          value: `<a href="${params.acceptUrl}" style="color:#16A34A;font-weight:600;">Accept</a>`,
+        },
+        {
+          label: "Decline",
+          value: `<a href="${params.declineUrl}" style="color:#C8102E;font-weight:600;">Decline</a>`,
+        },
+      ])
+    );
+    if (!adminResult.sent) {
+      console.error("[121] Admin fallback email also failed:", adminResult.error);
+    }
+  }
+
+  const requesterResult = await sendMemberEmail(
+    params.requesterEmail,
+    `1-2-1 request sent to ${params.hostName}`,
+    emailTemplate("1-2-1 Request Submitted", [
+      { label: "Host", value: params.hostName },
+      { label: "When", value: params.summary },
+      {
+        label: "Status",
+        value: "Pending — the host will review and confirm by email.",
+      },
+      {
+        label: "Your calendar",
+        value: `<a href="${SITE_URL}/my-121" style="color:#C8102E;">My 1-2-1 Calendar</a>`,
+      },
+    ])
+  );
+  if (!requesterResult.sent) {
+    console.error("[121] Requester confirmation email failed:", requesterResult.error);
+  }
+}
 
 function newActionToken(): string {
   return randomBytes(24).toString("hex");
@@ -321,31 +416,17 @@ export async function submit121RequestAction(input: {
   const acceptUrl = `${SITE_URL}/121/respond/${token}?action=accept`;
   const declineUrl = `${SITE_URL}/121/respond/${token}?action=decline`;
 
-  const hostEmail = (host?.email as string | null) ?? "";
-  if (hostEmail) {
-    try {
-      await sendMemberEmail(
-        hostEmail,
-        `New 1-2-1 request from ${name}`,
-        emailTemplate("New 1-2-1 Request", [
-          { label: "Requester", value: name },
-          { label: "Chapter", value: chapter },
-          { label: "Email", value: email },
-          { label: "When", value: summary },
-          {
-            label: "Actions",
-            value: `<a href="${acceptUrl}" style="color:#16A34A;font-weight:600;">Accept</a> · <a href="${declineUrl}" style="color:#C8102E;font-weight:600;">Decline</a>`,
-          },
-          {
-            label: "Profile",
-            value: `<a href="${profileUrl}" style="color:#C8102E;">View on your profile</a>`,
-          },
-        ])
-      );
-    } catch (err) {
-      console.error("[submit121RequestAction] Host notification email failed:", err);
-    }
-  }
+  await sendNew121RequestEmails({
+    hostName: (host?.name as string) ?? "BNI Miracles member",
+    hostEmail: (host?.email as string | null) ?? "",
+    requesterName: name,
+    requesterChapter: chapter,
+    requesterEmail: email,
+    summary,
+    acceptUrl,
+    declineUrl,
+    profileUrl,
+  });
 
   return {};
 }
@@ -425,31 +506,30 @@ export async function accept121RequestAction(
     ? `${SITE_URL}/api/121-ics/${requestId}`
     : null;
 
-  try {
-    await sendMemberEmail(
-      request.requester_email,
-      `1-2-1 confirmed with ${host?.name ?? "your host"}`,
-      emailTemplate("1-2-1 Confirmed", [
-        { label: "Host", value: (host?.name as string) ?? "BNI Miracles member" },
-        { label: "When", value: summary },
-        {
-          label: "Meeting",
-          value:
-            slot.meeting_type === "online"
-              ? slot.meeting_url ?? "Link shared separately"
-              : slot.location ?? "See host for location",
-        },
-        ...(icsLink
-          ? [{ label: "Calendar", value: `<a href="${icsLink}" style="color:#C8102E;">Download .ics file</a>` }]
-          : []),
-        {
-          label: "Dance cards",
-          value: "View dance card links on your My 1-2-1 Calendar after logging in.",
-        },
-      ])
-    );
-  } catch (err) {
-    console.error("[accept121RequestAction] Confirmation email failed:", err);
+  const confirmResult = await sendMemberEmail(
+    request.requester_email,
+    `1-2-1 confirmed with ${host?.name ?? "your host"}`,
+    emailTemplate("1-2-1 Confirmed", [
+      { label: "Host", value: (host?.name as string) ?? "BNI Miracles member" },
+      { label: "When", value: summary },
+      {
+        label: "Meeting",
+        value:
+          slot.meeting_type === "online"
+            ? slot.meeting_url ?? "Link shared separately"
+            : slot.location ?? "See host for location",
+      },
+      ...(icsLink
+        ? [{ label: "Calendar", value: `<a href="${icsLink}" style="color:#C8102E;">Download .ics file</a>` }]
+        : []),
+      {
+        label: "Dance cards",
+        value: "View dance card links on your My 1-2-1 Calendar after logging in.",
+      },
+    ])
+  );
+  if (!confirmResult.sent) {
+    console.error("[accept121RequestAction] Confirmation email failed:", confirmResult.error);
   }
 
   return {};
@@ -477,22 +557,21 @@ export async function decline121RequestAction(
   const slotJoin = request.one_on_one_slots;
   const slot = slotJoin && !Array.isArray(slotJoin) ? slotJoin : null;
 
-  try {
-    await sendMemberEmail(
-      request.requester_email,
-      "1-2-1 request update — BNI Miracles",
-      emailTemplate("1-2-1 Request Declined", [
-        { label: "Host", value: "The member was unable to confirm this time." },
-        {
-          label: "Next step",
-          value: slot
-            ? `You may choose another open slot on their profile.`
-            : "Please try booking another time.",
-        },
-      ])
-    );
-  } catch (err) {
-    console.error("[decline121RequestAction] Notification email failed:", err);
+  const declineResult = await sendMemberEmail(
+    request.requester_email,
+    "1-2-1 request update — BNI Miracles",
+    emailTemplate("1-2-1 Request Declined", [
+      { label: "Host", value: "The member was unable to confirm this time." },
+      {
+        label: "Next step",
+        value: slot
+          ? `You may choose another open slot on their profile.`
+          : "Please try booking another time.",
+      },
+    ])
+  );
+  if (!declineResult.sent) {
+    console.error("[decline121RequestAction] Notification email failed:", declineResult.error);
   }
 
   return {};
