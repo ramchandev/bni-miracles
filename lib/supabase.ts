@@ -247,3 +247,39 @@ export type SessionMember = {
   phone: string | null;
   email: string | null;
 };
+
+/* ── 121 Scheduler ───────────────────────────────────────────────────── */
+
+export type OneOnOneMeetingType = "online" | "in_person";
+export type OneOnOneSlotStatus = "open" | "booked" | "cancelled";
+export type OneOnOneRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+
+export type OneOnOneSlot = {
+  id: string;
+  host_member_id: string;
+  slot_date: string;
+  start_time: string;
+  meeting_type: OneOnOneMeetingType;
+  location: string | null;
+  meeting_url: string | null;
+  status: OneOnOneSlotStatus;
+  created_at: string;
+};
+
+export type OneOnOneRequest = {
+  id: string;
+  slot_id: string;
+  host_member_id: string;
+  requester_member_id: string | null;
+  requester_name: string;
+  requester_chapter: string;
+  requester_email: string;
+  guest_dance_card_url: string | null;
+  host_dance_card_id: string | null;
+  requester_dance_card_id: string | null;
+  status: OneOnOneRequestStatus;
+  host_action_token: string;
+  confirmed_at: string | null;
+  created_at: string;
+  one_on_one_slots?: OneOnOneSlot | OneOnOneSlot[] | null;
+};

@@ -6,6 +6,9 @@ import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
+import { getMemberSession } from "@/lib/member-session";
+import { fetchPublic121ProfileAction } from "@/app/actions/one-on-one";
+import OneOnOneScheduler from "@/components/members/OneOnOneScheduler";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
 
 function giveAskCategoryName(row: GiveAsk): string | null {
@@ -127,9 +130,12 @@ export default async function MemberDetailPage({ params }: Props) {
 
   if (!member) notFound();
 
-  const [{ data: givesAsksData }, leadershipRoles] = await Promise.all([
+  const session = await getMemberSession();
+
+  const [{ data: givesAsksData }, leadershipRoles, calendarData] = await Promise.all([
     supabase.from("member_gives_asks").select("*, gives_asks_categories(name)").eq("member_id", member.id).order("sort_order"),
     fetchMemberLeadershipRoles(member.id),
+    fetchPublic121ProfileAction(member.id),
   ]);
 
   const allItems = (givesAsksData as GiveAsk[] | null) ?? [];
@@ -381,6 +387,14 @@ export default async function MemberDetailPage({ params }: Props) {
               </p>
             </div>
           )}
+
+          <div className="card p-8">
+            <OneOnOneScheduler
+              host={{ id: member.id, name: member.name, slug: member.slug }}
+              sessionMember={session}
+              initialData={calendarData}
+            />
+          </div>
         </div>
         <div style={{ maxWidth: 900, margin: "2rem auto 0" }}>
           <Link href="/members" className="flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--color-primary)" }}>

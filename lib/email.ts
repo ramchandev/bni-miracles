@@ -78,27 +78,38 @@ export async function sendMemberEmail(
     .eq("id", 1)
     .single();
 
-  if (error || !data?.smtp_host || !data?.smtp_user || !data?.smtp_pass) return;
+  if (error || !data?.smtp_host || !data?.smtp_user || !data?.smtp_pass) {
+    console.warn("[sendMemberEmail] SMTP settings incomplete — configure in admin → Settings");
+    return;
+  }
 
+  const fromAddress = (data.smtp_user as string).trim();
   const port = (data.smtp_port as number) ?? 465;
-  const transporter = nodemailer.createTransport({
-    host: data.smtp_host as string,
-    port,
-    secure: port === 465,
-    auth: { user: data.smtp_user as string, pass: data.smtp_pass as string },
-    connectionTimeout: 15_000,
-    greetingTimeout: 15_000,
-    socketTimeout: 15_000,
-  });
 
-  const info = await transporter.sendMail({
-    from: `"BNI Miracles" <${data.smtp_user}>`,
-    to,
-    subject,
-    html,
-  });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: data.smtp_host as string,
+      port,
+      secure: port === 465,
+      auth: { user: fromAddress, pass: data.smtp_pass as string },
+      connectionTimeout: 20_000,
+      greetingTimeout: 20_000,
+      socketTimeout: 20_000,
+    });
 
-  console.info("[sendMemberEmail] Sent to", to, ":", info.messageId ?? info.response);
+    const info = await transporter.sendMail({
+      from: `"BNI Miracles" <${fromAddress}>`,
+      replyTo: fromAddress,
+      to,
+      subject,
+      html,
+    });
+
+    console.info("[sendMemberEmail] Sent to", to, "from", fromAddress, ":", info.messageId ?? info.response);
+  } catch (err) {
+    console.error("[sendMemberEmail] Failed to send to", to, ":", err);
+    throw err;
+  }
 }
 
 /** Shared HTML wrapper matching BNI Miracles brand colours */

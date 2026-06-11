@@ -6,7 +6,6 @@ import {
   deleteMemberSession,
 } from "@/lib/member-session";
 import type { SessionMember } from "@/lib/supabase";
-import { redirect } from "next/navigation";
 
 function normalizePhone(raw: string): string {
   let p = raw.replace(/[\s\-\(\)\.]/g, "").replace(/^\+/, "");
@@ -52,8 +51,7 @@ export async function loginMemberAction(
   return { ok: true, member: matched as SessionMember };
 }
 
-/** Delete session and redirect to home. */
+/** Delete session cookie and DB row. Client should clear context and navigate home. */
 export async function logoutMemberAction(): Promise<void> {
   await deleteMemberSession();
-  redirect("/");
 }

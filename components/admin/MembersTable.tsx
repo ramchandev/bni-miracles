@@ -5,7 +5,7 @@ import { useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toggleMemberActiveAction, deleteMemberAction } from '@/app/admin/actions/members';
-import type { Member } from '@/lib/supabase';
+import type { MemberAdminRow } from '@/lib/member-profile-status';
 
 function Initials({ name }: { name: string }) {
   const parts = name.trim().split(' ');
@@ -20,7 +20,13 @@ function Initials({ name }: { name: string }) {
   );
 }
 
-export default function MembersTable({ members }: { members: Member[] }) {
+function completionColor(percent: number): string {
+  if (percent >= 80) return '#166534';
+  if (percent >= 50) return '#D97706';
+  return '#6B7280';
+}
+
+export default function MembersTable({ members }: { members: MemberAdminRow[] }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -58,7 +64,7 @@ export default function MembersTable({ members }: { members: Member[] }) {
             <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
               <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Member</th>
               <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Category</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Location</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Profile</th>
               <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Status</th>
               <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-gray)' }}>Actions</th>
             </tr>
@@ -91,8 +97,30 @@ export default function MembersTable({ members }: { members: Member[] }) {
                     {m.category}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--color-gray)' }}>
-                  {m.business_location || '—'}
+                <td className="px-4 py-3">
+                  <div className="text-sm font-semibold" style={{ color: completionColor(m.profileCompletionPercent) }}>
+                    {m.profileCompletionPercent}%
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
+                      style={{
+                        background: m.givesAsksLabel === 'GA: 100%' ? '#DCFCE7' : '#F3F4F6',
+                        color: m.givesAsksLabel === 'GA: 100%' ? '#166534' : '#6B7280',
+                      }}
+                    >
+                      {m.givesAsksLabel}
+                    </span>
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
+                      style={{
+                        background: m.danceCardLabel === 'DC: Generated' ? '#FEE2E2' : '#F3F4F6',
+                        color: m.danceCardLabel === 'DC: Generated' ? 'var(--color-primary)' : '#6B7280',
+                      }}
+                    >
+                      {m.danceCardLabel}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button

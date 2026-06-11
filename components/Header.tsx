@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 import { useMemberSession } from "@/components/MemberSessionContext";
@@ -99,7 +100,17 @@ export default function Header({ powerTeams = [] }: Props) {
   const [memberMenuOpen, setMemberMenuOpen] = useState(false);
   const memberMenuRef = useRef<HTMLDivElement>(null);
 
-  const { member } = useMemberSession();
+  const router = useRouter();
+  const { member, setMember } = useMemberSession();
+
+  const handleLogout = async () => {
+    setMemberMenuOpen(false);
+    setMenuOpen(false);
+    setMember(null);
+    await logoutMemberAction();
+    router.push("/");
+    router.refresh();
+  };
 
   // Close member dropdown on outside click
   useEffect(() => {
@@ -277,16 +288,42 @@ export default function Header({ powerTeams = [] }: Props) {
 
                 {memberMenuOpen && (
                   <div
-                    className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden shadow-xl z-50"
+                    className="absolute right-0 top-full mt-2 w-52 rounded-xl overflow-hidden shadow-xl z-50"
                     style={{ background: "rgba(26,26,46,0.98)", border: "1px solid rgba(255,255,255,0.12)" }}
                   >
+                    <Link
+                      href={`/members/${member.slug}`}
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/5 border-b border-white/10"
+                      onClick={() => setMemberMenuOpen(false)}
+                    >
+                      {member.profile_picture_url ? (
+                        <Image
+                          src={member.profile_picture_url}
+                          alt={member.name}
+                          width={32}
+                          height={32}
+                          className="rounded-full object-cover shrink-0"
+                          style={{ width: 32, height: 32 }}
+                        />
+                      ) : (
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                          style={{ background: "var(--color-primary)" }}
+                        >
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="font-semibold">My Profile</span>
+                    </Link>
                     <Link href="/bizrox" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📣 BizRox Feed</Link>
                     <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>✏️ New Post</Link>
                     <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>👤 Edit Profile</Link>
                     <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                    <Link href="/my-121" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
                     <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🎴 Dance Card</Link>
                     <button
-                      onClick={() => { setMemberMenuOpen(false); logoutMemberAction(); }}
+                      type="button"
+                      onClick={handleLogout}
                       className="flex items-center gap-2 w-full px-4 py-3 text-sm text-white/50 hover:bg-white/5 hover:text-white border-t border-white/10"
                     >
                       🚪 Log Out
@@ -466,21 +503,27 @@ export default function Header({ powerTeams = [] }: Props) {
               </button>
             ) : (
               <>
-                <div className="flex items-center gap-3 py-2 px-1 mt-1 border-t border-white/10">
+                <Link
+                  href={`/members/${member.slug}`}
+                  className="flex items-center gap-3 py-2 px-1 mt-1 border-t border-white/10"
+                  onClick={() => setMenuOpen(false)}
+                >
                   {member.profile_picture_url ? (
-                    <Image src={member.profile_picture_url} alt={member.name} width={32} height={32} className="rounded-full object-cover" style={{ width: 32, height: 32 }} />
+                    <Image src={member.profile_picture_url} alt={member.name} width={32} height={32} className="rounded-full object-cover shrink-0" style={{ width: 32, height: 32 }} />
                   ) : (
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "var(--color-primary)" }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: "var(--color-primary)" }}>
                       {member.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-white font-semibold text-sm">{member.name}</span>
-                </div>
+                  <span className="text-white font-semibold text-sm">My Profile</span>
+                </Link>
                 <Link href="/edit-my-details" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>👤 Edit Profile</Link>
                 <Link href="/gives-asks" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
+                <Link href="/my-121" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
                 <Link href="/dance-card" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎴 Dance Card</Link>
                 <button
-                  onClick={() => { setMenuOpen(false); logoutMemberAction(); }}
+                  type="button"
+                  onClick={handleLogout}
                   className="text-left text-white/50 text-sm py-2 px-1"
                 >
                   🚪 Log Out
