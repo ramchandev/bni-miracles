@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { fetchPublic121ProfileAction } from "@/app/actions/one-on-one";
+import { fetchPublic121ProfileAction } from "@/app/actions/one-on-one-queries";
 import {
   formatHourLabel,
   formatProfileDate,

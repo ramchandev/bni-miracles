@@ -252,7 +252,12 @@ export type SessionMember = {
 
 export type OneOnOneMeetingType = "online" | "in_person";
 export type OneOnOneSlotStatus = "open" | "booked" | "cancelled";
-export type OneOnOneRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+export type OneOnOneRequestStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "cancelled"
+  | "met";
 
 export type OneOnOneSlot = {
   id: string;

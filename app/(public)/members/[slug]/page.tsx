@@ -7,7 +7,7 @@ import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
 import { getMemberSession } from "@/lib/member-session";
-import { fetchPublic121ProfileAction } from "@/app/actions/one-on-one";
+import { fetchPublic121Profile } from "@/lib/one-on-one-queries";
 import OneOnOneScheduler from "@/components/members/OneOnOneScheduler";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
 
@@ -135,7 +135,7 @@ export default async function MemberDetailPage({ params }: Props) {
   const [{ data: givesAsksData }, leadershipRoles, calendarData] = await Promise.all([
     supabase.from("member_gives_asks").select("*, gives_asks_categories(name)").eq("member_id", member.id).order("sort_order"),
     fetchMemberLeadershipRoles(member.id),
-    fetchPublic121ProfileAction(member.id),
+    fetchPublic121Profile(member.id),
   ]);
 
   const allItems = (givesAsksData as GiveAsk[] | null) ?? [];

@@ -17,6 +17,7 @@ const STATUS_STYLES: Record<CalendarDayStatus, { bg: string; ring: string }> = {
   open: { bg: "#DCFCE7", ring: "#16A34A" },
   pending: { bg: "#FEF3C7", ring: "#D97706" },
   confirmed: { bg: "#FEE2E2", ring: "#C8102E" },
+  completed: { bg: "#E5E7EB", ring: "#4B5563" },
 };
 
 type Props = {

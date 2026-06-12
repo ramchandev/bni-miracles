@@ -18,6 +18,35 @@ export function kolkataDateString(d = new Date()): string {
   }).format(d);
 }
 
+/** Current hour (0–23) in Asia/Kolkata. */
+export function kolkataHourNow(d = new Date()): number {
+  const hourStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIMEZONE,
+    hour: "numeric",
+    hour12: false,
+  }).format(d);
+  const h = parseInt(hourStr, 10);
+  return h === 24 ? 0 : h;
+}
+
+export function isAvailabilitySlotInPast(
+  slotDate: string,
+  startHour: number,
+  now = new Date()
+): boolean {
+  const today = kolkataDateString(now);
+  if (slotDate < today) return true;
+  if (slotDate > today) return false;
+  return startHour <= kolkataHourNow(now);
+}
+
+/** Sort key for slot date + start time in Asia/Kolkata. */
+export function slotDateTimeSortKey(slotDate: string, startTime: string): number {
+  const hour = parseStartTime(startTime);
+  const hh = String(hour).padStart(2, "0");
+  return new Date(`${slotDate}T${hh}:00:00+05:30`).getTime();
+}
+
 /** Calendar month view anchored to IST, not the host machine timezone. */
 export function kolkataYearMonth(d: Date | string = new Date()): { year: number; month: number } {
   const dateStr = typeof d === "string" ? d : kolkataDateString(d);
@@ -146,7 +175,7 @@ export function formatSlotSummary(
   return `${dateStr}, ${timeStr} · ${typeLabel} · ${place}`;
 }
 
-export type CalendarDayStatus = "none" | "open" | "pending" | "confirmed";
+export type CalendarDayStatus = "none" | "open" | "pending" | "confirmed" | "completed";
 
 export function calendarStatusForDate(
   dateStr: string,
@@ -160,6 +189,7 @@ export function calendarStatusForDate(
   const dayRequests = requests.filter((r) => slotIds.has(r.slot_id));
 
   if (dayRequests.some((r) => r.status === "accepted")) return "confirmed";
+  if (dayRequests.some((r) => r.status === "met")) return "completed";
   if (dayRequests.some((r) => r.status === "pending")) return "pending";
   if (daySlots.some((s) => s.status === "open")) return "open";
   return "none";

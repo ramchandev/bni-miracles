@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  accept121RequestAction,
-  decline121RequestAction,
-  getRequestDanceCardLinksAction,
-} from "@/app/actions/one-on-one";
+import { accept121RequestAction, decline121RequestAction } from "@/app/actions/one-on-one";
+import { getRequestDanceCardLinksAction } from "@/app/actions/one-on-one-queries";
 import { formatSlotSummary } from "@/lib/one-on-one";
 import {
   EVENT_STYLES,
@@ -14,7 +11,7 @@ import {
 } from "@/lib/my-121-calendar";
 
 type Props = {
-  event: My121CalendarEvent | null;
+  event: My121CalendarEvent;
   onUpdate: () => void | Promise<void>;
   onRemoveSlot?: (slotId: string) => void | Promise<void>;
   removingSlotId?: string | null;
@@ -33,19 +30,6 @@ export default function My121EventDetail({
     requesterHasCard: boolean;
     requesterUploadUrl: string | null;
   } | null>(null);
-
-  if (!event) {
-    return (
-      <div
-        className="rounded-2xl p-6 text-center"
-        style={{ background: "white", border: "1.5px solid #E5E7EB" }}
-      >
-        <p className="text-sm text-gray-500">
-          Select a slot on the calendar to view details and take action.
-        </p>
-      </div>
-    );
-  }
 
   const style = EVENT_STYLES[event.kind];
   const req = event.request;
@@ -88,9 +72,13 @@ export default function My121EventDetail({
         ? "Pending request"
         : event.kind === "confirmed_host"
           ? "Confirmed · You host"
-          : event.kind === "pending_guest"
-            ? "Pending · You attend"
-            : "Confirmed · You attend";
+          : event.kind === "completed_host"
+            ? "Completed · You host"
+            : event.kind === "pending_guest"
+              ? "Pending · You attend"
+              : event.kind === "completed_guest"
+                ? "Completed · You attend"
+                : "Confirmed · You attend";
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1.5px solid #E5E7EB" }}>
@@ -171,7 +159,11 @@ export default function My121EventDetail({
             </button>
           )}
 
-          {req && (event.kind === "confirmed_host" || event.kind === "confirmed_guest") && (
+          {req &&
+            (event.kind === "confirmed_host" ||
+              event.kind === "confirmed_guest" ||
+              event.kind === "completed_host" ||
+              event.kind === "completed_guest") && (
             <>
               <a
                 href={`/api/121-ics/${req.id}`}

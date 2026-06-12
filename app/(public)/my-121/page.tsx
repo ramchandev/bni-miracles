@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import My121Client from "@/components/members/My121Client";
 import MemberPageGate from "@/components/MemberPageGate";
-import { fetchMy121CalendarAction } from "@/app/actions/one-on-one";
+import { fetchMy121Calendar } from "@/lib/one-on-one-queries";
 import { getMemberSession } from "@/lib/member-session";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export default async function My121Page() {
     );
   }
 
-  const calendar = await fetchMy121CalendarAction(session.id);
+  const calendar = await fetchMy121Calendar(session.id);
 
   return (
     <My121Client memberId={session.id} initial={calendar} />

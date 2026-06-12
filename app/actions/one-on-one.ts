@@ -1,22 +1,24 @@
 "use server";
 
 import { randomBytes } from "crypto";
-import { uploadGuestDanceCardPdf, GUEST_DANCE_CARD_BUCKET } from "@/lib/121-dance-card-upload";
+import { uploadGuestDanceCardPdf } from "@/lib/121-dance-card-upload";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getMemberSession } from "@/lib/member-session";
 import { sendAdminEmail, sendMemberEmail, emailTemplate } from "@/lib/email";
 import { createMemberNotification } from "@/app/actions/notifications";
+import {
+  getMemberDanceCardId,
+  normalizeRequest,
+  normalizeSlot,
+} from "@/lib/one-on-one-queries";
 import {
   formatHourOption,
   formatSlotSummary,
   generateIcsContent,
   isValidSlotHour,
   MIRACLES_CHAPTER,
-  requiresGuestDanceCardUpload,
   slotDateTime,
   slotEndDateTime,
-  type Member121CalendarData,
-  type Public121ProfileData,
 } from "@/lib/one-on-one";
 import type {
   OneOnOneMeetingType,
@@ -25,7 +27,6 @@ import type {
 } from "@/lib/supabase";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bnimiracles.in";
-const GUEST_BUCKET = GUEST_DANCE_CARD_BUCKET;
 
 async function sendNew121RequestEmails(params: {
   hostMemberId: string;
@@ -137,137 +138,6 @@ function newActionToken(): string {
   return randomBytes(24).toString("hex");
 }
 
-function normalizeSlot(row: Record<string, unknown>): OneOnOneSlot {
-  const start = String(row.start_time ?? "");
-  const hourPart = start.slice(0, 5);
-  return { ...(row as object), start_time: hourPart } as OneOnOneSlot;
-}
-
-function normalizeRequest(row: Record<string, unknown>): OneOnOneRequest {
-  const raw = row.one_on_one_slots;
-  let slot: OneOnOneSlot | null = null;
-  if (raw && typeof raw === "object") {
-    if (Array.isArray(raw)) {
-      slot = raw[0] ? normalizeSlot(raw[0] as Record<string, unknown>) : null;
-    } else {
-      slot = normalizeSlot(raw as Record<string, unknown>);
-    }
-  }
-  return {
-    ...(row as object),
-    one_on_one_slots: slot,
-  } as OneOnOneRequest;
-}
-
-async function getMemberDanceCardId(memberId: string): Promise<string | null> {
-  const admin = createSupabaseAdminClient();
-  const { data } = await admin
-    .from("dance_cards")
-    .select("id")
-    .eq("member_id", memberId)
-    .maybeSingle();
-  return (data?.id as string | undefined) ?? null;
-}
-
-async function signedGuestCardUrl(storagePath: string): Promise<string | null> {
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin.storage
-    .from(GUEST_BUCKET)
-    .createSignedUrl(storagePath, 60 * 60);
-  if (error || !data?.signedUrl) return null;
-  return data.signedUrl;
-}
-
-/** Public profile view: open slots to book + booked times (no requester details). */
-export async function fetchPublic121ProfileAction(
-  hostMemberId: string
-): Promise<Public121ProfileData> {
-  const admin = createSupabaseAdminClient();
-  const { data: slotsRaw } = await admin
-    .from("one_on_one_slots")
-    .select("*")
-    .eq("host_member_id", hostMemberId)
-    .in("status", ["open", "booked"])
-    .order("slot_date")
-    .order("start_time");
-
-  const slots = ((slotsRaw ?? []) as Record<string, unknown>[]).map(normalizeSlot);
-  return {
-    openSlots: slots.filter((s) => s.status === "open"),
-    bookedSlots: slots.filter((s) => s.status === "booked"),
-  };
-}
-
-export async function fetchMember121DataAction(
-  hostMemberId: string,
-  viewerMemberId?: string | null
-): Promise<Member121CalendarData> {
-  const admin = createSupabaseAdminClient();
-  const isOwner = viewerMemberId === hostMemberId;
-
-  const slotQuery = admin
-    .from("one_on_one_slots")
-    .select("*")
-    .eq("host_member_id", hostMemberId)
-    .order("slot_date")
-    .order("start_time");
-
-  if (!isOwner) {
-    slotQuery.eq("status", "open");
-  }
-
-  const [{ data: slotsRaw }, { data: requestsRaw }] = await Promise.all([
-    slotQuery,
-    isOwner
-      ? admin
-          .from("one_on_one_requests")
-          .select("*, one_on_one_slots(*)")
-          .eq("host_member_id", hostMemberId)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
-  ]);
-
-  const slots = ((slotsRaw ?? []) as Record<string, unknown>[]).map(normalizeSlot);
-  const requests = ((requestsRaw ?? []) as Record<string, unknown>[]).map(normalizeRequest);
-  const pendingAsHost = requests.filter((r) => r.status === "pending");
-
-  return { slots, requests, pendingAsHost };
-}
-
-export async function fetchMy121CalendarAction(
-  memberId: string
-): Promise<{ asHost: OneOnOneRequest[]; asRequester: OneOnOneRequest[]; hostSlots: OneOnOneSlot[] }> {
-  const admin = createSupabaseAdminClient();
-
-  const [{ data: asHostRaw }, { data: asRequesterRaw }, { data: hostSlotsRaw }] = await Promise.all([
-    admin
-      .from("one_on_one_requests")
-      .select("*, one_on_one_slots(*)")
-      .eq("host_member_id", memberId)
-      .in("status", ["pending", "accepted"])
-      .order("created_at", { ascending: false }),
-    admin
-      .from("one_on_one_requests")
-      .select("*, one_on_one_slots(*), members!host_member_id(name)")
-      .eq("requester_member_id", memberId)
-      .in("status", ["pending", "accepted"])
-      .order("created_at", { ascending: false }),
-    admin
-      .from("one_on_one_slots")
-      .select("*")
-      .eq("host_member_id", memberId)
-      .neq("status", "cancelled")
-      .order("slot_date")
-      .order("start_time"),
-  ]);
-
-  return {
-    asHost: ((asHostRaw ?? []) as Record<string, unknown>[]).map(normalizeRequest),
-    asRequester: ((asRequesterRaw ?? []) as Record<string, unknown>[]).map(normalizeRequest),
-    hostSlots: ((hostSlotsRaw ?? []) as Record<string, unknown>[]).map(normalizeSlot),
-  };
-}
-
 export async function createAvailabilitySlotAction(input: {
   hostMemberId: string;
   slotDate: string;
@@ -376,16 +246,6 @@ export async function submit121RequestAction(input: {
     ? await getMemberDanceCardId(requesterMemberId)
     : null;
 
-  const needsUpload = requiresGuestDanceCardUpload(
-    requesterMemberId,
-    chapter,
-    !!requesterDanceCardId
-  );
-
-  if (needsUpload && !input.guestDanceCardPath?.trim()) {
-    return { error: "Please upload your dance card PDF." };
-  }
-
   const admin = createSupabaseAdminClient();
   const { data: slot } = await admin
     .from("one_on_one_slots")
@@ -414,7 +274,7 @@ export async function submit121RequestAction(input: {
     requester_name: name,
     requester_chapter: chapter,
     requester_email: email,
-    guest_dance_card_url: needsUpload ? input.guestDanceCardPath!.trim() : null,
+    guest_dance_card_url: input.guestDanceCardPath?.trim() || null,
     requester_dance_card_id: requesterDanceCardId,
     status: "pending",
     host_action_token: token,
@@ -684,64 +544,99 @@ export async function generate121IcsAction(
   };
 }
 
-export async function getRequestDanceCardLinksAction(
+async function loadAcceptedMeetingForMember(
   requestId: string
-): Promise<{
-  hostHasCard: boolean;
-  requesterUploadUrl: string | null;
-  requesterHasCard: boolean;
-  error?: string;
-}> {
+): Promise<{ request: OneOnOneRequest; slot: OneOnOneSlot; error?: string } | { error: string }> {
   const session = await getMemberSession();
-  if (!session) return { error: "Please log in.", hostHasCard: false, requesterUploadUrl: null, requesterHasCard: false };
+  if (!session) return { error: "Please log in." };
 
   const admin = createSupabaseAdminClient();
   const { data: raw } = await admin
     .from("one_on_one_requests")
-    .select("*")
+    .select("*, one_on_one_slots(*)")
     .eq("id", requestId)
     .eq("status", "accepted")
     .single();
 
-  if (!raw) return { error: "Meeting not found.", hostHasCard: false, requesterUploadUrl: null, requesterHasCard: false };
+  if (!raw) return { error: "Meeting not found." };
 
-  const request = raw as OneOnOneRequest;
+  const request = normalizeRequest(raw as Record<string, unknown>);
+  const slotJoin = request.one_on_one_slots;
+  if (!slotJoin || Array.isArray(slotJoin)) return { error: "Slot not found." };
+  const slot = slotJoin;
+
   const isHost = session.id === request.host_member_id;
   const isRequester = session.id === request.requester_member_id;
-  if (!isHost && !isRequester) {
-    return { error: "Unauthorized.", hostHasCard: false, requesterUploadUrl: null, requesterHasCard: false };
-  }
+  if (!isHost && !isRequester) return { error: "Unauthorized." };
 
-  let requesterUploadUrl: string | null = null;
-  if (request.guest_dance_card_url) {
-    requesterUploadUrl = await signedGuestCardUrl(request.guest_dance_card_url);
-  }
-
-  return {
-    hostHasCard: !!request.host_dance_card_id,
-    requesterHasCard: !!request.requester_dance_card_id,
-    requesterUploadUrl,
-  };
+  return { request, slot };
 }
 
-export async function getRequesterPrefillAction(): Promise<{
-  name: string;
-  chapter: string;
-  email: string;
-  memberId: string | null;
-  hasDanceCard: boolean;
-}> {
+async function reopenBookedSlot(admin: ReturnType<typeof createSupabaseAdminClient>, slotId: string) {
+  await admin.from("one_on_one_slots").update({ status: "open" }).eq("id", slotId).eq("status", "booked");
+}
+
+export async function mark121MeetingMetAction(requestId: string): Promise<{ error?: string }> {
+  const loaded = await loadAcceptedMeetingForMember(requestId);
+  if ("error" in loaded) return { error: loaded.error };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("one_on_one_requests")
+    .update({ status: "met" })
+    .eq("id", requestId)
+    .eq("status", "accepted");
+
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function cancel121MeetingAction(requestId: string): Promise<{ error?: string }> {
+  const loaded = await loadAcceptedMeetingForMember(requestId);
+  if ("error" in loaded) return { error: loaded.error };
+
+  const { request, slot } = loaded;
   const session = await getMemberSession();
-  if (!session) {
-    return { name: "", chapter: "", email: "", memberId: null, hasDanceCard: false };
-  }
+  if (!session) return { error: "Please log in." };
 
-  const danceCardId = await getMemberDanceCardId(session.id);
-  return {
-    name: session.name,
-    chapter: MIRACLES_CHAPTER,
-    email: session.email ?? "",
-    memberId: session.id,
-    hasDanceCard: !!danceCardId,
-  };
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("one_on_one_requests")
+    .update({ status: "cancelled" })
+    .eq("id", requestId)
+    .eq("status", "accepted");
+
+  if (error) return { error: error.message };
+
+  const isHost = session.id === request.host_member_id;
+  if (isHost) {
+    const { error: slotError } = await admin.from("one_on_one_slots").delete().eq("id", slot.id);
+    if (slotError) return { error: slotError.message };
+  } else {
+    await reopenBookedSlot(admin, slot.id);
+  }
+  return {};
 }
+
+export async function delete121MeetingAction(requestId: string): Promise<{ error?: string }> {
+  const loaded = await loadAcceptedMeetingForMember(requestId);
+  if ("error" in loaded) return { error: loaded.error };
+
+  const { request, slot } = loaded;
+  const session = await getMemberSession();
+  if (!session) return { error: "Please log in." };
+
+  const admin = createSupabaseAdminClient();
+  const isHost = session.id === request.host_member_id;
+
+  if (isHost) {
+    const { error } = await admin.from("one_on_one_slots").delete().eq("id", slot.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await admin.from("one_on_one_requests").delete().eq("id", requestId);
+    if (error) return { error: error.message };
+    await reopenBookedSlot(admin, slot.id);
+  }
+  return {};
+}
+

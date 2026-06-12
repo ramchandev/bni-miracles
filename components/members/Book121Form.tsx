@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getRequesterPrefillAction,
-  submit121RequestAction,
-} from "@/app/actions/one-on-one";
+import { submit121RequestAction } from "@/app/actions/one-on-one";
+import { getRequesterPrefillAction } from "@/app/actions/one-on-one-queries";
 import { formatSlotSummary, MIRACLES_CHAPTER, requiresGuestDanceCardUpload } from "@/lib/one-on-one";
 import type { OneOnOneSlot } from "@/lib/supabase";
 
@@ -45,12 +43,7 @@ export default function Book121Form({ slot, hostName, onSuccess, onCancel }: Pro
     setError("");
 
     let guestDanceCardPath: string | null = null;
-    if (needsUpload) {
-      if (!pdfFile) {
-        setError("Please upload your dance card PDF.");
-        setSaving(false);
-        return;
-      }
+    if (pdfFile) {
       const fd = new FormData();
       fd.set("file", pdfFile);
       const uploadRes = await fetch("/api/121-dance-card-upload", {
@@ -143,13 +136,12 @@ export default function Book121Form({ slot, hostName, onSuccess, onCancel }: Pro
 
       {needsUpload && (
         <label className="block text-xs font-semibold text-gray-500">
-          Dance card (PDF)
+          Dance card (PDF) <span className="font-normal text-gray-400">(optional)</span>
           <input
             type="file"
             accept="application/pdf,.pdf"
             onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
             className="mt-1 w-full text-sm"
-            required
           />
         </label>
       )}

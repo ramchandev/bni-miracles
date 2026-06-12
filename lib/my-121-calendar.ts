@@ -16,7 +16,9 @@ export type My121EventKind =
   | "pending_host"
   | "confirmed_host"
   | "pending_guest"
-  | "confirmed_guest";
+  | "confirmed_guest"
+  | "completed_host"
+  | "completed_guest";
 
 export type My121CalendarEvent = {
   id: string;
@@ -39,6 +41,8 @@ export const EVENT_STYLES: Record<
   confirmed_host: { bg: "#FEE2E2", border: "#C8102E", text: "#7F1D1D" },
   pending_guest: { bg: "#E0E7FF", border: "#6366F1", text: "#3730A3" },
   confirmed_guest: { bg: "#DBEAFE", border: "#2563EB", text: "#1E3A8A" },
+  completed_host: { bg: "#E5E7EB", border: "#4B5563", text: "#1F2937" },
+  completed_guest: { bg: "#D1FAE5", border: "#059669", text: "#064E3B" },
 };
 
 function slotFromRequest(req: OneOnOneRequest): OneOnOneSlot | null {
@@ -110,11 +114,30 @@ export function buildMy121CalendarEvents(
         request: req,
         role: "host",
       });
+      continue;
     }
+
+    if (req?.status === "met") {
+      events.push({
+        id: `req-${req.id}`,
+        kind: "completed_host",
+        date: slot.slot_date,
+        startHour: hour,
+        title: req.requester_name,
+        subtitle: `${req.requester_chapter} · Completed`,
+        slot,
+        request: req,
+        role: "host",
+      });
+      continue;
+    }
+
+    // Booked slot with no active request — don't show a stale block on the calendar
+    if (slot.status === "booked") continue;
   }
 
   for (const req of asRequester) {
-    if (req.status !== "pending" && req.status !== "accepted") continue;
+    if (req.status !== "pending" && req.status !== "accepted" && req.status !== "met") continue;
     const slot = slotFromRequest(req);
     if (!slot) continue;
     if (slot.host_member_id === memberId) continue;
@@ -123,14 +146,15 @@ export function buildMy121CalendarEvents(
     const hour = parseStartTime(slot.start_time);
     const hostName = hostNameFromRequest(req);
     const pending = req.status === "pending";
+    const completed = req.status === "met";
 
     events.push({
       id: `guest-${req.id}`,
-      kind: pending ? "pending_guest" : "confirmed_guest",
+      kind: pending ? "pending_guest" : completed ? "completed_guest" : "confirmed_guest",
       date: slot.slot_date,
       startHour: hour,
       title: hostName ? `With ${hostName}` : "1-2-1 meeting",
-      subtitle: pending ? "Awaiting host" : "Confirmed · Guest",
+      subtitle: pending ? "Awaiting host" : completed ? "Completed · Guest" : "Confirmed · Guest",
       slot,
       request: req,
       role: "guest",

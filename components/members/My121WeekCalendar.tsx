@@ -8,6 +8,7 @@ import {
   formatKolkataDayHeader,
   formatKolkataMonthYear,
   formatKolkataWeekRange,
+  isAvailabilitySlotInPast,
   kolkataDateString,
   kolkataDayOfWeek,
   kolkataWeekDates,
@@ -32,6 +33,7 @@ const STATUS_DOT: Record<string, string> = {
   open: "#16A34A",
   pending: "#D97706",
   confirmed: "#C8102E",
+  completed: "#4B5563",
 };
 
 type Props = {
@@ -41,6 +43,7 @@ type Props = {
   asRequester: OneOnOneRequest[];
   selectedEventId: string | null;
   onSelectEvent: (event: My121CalendarEvent | null) => void;
+  onEmptySlotClick?: (slotDate: string, startHour: number) => void;
 };
 
 function pad(n: number) {
@@ -58,6 +61,7 @@ export default function My121WeekCalendar({
   asRequester,
   selectedEventId,
   onSelectEvent,
+  onEmptySlotClick,
 }: Props) {
   const todayStr = kolkataDateString();
   const [weekStart, setWeekStart] = useState(() => kolkataWeekStart());
@@ -313,6 +317,27 @@ export default function My121WeekCalendar({
                     />
                   ))}
 
+                  {onEmptySlotClick &&
+                    SLOT_HOURS.map((h) => {
+                      const occupied = dayEvents.some((ev) => ev.startHour === h);
+                      const inPast = isAvailabilitySlotInPast(date, h);
+                      if (occupied || inPast) return null;
+                      return (
+                        <button
+                          key={`empty-${h}`}
+                          type="button"
+                          onClick={() => onEmptySlotClick(date, h)}
+                          className="absolute w-full left-0 text-left transition-colors hover:bg-green-50/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-600 cursor-pointer"
+                          style={{
+                            top: (h - CALENDAR_START_HOUR) * CALENDAR_HOUR_HEIGHT,
+                            height: CALENDAR_HOUR_HEIGHT,
+                            zIndex: 0,
+                          }}
+                          aria-label={`Add availability ${formatKolkataDayHeader(date)}, ${formatHourLabel(h)}`}
+                        />
+                      );
+                    })}
+
                   {dayEvents.map((ev) => {
                     const es = EVENT_STYLES[ev.kind];
                     const selected = selectedEventId === ev.id;
@@ -373,6 +398,13 @@ export default function My121WeekCalendar({
           <span className="w-3 h-3 rounded" style={{ background: EVENT_STYLES.confirmed_guest.bg, borderLeft: `3px solid ${EVENT_STYLES.confirmed_guest.border}` }} />
           Attending
         </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded" style={{ background: EVENT_STYLES.completed_host.bg, borderLeft: `3px solid ${EVENT_STYLES.completed_host.border}` }} />
+          Completed
+        </span>
+        {onEmptySlotClick && (
+          <span className="text-gray-400">Click an empty time slot to add availability</span>
+        )}
       </div>
     </div>
   );
