@@ -248,7 +248,7 @@ export async function fetchMy121CalendarAction(
       .order("created_at", { ascending: false }),
     admin
       .from("one_on_one_requests")
-      .select("*, one_on_one_slots(*)")
+      .select("*, one_on_one_slots(*), members!host_member_id(name)")
       .eq("requester_member_id", memberId)
       .in("status", ["pending", "accepted"])
       .order("created_at", { ascending: false }),

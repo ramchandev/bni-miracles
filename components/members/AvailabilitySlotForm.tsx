@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { createAvailabilitySlotAction } from "@/app/actions/one-on-one";
-import { formatHourLabel, SLOT_HOURS } from "@/lib/one-on-one";
+import { useToast } from "@/components/Toast";
+import { formatHourLabel, formatProfileDate, parseStartTime, SLOT_HOURS } from "@/lib/one-on-one";
 import type { OneOnOneMeetingType, OneOnOneSlot } from "@/lib/supabase";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function AvailabilitySlotForm({ hostMemberId, onCreated }: Props) {
+  const showToast = useToast();
   const today = new Date().toISOString().slice(0, 10);
   const [slotDate, setSlotDate] = useState(today);
   const [startHour, setStartHour] = useState<number>(9);
@@ -35,6 +37,10 @@ export default function AvailabilitySlotForm({ hostMemberId, onCreated }: Props)
     setSaving(false);
     if (res.error) setError(res.error);
     else if (res.slot) {
+      const hour = parseStartTime(res.slot.start_time);
+      showToast(
+        `Slot created — ${formatProfileDate(res.slot.slot_date)}, ${formatHourLabel(hour)} – ${formatHourLabel(hour + 1)} IST`
+      );
       onCreated(res.slot);
       setLocation("");
       setMeetingUrl("");

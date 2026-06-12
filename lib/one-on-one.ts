@@ -19,8 +19,9 @@ export function kolkataDateString(d = new Date()): string {
 }
 
 /** Calendar month view anchored to IST, not the host machine timezone. */
-export function kolkataYearMonth(d = new Date()): { year: number; month: number } {
-  const [year, month] = kolkataDateString(d).split("-").map(Number);
+export function kolkataYearMonth(d: Date | string = new Date()): { year: number; month: number } {
+  const dateStr = typeof d === "string" ? d : kolkataDateString(d);
+  const [year, month] = dateStr.split("-").map(Number);
   return { year, month: month - 1 };
 }
 
@@ -31,6 +32,64 @@ export function formatKolkataMonthYear(year: number, month: number): string {
     month: "long",
     year: "numeric",
   }).format(new Date(`${year}-${m}-15T12:00:00+05:30`));
+}
+
+const KOLKATA_WEEKDAY: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+export function kolkataDayOfWeek(dateStr: string): number {
+  const wd = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIMEZONE,
+    weekday: "short",
+  }).format(new Date(`${dateStr}T12:00:00+05:30`));
+  return KOLKATA_WEEKDAY[wd] ?? 0;
+}
+
+export function addKolkataDays(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T12:00:00+05:30`);
+  d.setTime(d.getTime() + days * 86_400_000);
+  return kolkataDateString(d);
+}
+
+/** Sunday (start of week) containing `dateStr` in IST. */
+export function kolkataWeekStart(dateStr?: string): string {
+  const anchor = dateStr ?? kolkataDateString();
+  return addKolkataDays(anchor, -kolkataDayOfWeek(anchor));
+}
+
+export function kolkataWeekDates(sundayStr: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addKolkataDays(sundayStr, i));
+}
+
+export function formatKolkataDayHeader(dateStr: string): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIMEZONE,
+    weekday: "short",
+    day: "numeric",
+  }).format(new Date(`${dateStr}T12:00:00+05:30`));
+}
+
+export function formatKolkataWeekRange(sundayStr: string): string {
+  const end = addKolkataDays(sundayStr, 6);
+  const startLabel = new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIMEZONE,
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${sundayStr}T12:00:00+05:30`));
+  const endLabel = new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIMEZONE,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${end}T12:00:00+05:30`));
+  return `${startLabel} – ${endLabel}`;
 }
 
 export type SlotHour = (typeof SLOT_HOURS)[number];
