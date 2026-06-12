@@ -18,6 +18,7 @@ const navLinksBeforeDropdowns = [
 const memberNavItems = [
   { key: "all-gives", href: "/members/all-gives", label: "All Gives", icon: "✅", hint: "Grouped by category" },
   { key: "all-asks", href: "/members/all-asks", label: "All Asks", icon: "🙏", hint: "Grouped by category" },
+  { key: "plan-121s", href: "/members/plan-121s", label: "Plan 1-2-1s", icon: "📅", hint: "Book open slots chapter-wide" },
 ];
 
 const navLinksAfterDropdowns = [{ href: "/contact", label: "Contact" }];

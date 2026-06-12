@@ -92,6 +92,9 @@ export default function Book121Form({ slot, hostName, onSuccess, onCancel }: Pro
         <p className="text-sm text-gray-600">
           {hostName} will review your request and email you when it&apos;s confirmed.
         </p>
+        <button type="button" onClick={onCancel} className="btn-primary text-sm mt-5">
+          Close
+        </button>
       </div>
     );
   }
