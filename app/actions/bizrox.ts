@@ -3,6 +3,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getMemberSession } from "@/lib/member-session";
 import { sendMemberEmail, emailTemplate } from "@/lib/email";
+import { createMemberNotification } from "@/app/actions/notifications";
 import { revalidatePath } from "next/cache";
 import type {
   PostType,
@@ -221,6 +222,17 @@ export async function addCommentAction(
   if (post && (post.member_id as string) !== member.id) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const author = post.members as any;
+    const authorId = post.member_id as string;
+
+    await createMemberNotification({
+      memberId: authorId,
+      type: "bizrox_comment",
+      title: `${member.name} commented on your post`,
+      body: (content as string).slice(0, 120),
+      href: `/bizrox/${postId}`,
+      sourceId: comment.id as string,
+    });
+
     if (author?.email) {
       const waLink = member.phone
         ? `https://wa.me/${(member.phone as string).replace(/\D/g, "")}`

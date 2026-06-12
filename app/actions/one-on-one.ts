@@ -5,6 +5,7 @@ import { uploadGuestDanceCardPdf, GUEST_DANCE_CARD_BUCKET } from "@/lib/121-danc
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getMemberSession } from "@/lib/member-session";
 import { sendAdminEmail, sendMemberEmail, emailTemplate } from "@/lib/email";
+import { createMemberNotification } from "@/app/actions/notifications";
 import {
   formatHourOption,
   formatSlotSummary,
@@ -27,16 +28,27 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bnimiracles.in";
 const GUEST_BUCKET = GUEST_DANCE_CARD_BUCKET;
 
 async function sendNew121RequestEmails(params: {
+  hostMemberId: string;
   hostName: string;
   hostEmail: string;
   requesterName: string;
   requesterChapter: string;
   requesterEmail: string;
+  requestId: string;
   summary: string;
   acceptUrl: string;
   declineUrl: string;
   profileUrl: string;
 }): Promise<void> {
+  await createMemberNotification({
+    memberId: params.hostMemberId,
+    type: "121_request",
+    title: `1-2-1 request from ${params.requesterName}`,
+    body: `${params.requesterChapter} · ${params.summary}`,
+    href: "/my-121",
+    sourceId: params.requestId,
+  });
+
   const hostHtml = emailTemplate("New 1-2-1 Request", [
     { label: "Requester", value: params.requesterName },
     { label: "Chapter", value: params.requesterChapter },
@@ -395,7 +407,7 @@ export async function submit121RequestAction(input: {
     .single();
 
   const token = newActionToken();
-  const { error } = await admin.from("one_on_one_requests").insert({
+  const { data: inserted, error } = await admin.from("one_on_one_requests").insert({
     slot_id: input.slotId,
     host_member_id: slot.host_member_id,
     requester_member_id: requesterMemberId,
@@ -406,9 +418,10 @@ export async function submit121RequestAction(input: {
     requester_dance_card_id: requesterDanceCardId,
     status: "pending",
     host_action_token: token,
-  });
+  }).select("id").single();
 
   if (error) return { error: error.message };
+  if (!inserted?.id) return { error: "Could not save request." };
 
   const slotNorm = normalizeSlot(slot as Record<string, unknown>);
   const summary = formatSlotSummary(slotNorm);
@@ -417,11 +430,13 @@ export async function submit121RequestAction(input: {
   const declineUrl = `${SITE_URL}/121/respond/${token}?action=decline`;
 
   await sendNew121RequestEmails({
+    hostMemberId: slot.host_member_id as string,
     hostName: (host?.name as string) ?? "BNI Miracles member",
     hostEmail: (host?.email as string | null) ?? "",
     requesterName: name,
     requesterChapter: chapter,
     requesterEmail: email,
+    requestId: inserted.id as string,
     summary,
     acceptUrl,
     declineUrl,
@@ -532,6 +547,17 @@ export async function accept121RequestAction(
     console.error("[accept121RequestAction] Confirmation email failed:", confirmResult.error);
   }
 
+  if (request.requester_member_id) {
+    await createMemberNotification({
+      memberId: request.requester_member_id,
+      type: "121_accepted",
+      title: `1-2-1 confirmed with ${(host?.name as string) ?? "your host"}`,
+      body: summary,
+      href: "/my-121",
+      sourceId: requestId,
+    });
+  }
+
   return {};
 }
 
@@ -572,6 +598,17 @@ export async function decline121RequestAction(
   );
   if (!declineResult.sent) {
     console.error("[decline121RequestAction] Notification email failed:", declineResult.error);
+  }
+
+  if (request.requester_member_id) {
+    await createMemberNotification({
+      memberId: request.requester_member_id,
+      type: "121_declined",
+      title: "1-2-1 request declined",
+      body: "The host was unable to confirm this time. Try another slot.",
+      href: "/my-121",
+      sourceId: requestId,
+    });
   }
 
   return {};

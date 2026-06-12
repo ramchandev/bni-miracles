@@ -49,6 +49,11 @@ function createSmtpTransporter(settings: EmailSettings) {
       user: settings.smtp_user,
       pass: settings.smtp_pass,
     },
+    tls: {
+      // cPanel / shared hosting often uses certs that fail strict Node verification
+      rejectUnauthorized: false,
+      minVersion: "TLSv1.2",
+    },
     connectionTimeout: 25_000,
     greetingTimeout: 25_000,
     socketTimeout: 25_000,
@@ -102,6 +107,8 @@ export async function sendEmail(
   try {
     const transporter = createSmtpTransporter(settings);
     const fromAddress = settings.smtp_user;
+
+    await transporter.verify();
 
     const info = await transporter.sendMail({
       from: `"BNI Miracles" <${fromAddress}>`,
