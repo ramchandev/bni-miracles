@@ -11,7 +11,7 @@ import type { OneOnOneRequest } from "@/lib/supabase";
 
 type Props = {
   requests: OneOnOneRequest[];
-  onUpdate: () => void;
+  onUpdate: () => void | Promise<void>;
 };
 
 function slotFromRequest(req: OneOnOneRequest) {
@@ -71,13 +71,19 @@ function PendingRequestCard({
   const act = async (action: "accept" | "decline") => {
     setBusy(action);
     setError("");
-    const res =
-      action === "accept"
-        ? await accept121RequestAction(request.id)
-        : await decline121RequestAction(request.id);
-    setBusy(null);
-    if (res.error) setError(res.error);
-    else onUpdate();
+    try {
+      const res =
+        action === "accept"
+          ? await accept121RequestAction(request.id)
+          : await decline121RequestAction(request.id);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      await onUpdate();
+    } finally {
+      setBusy(null);
+    }
   };
 
   return (
@@ -93,19 +99,21 @@ function PendingRequestCard({
         <button
           type="button"
           disabled={!!busy}
+          {...(busy === "accept" ? { "aria-busy": true as const } : {})}
           onClick={() => act("accept")}
-          className="text-xs font-semibold px-4 py-2 rounded-lg text-white"
+          className="text-xs font-semibold px-4 py-2 rounded-lg text-white min-w-[6.5rem] disabled:opacity-90 disabled:cursor-wait"
           style={{ background: "#16A34A" }}
         >
-          {busy === "accept" ? "…" : "Accept"}
+          {busy === "accept" ? "Accepting…" : "Accept"}
         </button>
         <button
           type="button"
           disabled={!!busy}
+          {...(busy === "decline" ? { "aria-busy": true as const } : {})}
           onClick={() => act("decline")}
-          className="text-xs font-semibold px-4 py-2 rounded-lg border border-gray-200"
+          className="text-xs font-semibold px-4 py-2 rounded-lg border border-gray-200 min-w-[6.5rem] disabled:opacity-70 disabled:cursor-wait"
         >
-          {busy === "decline" ? "…" : "Decline"}
+          {busy === "decline" ? "Declining…" : "Decline"}
         </button>
       </div>
     </div>

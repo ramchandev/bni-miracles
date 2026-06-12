@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   calendarStatusForDate,
+  formatKolkataMonthYear,
+  kolkataDateString,
+  kolkataYearMonth,
   type CalendarDayStatus,
 } from "@/lib/one-on-one";
 import type { OneOnOneRequest, OneOnOneSlot } from "@/lib/supabase";
@@ -37,9 +40,10 @@ export default function OneOnOneCalendar({
   selectedDate,
   onSelectDate,
 }: Props) {
-  const today = new Date();
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const todayStr = kolkataDateString();
+  const initialView = kolkataYearMonth();
+  const [viewYear, setViewYear] = useState(initialView.year);
+  const [viewMonth, setViewMonth] = useState(initialView.month);
 
   const cells = useMemo(() => {
     const first = new Date(viewYear, viewMonth, 1);
@@ -58,10 +62,7 @@ export default function OneOnOneCalendar({
     return out;
   }, [viewYear, viewMonth, slots, requests]);
 
-  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("en-IN", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = formatKolkataMonthYear(viewYear, viewMonth);
 
   const prevMonth = () => {
     if (viewMonth === 0) {
@@ -114,8 +115,7 @@ export default function OneOnOneCalendar({
           if (!cell.date) return <div key={`empty-${i}`} className="aspect-square" />;
           const isSelected = selectedDate === cell.date;
           const style = STATUS_STYLES[cell.status];
-          const isPast =
-            new Date(cell.date) < new Date(today.toISOString().slice(0, 10));
+          const isPast = cell.date < todayStr;
 
           return (
             <button

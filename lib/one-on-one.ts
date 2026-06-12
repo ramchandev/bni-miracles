@@ -8,6 +8,31 @@ export const MIRACLES_CHAPTER = "BNI Miracles";
 export const SLOT_HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] as const;
 export const TIMEZONE = "Asia/Kolkata";
 
+/** YYYY-MM-DD in Asia/Kolkata — consistent on server (UTC) and client (local). */
+export function kolkataDateString(d = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/** Calendar month view anchored to IST, not the host machine timezone. */
+export function kolkataYearMonth(d = new Date()): { year: number; month: number } {
+  const [year, month] = kolkataDateString(d).split("-").map(Number);
+  return { year, month: month - 1 };
+}
+
+export function formatKolkataMonthYear(year: number, month: number): string {
+  const m = String(month + 1).padStart(2, "0");
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIMEZONE,
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${year}-${m}-15T12:00:00+05:30`));
+}
+
 export type SlotHour = (typeof SLOT_HOURS)[number];
 
 export function formatHourOption(hour: number): string {

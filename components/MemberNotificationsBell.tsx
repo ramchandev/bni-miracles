@@ -9,6 +9,37 @@ import {
 import { notificationIcon } from "@/lib/notifications";
 import type { MemberNotification } from "@/lib/notifications";
 
+const READ_STORAGE_KEY = "bni_notif_read";
+
+function loadLocalReadKeys(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(READ_STORAGE_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveLocalReadKeys(keys: Set<string>) {
+  localStorage.setItem(READ_STORAGE_KEY, JSON.stringify([...keys]));
+}
+
+function notifReadKey(n: MemberNotification): string {
+  return `${n.type}:${n.source_id ?? n.id}`;
+}
+
+function applyLocalReadState(
+  notifications: MemberNotification[],
+  localRead: Set<string>
+): MemberNotification[] {
+  return notifications.map((n) => {
+    if (n.is_read) return n;
+    const key = notifReadKey(n);
+    return localRead.has(key) ? { ...n, is_read: true } : n;
+  });
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -25,22 +56,29 @@ export default function MemberNotificationsBell() {
   const [notifications, setNotifications] = useState<MemberNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const localReadRef = useRef<Set<string>>(new Set());
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchMemberNotificationsAction();
-      setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount);
+      const merged = applyLocalReadState(data.notifications, localReadRef.current);
+      setNotifications(merged);
+      setUnreadCount(merged.filter((n) => !n.is_read).length);
+    } catch (err) {
+      console.error("[MemberNotificationsBell] refresh failed:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    localReadRef.current = loadLocalReadKeys();
+    setMounted(true);
     refresh();
-    const interval = setInterval(refresh, 60_000);
+    const interval = setInterval(refresh, 30_000);
     return () => clearInterval(interval);
   }, [refresh]);
 
@@ -55,19 +93,35 @@ export default function MemberNotificationsBell() {
   }, []);
 
   const openPanel = async () => {
-    setOpen((o) => !o);
-    if (!open) await refresh();
+    const next = !open;
+    setOpen(next);
+    if (next) await refresh();
+  };
+
+  const markRead = async (ids: string[], keys: string[]) => {
+    const idSet = new Set(ids);
+    keys.forEach((k) => localReadRef.current.add(k));
+    saveLocalReadKeys(localReadRef.current);
+    await markNotificationsReadAction(ids.length ? ids : undefined);
+    setNotifications((prev) =>
+      prev.map((n) => (idSet.has(n.id) ? { ...n, is_read: true } : n))
+    );
+    setUnreadCount((prev) => {
+      if (!ids.length) return 0;
+      return Math.max(0, prev - ids.length);
+    });
   };
 
   const markAllRead = async () => {
-    await markNotificationsReadAction();
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    setUnreadCount(0);
+    const ids = notifications.filter((n) => !n.is_read).map((n) => n.id);
+    const keys = notifications.map(notifReadKey);
+    await markRead(ids, keys);
   };
 
   const onItemClick = async (n: MemberNotification) => {
     if (!n.is_read) {
-      await markNotificationsReadAction([n.id]);
+      const keys = [notifReadKey(n)];
+      await markRead([n.id], keys);
       setNotifications((prev) =>
         prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item))
       );
@@ -81,7 +135,11 @@ export default function MemberNotificationsBell() {
       <button
         type="button"
         onClick={openPanel}
-        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+        aria-label={
+          mounted && unreadCount > 0
+            ? `Notifications, ${unreadCount} unread`
+            : "Notifications"
+        }
         className="relative flex items-center justify-center w-9 h-9 rounded-full transition-all hover:bg-white/10"
         style={{ border: "1px solid rgba(255,255,255,0.2)" }}
       >
@@ -89,7 +147,7 @@ export default function MemberNotificationsBell() {
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 01-3.46 0" />
         </svg>
-        {unreadCount > 0 && (
+        {mounted && unreadCount > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
             style={{ background: "var(--color-primary)" }}
@@ -106,7 +164,7 @@ export default function MemberNotificationsBell() {
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <span className="text-sm font-semibold text-white">Notifications</span>
-            {unreadCount > 0 && (
+            {mounted && unreadCount > 0 && (
               <button
                 type="button"
                 onClick={markAllRead}
