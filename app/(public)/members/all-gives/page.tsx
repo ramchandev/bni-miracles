@@ -1,17 +1,46 @@
 import ChapterGivesAsksBrowse from "@/components/ChapterGivesAsksBrowse";
 import JsonLd from "@/components/JsonLd";
+import MemberPageGate from "@/components/MemberPageGate";
 import { fetchChapterGivesAsksGrouped } from "@/lib/gives-asks-chapter";
+import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
   title: "All Gives — BNI Miracles Members",
-  description:
-    "Browse every referral give from BNI Miracles members, grouped by category — find who can introduce leads in your target market.",
+  description: "BNI Miracles members: browse chapter gives grouped by category.",
   path: "/members/all-gives",
-  keywords: ["BNI gives", "BNI Miracles referrals", "member gives Chennai"],
+  noIndex: true,
 });
 
 export default async function AllGivesPage() {
+  const session = await getMemberSession();
+
+  if (!session) {
+    return (
+      <>
+        <section
+          className="px-6 text-center"
+          style={{ background: "var(--color-dark)", paddingTop: 100, paddingBottom: 48 }}
+        >
+          <p
+            className="text-sm font-semibold tracking-widest uppercase mb-3"
+            style={{ color: "var(--color-accent)" }}
+          >
+            BNI Miracles Members
+          </p>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">All Gives</h1>
+          <p className="text-white/60 text-sm max-w-lg mx-auto leading-relaxed">
+            Log in to browse referral gives from chapter members, grouped by category.
+          </p>
+        </section>
+        <MemberPageGate
+          title="All Gives"
+          description="Log in with your phone number and meeting place to browse chapter gives."
+        />
+      </>
+    );
+  }
+
   const { giveGroups } = await fetchChapterGivesAsksGrouped();
 
   return (

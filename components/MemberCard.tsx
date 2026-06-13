@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useMemberSession } from "@/components/MemberSessionContext";
 import type { Member } from "@/lib/supabase";
 
 function Initials({ name }: { name: string }) {
@@ -29,6 +30,101 @@ interface MemberCardProps {
   isCaptain?: boolean;
   /** When set (e.g. Power Team page), primary CTAs use this colour instead of chapter red */
   accentColor?: string;
+};
+
+function MemberCardFront({
+  member,
+  categoryIcon,
+  isCaptain,
+  ctaStyle,
+  showFlipHint,
+  stopLinkPropagation,
+}: {
+  member: Member;
+  categoryIcon?: string;
+  isCaptain?: boolean;
+  accentColor?: string;
+  ctaStyle?: React.CSSProperties;
+  showFlipHint?: boolean;
+  stopLinkPropagation?: boolean;
+}) {
+  return (
+    <>
+      <div className="p-6 flex flex-col items-center text-center flex-1">
+        <div className="mb-4 relative inline-block">
+          {isCaptain && (
+            <span
+              className="absolute -top-1 -right-1 z-10 flex items-center justify-center w-7 h-7 rounded-full shadow-md text-sm leading-none"
+              style={{ background: "#FBBF24", color: "#78350F" }}
+              title="Team Captain"
+              aria-label="Team Captain"
+            >
+              ★
+            </span>
+          )}
+          {member.profile_picture_url ? (
+            <Image
+              src={member.profile_picture_url}
+              alt={`${member.name} profile picture`}
+              width={80}
+              height={80}
+              className="rounded-full object-cover mx-auto"
+              style={{ width: 80, height: 80 }}
+            />
+          ) : (
+            <Initials name={member.name} />
+          )}
+        </div>
+
+        <span
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-3"
+          style={{ background: "#FEE2E2", color: "var(--color-primary)" }}
+        >
+          {categoryIcon && <span>{categoryIcon}</span>}
+          {member.category}
+        </span>
+
+        <h3 className="text-lg font-bold mb-1" style={{ color: "var(--color-dark)" }}>
+          {member.name}
+        </h3>
+        <p className="text-sm font-medium mb-1" style={{ color: "var(--color-gray)" }}>
+          {member.business_name}
+        </p>
+        {member.business_location && (
+          <p
+            className="text-xs flex items-center gap-1 justify-center"
+            style={{ color: "var(--color-gray)" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {member.business_location}
+          </p>
+        )}
+      </div>
+
+      <div className="px-6 pb-6 flex flex-col gap-2">
+        <Link
+          href={`/members/${member.slug}`}
+          className={
+            ctaStyle
+              ? "block w-full text-center text-sm font-semibold rounded-lg transition-opacity hover:opacity-90"
+              : "btn-outline w-full text-center text-sm"
+          }
+          style={{ padding: "0.6rem 1rem", ...ctaStyle }}
+          onClick={stopLinkPropagation ? (e) => e.stopPropagation() : undefined}
+        >
+          View Profile
+        </Link>
+        {showFlipHint && (
+          <p className="text-center text-xs" style={{ color: "var(--color-gray)" }}>
+            Hover to see Gives &amp; Asks
+          </p>
+        )}
+      </div>
+    </>
+  );
 }
 
 export default function MemberCard({
@@ -39,16 +135,34 @@ export default function MemberCard({
   isCaptain = false,
   accentColor,
 }: MemberCardProps) {
+  const { member: sessionMember } = useMemberSession();
   const ctaStyle = accentColor
     ? { background: accentColor, color: "#fff", border: `2px solid ${accentColor}` }
     : undefined;
   const [flipped, setFlipped] = useState(false);
 
+  const isMember = !!sessionMember;
   const hasGivesAsks = gives.length > 0 || asks.length > 0;
+  const showFlip = isMember && hasGivesAsks;
 
-  // Slice to a max of 3 items per side so the card doesn't overflow
   const showGives = gives.slice(0, 3);
-  const showAsks  = asks.slice(0, 3);
+  const showAsks = asks.slice(0, 3);
+
+  if (!showFlip) {
+    return (
+      <div className="group" style={{ height: 320 }}>
+        <article className="card flex flex-col overflow-hidden h-full">
+          <MemberCardFront
+            member={member}
+            categoryIcon={categoryIcon}
+            isCaptain={isCaptain}
+            accentColor={accentColor}
+            ctaStyle={ctaStyle}
+          />
+        </article>
+      </div>
+    );
+  }
 
   return (
     /* Outer wrapper — fixed height, perspective for 3D */
@@ -80,82 +194,15 @@ export default function MemberCard({
             WebkitBackfaceVisibility: "hidden",
           }}
         >
-          <div className="p-6 flex flex-col items-center text-center flex-1">
-            {/* Avatar */}
-            <div className="mb-4 relative inline-block">
-              {isCaptain && (
-                <span
-                  className="absolute -top-1 -right-1 z-10 flex items-center justify-center w-7 h-7 rounded-full shadow-md text-sm leading-none"
-                  style={{ background: "#FBBF24", color: "#78350F" }}
-                  title="Team Captain"
-                  aria-label="Team Captain"
-                >
-                  ★
-                </span>
-              )}
-              {member.profile_picture_url ? (
-                <Image
-                  src={member.profile_picture_url}
-                  alt={`${member.name} profile picture`}
-                  width={80}
-                  height={80}
-                  className="rounded-full object-cover mx-auto"
-                  style={{ width: 80, height: 80 }}
-                />
-              ) : (
-                <Initials name={member.name} />
-              )}
-            </div>
-
-            {/* Category badge */}
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-3"
-              style={{ background: "#FEE2E2", color: "var(--color-primary)" }}
-            >
-              {categoryIcon && <span>{categoryIcon}</span>}
-              {member.category}
-            </span>
-
-            {/* Name & Business */}
-            <h3 className="text-lg font-bold mb-1" style={{ color: "var(--color-dark)" }}>
-              {member.name}
-            </h3>
-            <p className="text-sm font-medium mb-1" style={{ color: "var(--color-gray)" }}>
-              {member.business_name}
-            </p>
-            {member.business_location && (
-              <p
-                className="text-xs flex items-center gap-1 justify-center"
-                style={{ color: "var(--color-gray)" }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {member.business_location}
-              </p>
-            )}
-          </div>
-
-          <div className="px-6 pb-6 flex flex-col gap-2">
-            <Link
-              href={`/members/${member.slug}`}
-              className={
-                accentColor
-                  ? "block w-full text-center text-sm font-semibold rounded-lg transition-opacity hover:opacity-90"
-                  : "btn-outline w-full text-center text-sm"
-              }
-              style={{ padding: "0.6rem 1rem", ...ctaStyle }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              View Profile
-            </Link>
-            {hasGivesAsks && (
-              <p className="text-center text-xs" style={{ color: "var(--color-gray)" }}>
-                Hover to see Gives &amp; Asks
-              </p>
-            )}
-          </div>
+          <MemberCardFront
+            member={member}
+            categoryIcon={categoryIcon}
+            isCaptain={isCaptain}
+            accentColor={accentColor}
+            ctaStyle={ctaStyle}
+            showFlipHint
+            stopLinkPropagation
+          />
         </article>
 
         {/* ── BACK FACE ───────────────────────────────────────────────── */}

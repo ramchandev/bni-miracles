@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useMemberSession } from "@/components/MemberSessionContext";
 import { supabase, type Member } from "@/lib/supabase";
 import MemberCard from "@/components/MemberCard";
 
@@ -20,6 +21,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function MembersPageClient() {
+  const { member: sessionMember } = useMemberSession();
   const [allMembers, setAllMembers]   = useState<Member[]>([]);
   const [groups, setGroups]           = useState<GroupedMembers[]>([]);
   const [catIcons, setCatIcons]       = useState<CatIconMap>(new Map());
@@ -29,17 +31,22 @@ export default function MembersPageClient() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: membersData }, { data: catData }, { data: gaData }] = await Promise.all([
+      const [{ data: membersData }, { data: catData }] = await Promise.all([
         supabase.from("members").select("*").eq("is_active", true).order("name"),
         supabase
           .from("business_categories")
           .select("name, icon, category_groups(name, sort_order)")
           .order("sort_order"),
-        supabase
+      ]);
+
+      let gaData: { member_id: string; type: string; item: string }[] | null = null;
+      if (sessionMember) {
+        const res = await supabase
           .from("member_gives_asks")
           .select("member_id, type, item")
-          .order("sort_order"),
-      ]);
+          .order("sort_order");
+        gaData = res.data;
+      }
 
       const memberList = membersData ?? [];
 
@@ -86,7 +93,7 @@ export default function MembersPageClient() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [sessionMember]);
 
   // filter within groups when searching; hide empty groups
   const displayGroups = useMemo(() => {

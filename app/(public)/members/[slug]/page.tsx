@@ -133,15 +133,21 @@ export default async function MemberDetailPage({ params }: Props) {
   const session = await getMemberSession();
 
   const [{ data: givesAsksData }, leadershipRoles, calendarData] = await Promise.all([
-    supabase.from("member_gives_asks").select("*, gives_asks_categories(name)").eq("member_id", member.id).order("sort_order"),
+    session
+      ? supabase
+          .from("member_gives_asks")
+          .select("*, gives_asks_categories(name)")
+          .eq("member_id", member.id)
+          .order("sort_order")
+      : Promise.resolve({ data: null }),
     fetchMemberLeadershipRoles(member.id),
     fetchPublic121Profile(member.id),
   ]);
 
-  const allItems = (givesAsksData as GiveAsk[] | null) ?? [];
+  const allItems = session ? ((givesAsksData as GiveAsk[] | null) ?? []) : [];
   const gives = allItems.filter((r) => r.type === "give");
   const asks = allItems.filter((r) => r.type === "ask");
-  const hasGivesAsks = gives.length > 0 || asks.length > 0;
+  const hasGivesAsks = session && (gives.length > 0 || asks.length > 0);
 
   return (
     <>
@@ -205,8 +211,8 @@ export default async function MemberDetailPage({ params }: Props) {
             </p>
           )}
 
-          {/* Phone */}
-          {member.phone && (
+          {/* Phone — members only */}
+          {session && member.phone && (
             <p className="flex items-center justify-center gap-1.5 text-sm mb-2" style={{ color: "rgba(255,255,255,0.6)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" />
@@ -215,8 +221,8 @@ export default async function MemberDetailPage({ params }: Props) {
             </p>
           )}
 
-          {/* Email */}
-          {member.email && (
+          {/* Email — members only */}
+          {session && member.email && (
             <p className="flex items-center justify-center gap-1.5 text-sm mb-2" style={{ color: "rgba(255,255,255,0.6)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -232,8 +238,8 @@ export default async function MemberDetailPage({ params }: Props) {
             </p>
           )}
 
-          {/* Website */}
-          {member.website && (
+          {/* Website — members only */}
+          {session && member.website && (
             <a
               href={member.website.startsWith("http") ? member.website : `https://${member.website}`}
               target="_blank"
@@ -245,7 +251,8 @@ export default async function MemberDetailPage({ params }: Props) {
             </a>
           )}
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons — members only */}
+          {session && (
           <div className="flex flex-wrap gap-3 justify-center mt-8">
             {member.email && (
               <a
@@ -288,6 +295,7 @@ export default async function MemberDetailPage({ params }: Props) {
               </a>
             )}
           </div>
+          )}
         </div>
       </section>
 

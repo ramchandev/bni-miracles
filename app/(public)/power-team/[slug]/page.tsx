@@ -12,6 +12,7 @@ import {
   sortTeamMembers,
 } from "@/lib/power-teams-server";
 import { teamLightBg } from "@/lib/power-teams";
+import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata, powerTeamMembersListJsonLd } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,8 +46,9 @@ export default async function PowerTeamDetailPage({ params }: Props) {
 
   const members = sortTeamMembers(team);
   const memberIds = members.map((r) => r.members!.id);
+  const session = await getMemberSession();
   const [givesAsksByMemberId, categoryIcons] = await Promise.all([
-    fetchGivesAsksForMembers(memberIds),
+    session ? fetchGivesAsksForMembers(memberIds) : Promise.resolve(new Map()),
     fetchCategoryIconMap(),
   ]);
   const memberCount = countTeamMembers(team);
