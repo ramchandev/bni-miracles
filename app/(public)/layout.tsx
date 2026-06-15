@@ -2,6 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import InstallAppBanner from "@/components/InstallAppBanner";
 import JsonLd from "@/components/JsonLd";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import { fetchPowerTeamsNav } from "@/lib/power-teams-server";
@@ -23,6 +24,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="flex-1">{children}</main>
       <Footer powerTeams={powerTeams} />
       <WhatsAppButton />
+      <InstallAppBanner />
       <MemberLoginHost />
       <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </MemberSessionProvider>

@@ -7,8 +7,11 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform hover:scale-110"
-      style={{ background: "#25D366" }}
+      className="fixed right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform hover:scale-110"
+      style={{
+        background: "#25D366",
+        bottom: "calc(1.5rem + var(--install-banner-offset, 0px))",
+      }}
     >
       <span
         className="absolute inset-0 rounded-full animate-ping"
