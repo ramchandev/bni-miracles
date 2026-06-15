@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+import appIcon from "../public/web-app-manifest-192x192.png";
 
 const DISMISS_KEY = "miracle-members-install-banner-dismissed";
 const BANNER_OFFSET = "5rem";
@@ -198,12 +198,12 @@ export default function InstallAppBanner() {
         aria-label="Install app prompt"
       >
         <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <Image
-            src="/web-app-manifest-192x192.png"
+          <img
+            src={appIcon.src}
             alt=""
             width={44}
             height={44}
-            className="shrink-0 rounded-xl"
+            className="shrink-0 rounded-xl bg-white object-contain"
             aria-hidden
           />
           <p className="flex-1 min-w-0 text-sm font-medium text-white leading-snug">

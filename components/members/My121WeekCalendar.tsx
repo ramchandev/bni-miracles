@@ -7,12 +7,9 @@ import {
   formatHourLabel,
   formatKolkataDayHeader,
   formatKolkataMonthYear,
-  formatKolkataWeekRange,
   isAvailabilitySlotInPast,
   kolkataDateString,
   kolkataDayOfWeek,
-  kolkataWeekDates,
-  kolkataWeekStart,
   kolkataYearMonth,
   SLOT_HOURS,
 } from "@/lib/one-on-one";
@@ -64,8 +61,6 @@ export default function My121WeekCalendar({
   onEmptySlotClick,
 }: Props) {
   const todayStr = kolkataDateString();
-  const [weekStart, setWeekStart] = useState(() => kolkataWeekStart());
-  const [viewMode, setViewMode] = useState<"week" | "day">("week");
   const [focusDay, setFocusDay] = useState(() => todayStr);
   const [miniMonth, setMiniMonth] = useState(() => kolkataYearMonth());
 
@@ -75,29 +70,23 @@ export default function My121WeekCalendar({
     [memberId, hostSlots, asHost, asRequester]
   );
 
-  const weekDates = useMemo(() => kolkataWeekDates(weekStart), [weekStart]);
-  const displayDates = viewMode === "week" ? weekDates : [focusDay];
+  const displayDates = [focusDay];
 
   const gridHeight = SLOT_HOURS.length * CALENDAR_HOUR_HEIGHT;
 
   const goToday = () => {
     const today = kolkataDateString();
-    setWeekStart(kolkataWeekStart(today));
     setFocusDay(today);
     setMiniMonth(kolkataYearMonth());
   };
 
-  const shiftWeek = (delta: number) => {
-    const newStart = addKolkataDays(weekStart, delta * 7);
-    setWeekStart(newStart);
-    if (viewMode === "day") {
-      setFocusDay(addKolkataDays(focusDay, delta * 7));
-    }
-    setMiniMonth(kolkataYearMonth(newStart));
+  const shiftDay = (delta: number) => {
+    const nextDay = addKolkataDays(focusDay, delta);
+    setFocusDay(nextDay);
+    setMiniMonth(kolkataYearMonth(nextDay));
   };
 
   const pickMiniDay = (dateStr: string) => {
-    setWeekStart(kolkataWeekStart(dateStr));
     setFocusDay(dateStr);
     setMiniMonth(kolkataYearMonth(dateStr));
     onSelectEvent(null);
@@ -132,47 +121,23 @@ export default function My121WeekCalendar({
           </button>
           <button
             type="button"
-            onClick={() => shiftWeek(-1)}
+            onClick={() => shiftDay(-1)}
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100"
-            aria-label="Previous week"
+            aria-label="Previous day"
           >
             ‹
           </button>
           <button
             type="button"
-            onClick={() => shiftWeek(1)}
+            onClick={() => shiftDay(1)}
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100"
-            aria-label="Next week"
+            aria-label="Next day"
           >
             ›
           </button>
           <span className="text-sm font-bold" style={{ color: "var(--color-dark)" }}>
-            {viewMode === "week" ? formatKolkataWeekRange(weekStart) : formatKolkataDayHeader(focusDay)}
+            {formatKolkataDayHeader(focusDay)}
           </span>
-        </div>
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setViewMode("week")}
-            className="px-3 py-1.5"
-            style={{
-              background: viewMode === "week" ? "var(--color-primary)" : "white",
-              color: viewMode === "week" ? "white" : "var(--color-dark)",
-            }}
-          >
-            Week
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("day")}
-            className="px-3 py-1.5 border-l border-gray-200"
-            style={{
-              background: viewMode === "day" ? "var(--color-primary)" : "white",
-              color: viewMode === "day" ? "white" : "var(--color-dark)",
-            }}
-          >
-            Day
-          </button>
         </div>
       </div>
 
@@ -215,8 +180,8 @@ export default function My121WeekCalendar({
           ))}
           {miniCells.map((cell, i) => {
             if (!cell.date) return <div key={`e-${i}`} />;
-            const inWeek = weekDates.includes(cell.date);
             const isToday = cell.date === todayStr;
+            const isSelected = cell.date === focusDay;
             const status = calendarStatusForDate(cell.date, hostSlots, allRequests);
             const dot = status !== "none" ? STATUS_DOT[status] : null;
             return (
@@ -226,9 +191,9 @@ export default function My121WeekCalendar({
                 onClick={() => pickMiniDay(cell.date!)}
                 className="relative text-[10px] font-semibold rounded-md py-1 hover:bg-white transition-colors"
                 style={{
-                  background: inWeek ? "white" : "transparent",
+                  background: isSelected ? "white" : "transparent",
                   color: isToday ? "var(--color-primary)" : "var(--color-dark)",
-                  outline: focusDay === cell.date ? "2px solid var(--color-primary)" : "none",
+                  outline: isSelected ? "2px solid var(--color-primary)" : "none",
                 }}
               >
                 {parseInt(cell.date.slice(8), 10)}
@@ -246,21 +211,16 @@ export default function My121WeekCalendar({
 
       {/* Time grid */}
       <div className="overflow-x-auto">
-        <div style={{ minWidth: viewMode === "week" ? 720 : 280 }}>
-          {/* Day headers */}
+        <div style={{ minWidth: 280 }}>
+          {/* Day header */}
           <div className="flex border-b border-gray-100 sticky top-0 bg-white z-10">
             <div className="w-14 shrink-0" />
             {displayDates.map((date) => {
               const isToday = date === todayStr;
               return (
-                <button
+                <div
                   key={date}
-                  type="button"
-                  onClick={() => {
-                    setFocusDay(date);
-                    if (viewMode === "day") onSelectEvent(null);
-                  }}
-                  className="flex-1 min-w-[72px] py-2 text-center border-l border-gray-100 hover:bg-gray-50"
+                  className="flex-1 min-w-[72px] py-2 text-center border-l border-gray-100"
                 >
                   <p
                     className="text-[10px] font-semibold uppercase text-gray-400"
@@ -276,7 +236,7 @@ export default function My121WeekCalendar({
                   >
                     {parseInt(date.slice(8), 10)}
                   </p>
-                </button>
+                </div>
               );
             })}
           </div>
