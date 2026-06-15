@@ -1,39 +1,69 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { emailTemplate, sendAdminEmail, verifyEmailDelivery } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 
 export type SettingsState = { success?: boolean; error?: string } | null;
+
+async function requireAdmin() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." } as const;
+  return { user } as const;
+}
 
 export async function saveEmailSettingsAction(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const supabase = await createSupabaseServerClient();
+  const auth = await requireAdmin();
+  if ("error" in auth) return { error: auth.error };
 
-  const smtp_pass_raw = (formData.get("smtp_pass") as string | null) ?? "";
+  const fromEmail = (formData.get("from_email") as string).trim().toLowerCase();
+  const adminEmails = (formData.get("admin_emails") as string).trim();
 
-  // If the password field was left blank (masked placeholder), keep the existing value
-  const payload: Record<string, unknown> = {
-    smtp_host:    (formData.get("smtp_host") as string).trim(),
-    smtp_port:    Number(formData.get("smtp_port") ?? 465),
-    smtp_user:    (formData.get("smtp_user") as string).trim(),
-    admin_emails: (formData.get("admin_emails") as string).trim(),
-    updated_at:   new Date().toISOString(),
-  };
-
-  // Only update password if a new value was entered
-  if (smtp_pass_raw.trim()) {
-    payload.smtp_pass = smtp_pass_raw.trim();
+  if (!fromEmail.includes("@")) {
+    return { error: "Please enter a valid sender email address." };
   }
 
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("email_settings")
-    .update(payload)
-    .eq("id", 1);
+    .upsert({
+      id: 1,
+      smtp_user: fromEmail,
+      admin_emails: adminEmails,
+      updated_at: new Date().toISOString(),
+    });
 
   if (error) return { error: error.message };
 
   revalidatePath("/admin/settings");
+  return { success: true };
+}
+
+export async function sendTestEmailAction(): Promise<SettingsState> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return { error: auth.error };
+
+  const verify = await verifyEmailDelivery();
+  if (!verify.sent) {
+    return { error: verify.error };
+  }
+
+  const result = await sendAdminEmail(
+    "✅ Miracle Members — Test Email",
+    emailTemplate("Test Email", [
+      { label: "Status", value: "Email delivery is working correctly via Resend." },
+      { label: "Sent at", value: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) },
+    ])
+  );
+
+  if (!result.sent) {
+    return { error: result.error };
+  }
+
   return { success: true };
 }

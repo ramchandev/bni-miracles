@@ -1,4 +1,5 @@
 import type { DanceCardRow } from "@/lib/dance-card-types";
+import { SITE_DOMAIN } from "@/lib/seo";
 import type { SessionMember } from "@/lib/supabase";
 
 type Props = {
@@ -142,7 +143,7 @@ export default function PrintableCard({ member, card }: Props) {
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
       <div style={{ marginTop: 24, paddingTop: 12, borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", color: "#9CA3AF", fontSize: 9 }}>
-        <span>Miracle Members · Chennai · bnimiracles.in</span>
+        <span>Miracle Members · Chennai · {SITE_DOMAIN}</span>
         <span>© Miracle Members Chapter · Chennai</span>
       </div>
     </div>

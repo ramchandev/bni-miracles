@@ -20,13 +20,12 @@ import {
   slotDateTime,
   slotEndDateTime,
 } from "@/lib/one-on-one";
+import { SITE_DOMAIN, SITE_URL } from "@/lib/seo";
 import type {
   OneOnOneMeetingType,
   OneOnOneRequest,
   OneOnOneSlot,
 } from "@/lib/supabase";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bnimiracles.in";
 
 async function sendNew121RequestEmails(params: {
   hostMemberId: string;
@@ -528,7 +527,7 @@ export async function generate121IcsAction(
       : slotRaw.location ?? "In person";
 
   const content = generateIcsContent({
-    uid: `121-${requestId}@bnimiracles.in`,
+    uid: `121-${requestId}@${SITE_DOMAIN}`,
     title: `1-2-1: ${request.requester_name} × ${(host?.name as string) ?? "Miracle Members"}`,
     description: formatSlotSummary(slotRaw),
     location,

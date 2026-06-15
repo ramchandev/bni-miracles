@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const SITE_URL = "https://bnimiracles.in";
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://miraclemembers.in"
+).replace(/\/$/, "");
+export const SITE_DOMAIN = new URL(SITE_URL).hostname;
 export const SITE_NAME = "Miracle Members";
 export const SITE_TAGLINE = "Hybrid Business Networking Chapter | Chennai";
 export const DEFAULT_DESCRIPTION =

@@ -1,22 +1,29 @@
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import { Resend } from "resend";
+import { SITE_URL } from "@/lib/seo";
 import { createSupabaseAdminClient } from "./supabase-admin";
 
 type EmailSettings = {
-  smtp_host: string;
-  smtp_port: number;
-  smtp_user: string;
-  smtp_pass: string;
+  from_email: string;
   admin_emails: string | null;
 };
 
 export type SendEmailResult = { sent: true } | { sent: false; error: string };
 
+export function isResendConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
+
 async function loadEmailSettings(): Promise<EmailSettings | null> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("email_settings")
-    .select("smtp_host, smtp_port, smtp_user, smtp_pass, admin_emails")
+    .select("smtp_user, admin_emails")
     .eq("id", 1)
     .single();
 
@@ -25,46 +32,20 @@ async function loadEmailSettings(): Promise<EmailSettings | null> {
     return null;
   }
 
-  if (!data.smtp_host || !data.smtp_user || !data.smtp_pass) {
-    console.warn("[email] SMTP settings incomplete — configure in admin → Settings");
-    return null;
-  }
-
   return {
-    smtp_host: String(data.smtp_host).trim(),
-    smtp_port: Number(data.smtp_port) || 465,
-    smtp_user: String(data.smtp_user).trim(),
-    smtp_pass: String(data.smtp_pass),
+    from_email: data.smtp_user ? String(data.smtp_user).trim() : "",
     admin_emails: data.admin_emails ? String(data.admin_emails) : null,
   };
 }
 
-function createSmtpTransporter(settings: EmailSettings) {
-  const port = settings.smtp_port;
-  const transport: SMTPTransport.Options = {
-    host: settings.smtp_host,
-    port,
-    secure: port === 465,
-    auth: {
-      user: settings.smtp_user,
-      pass: settings.smtp_pass,
-    },
-    tls: {
-      // cPanel / shared hosting often uses certs that fail strict Node verification
-      rejectUnauthorized: false,
-      minVersion: "TLSv1.2",
-    },
-    connectionTimeout: 25_000,
-    greetingTimeout: 25_000,
-    socketTimeout: 25_000,
-  };
+function resolveFromAddress(settings: EmailSettings | null): string {
+  const fromEnv = process.env.EMAIL_FROM?.trim();
+  if (fromEnv) return fromEnv;
 
-  if (port === 587) {
-    transport.secure = false;
-    transport.requireTLS = true;
-  }
+  const fromDb = settings?.from_email?.trim();
+  if (fromDb) return `"Miracle Members" <${fromDb}>`;
 
-  return nodemailer.createTransport(transport);
+  return '"Miracle Members" <onboarding@resend.dev>';
 }
 
 function htmlToPlainText(html: string): string {
@@ -79,15 +60,14 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
-function normalizeRecipients(to: string | string[]): string {
-  const list = (Array.isArray(to) ? to : [to])
+function normalizeRecipients(to: string | string[]): string[] {
+  return (Array.isArray(to) ? to : [to])
     .map((e) => e.trim())
     .filter((e) => e.includes("@"));
-  return list.join(", ");
 }
 
 /**
- * Sends a single email using SMTP settings from email_settings.
+ * Sends a single email via Resend.
  */
 export async function sendEmail(
   to: string | string[],
@@ -95,49 +75,67 @@ export async function sendEmail(
   html: string
 ): Promise<SendEmailResult> {
   const recipients = normalizeRecipients(to);
-  if (!recipients) {
+  if (recipients.length === 0) {
     return { sent: false, error: "No valid recipient address." };
   }
 
-  const settings = await loadEmailSettings();
-  if (!settings) {
-    return { sent: false, error: "SMTP settings are not configured." };
+  const resend = getResendClient();
+  if (!resend) {
+    return {
+      sent: false,
+      error: "RESEND_API_KEY is not set. Add it to .env.local and Vercel environment variables.",
+    };
   }
 
+  const settings = await loadEmailSettings();
+  const from = resolveFromAddress(settings);
+
   try {
-    const transporter = createSmtpTransporter(settings);
-    const fromAddress = settings.smtp_user;
-
-    await transporter.verify();
-
-    const info = await transporter.sendMail({
-      from: `"Miracle Members" <${fromAddress}>`,
-      replyTo: fromAddress,
+    const { data, error } = await resend.emails.send({
+      from,
       to: recipients,
       subject,
       html,
       text: htmlToPlainText(html),
     });
 
-    console.info(
-      "[sendEmail] Sent to",
-      recipients,
-      "from",
-      fromAddress,
-      ":",
-      info.messageId ?? info.response
-    );
+    if (error) {
+      console.error("[sendEmail] Resend error:", error.message);
+      return { sent: false, error: error.message };
+    }
+
+    console.info("[sendEmail] Sent to", recipients.join(", "), "id:", data?.id);
     return { sent: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[sendEmail] Failed to send to", recipients, ":", message);
+    console.error("[sendEmail] Failed:", message);
     return { sent: false, error: message };
   }
 }
 
-/**
- * Sends an HTML email to all configured admin addresses.
- */
+/** Pre-flight check before sending a test email. */
+export async function verifyEmailDelivery(): Promise<SendEmailResult> {
+  if (!isResendConfigured()) {
+    return { sent: false, error: "RESEND_API_KEY is not set." };
+  }
+
+  const settings = await loadEmailSettings();
+  const from = resolveFromAddress(settings);
+  if (!from.includes("@")) {
+    return {
+      sent: false,
+      error: "Set a sender address in admin settings (must be on your verified Resend domain).",
+    };
+  }
+
+  if (!settings?.admin_emails?.trim()) {
+    return { sent: false, error: "No admin notification emails configured." };
+  }
+
+  return { sent: true };
+}
+
+/** Sends an HTML email to all configured admin addresses. */
 export async function sendAdminEmail(subject: string, html: string): Promise<SendEmailResult> {
   const settings = await loadEmailSettings();
   if (!settings?.admin_emails) {
@@ -148,19 +146,16 @@ export async function sendAdminEmail(subject: string, html: string): Promise<Sen
   const to = settings.admin_emails
     .split(",")
     .map((e) => e.trim())
-    .filter(Boolean)
-    .join(", ");
+    .filter(Boolean);
 
-  if (!to) {
+  if (to.length === 0) {
     return { sent: false, error: "No admin_emails configured." };
   }
 
   return sendEmail(to, subject, html);
 }
 
-/**
- * Sends an HTML email to a specific member's address.
- */
+/** Sends an HTML email to a specific member's address. */
 export async function sendMemberEmail(
   to: string,
   subject: string,
@@ -193,14 +188,12 @@ export function emailTemplate(title: string, rows: { label: string; value: strin
     <tr>
       <td align="center" style="padding:32px 16px;">
         <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-          <!-- Header -->
           <tr>
             <td style="background:#C8102E;padding:20px 24px;">
               <p style="margin:0;font-size:18px;font-weight:700;color:#fff;">${title}</p>
               <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.7);">Miracle Members · Chennai</p>
             </td>
           </tr>
-          <!-- Body -->
           <tr>
             <td style="padding:8px 8px 24px;">
               <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -208,12 +201,11 @@ export function emailTemplate(title: string, rows: { label: string; value: strin
               </table>
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td style="background:#F9FAFB;padding:14px 24px;border-top:1px solid #E5E7EB;">
               <p style="margin:0;font-size:11px;color:#9CA3AF;">
                 This is an automated notification from the Miracle Members website.
-                Log in to the <a href="https://bnimiracles.in/admin" style="color:#C8102E;">admin panel</a> to manage submissions.
+                Log in to the <a href="${SITE_URL}/admin" style="color:#C8102E;">admin panel</a> to manage submissions.
               </p>
             </td>
           </tr>

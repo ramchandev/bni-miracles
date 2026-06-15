@@ -1,16 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
-import { saveEmailSettingsAction, type SettingsState } from "@/app/admin/actions/settings";
+import { useActionState, useState, useTransition } from "react";
+import { saveEmailSettingsAction, sendTestEmailAction, type SettingsState } from "@/app/admin/actions/settings";
 
 type Props = {
   initialValues: {
-    smtp_host: string | null;
-    smtp_port: number | null;
     smtp_user: string | null;
     admin_emails: string | null;
     updated_at: string | null;
   } | null;
+  resendConfigured: boolean;
 };
 
 const inputStyle = {
@@ -39,16 +38,24 @@ function formatTimestamp(ts: string | null): string {
   });
 }
 
-export default function EmailSettingsForm({ initialValues }: Props) {
+export default function EmailSettingsForm({ initialValues, resendConfigured }: Props) {
   const [state, formAction, isPending] = useActionState<SettingsState, FormData>(
     saveEmailSettingsAction,
     null
   );
+  const [testState, setTestState] = useState<SettingsState>(null);
+  const [isTesting, startTest] = useTransition();
+
+  const runTestEmail = () => {
+    setTestState(null);
+    startTest(async () => {
+      const result = await sendTestEmailAction();
+      setTestState(result);
+    });
+  };
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-
-      {/* Success / Error banners */}
       {state?.success && (
         <div
           className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium"
@@ -66,75 +73,67 @@ export default function EmailSettingsForm({ initialValues }: Props) {
         </div>
       )}
 
-      {/* SMTP Host */}
+      <div
+        className="px-4 py-3 rounded-lg text-sm"
+        style={{
+          background: resendConfigured ? "#DCFCE7" : "#FEE2E2",
+          color: resendConfigured ? "#166534" : "#991B1B",
+          border: `1px solid ${resendConfigured ? "#BBF7D0" : "#FECACA"}`,
+        }}
+      >
+        {resendConfigured ? (
+          <p>
+            <strong>Resend is connected.</strong> Emails send via HTTPS and work on Vercel.
+          </p>
+        ) : (
+          <p>
+            <strong>Resend API key missing.</strong> Add{" "}
+            <code className="font-mono text-xs">RESEND_API_KEY</code> to{" "}
+            <code className="font-mono text-xs">.env.local</code> (local) and Vercel environment
+            variables (production), then restart or redeploy.
+          </p>
+        )}
+      </div>
+
+      {testState?.success && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium"
+          style={{ background: "#DCFCE7", color: "#166534" }}
+        >
+          <span>✅</span> Test email sent to your admin address(es). Check inbox and spam.
+        </div>
+      )}
+      {testState?.error && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium"
+          style={{ background: "#FEE2E2", color: "#991B1B" }}
+        >
+          <span>❌</span> {testState.error}
+        </div>
+      )}
+
       <div>
         <label style={labelStyle}>
-          SMTP Host
+          Sender email (From)
           <span style={{ color: "var(--color-primary)", marginLeft: 2 }}>*</span>
         </label>
         <input
-          name="smtp_host"
-          type="text"
-          placeholder="mail.bnimiracles.in"
-          defaultValue={initialValues?.smtp_host ?? ""}
-          required
-          style={inputStyle}
-        />
-      </div>
-
-      {/* SMTP Port */}
-      <div>
-        <label style={labelStyle}>SMTP Port</label>
-        <input
-          name="smtp_port"
-          type="number"
-          placeholder="465"
-          defaultValue={initialValues?.smtp_port ?? 465}
-          style={{ ...inputStyle, width: 120 }}
-        />
-        <p className="text-xs mt-1" style={{ color: "var(--color-gray)" }}>
-          Use 465 for SSL (recommended) or 587 for STARTTLS.
-        </p>
-      </div>
-
-      {/* Username */}
-      <div>
-        <label style={labelStyle}>
-          SMTP Username
-          <span style={{ color: "var(--color-primary)", marginLeft: 2 }}>*</span>
-        </label>
-        <input
-          name="smtp_user"
-          type="text"
-          placeholder="care@bnimiracles.in"
+          name="from_email"
+          type="email"
+          placeholder="care@miraclemembers.in"
           defaultValue={initialValues?.smtp_user ?? ""}
           required
           style={inputStyle}
         />
         <p className="text-xs mt-1" style={{ color: "var(--color-gray)" }}>
-          This address also appears as the sender (From:) on all notifications.
+          Must be an address on your verified Resend domain (e.g.{" "}
+          <code className="font-mono">care@miraclemembers.in</code>).
         </p>
       </div>
 
-      {/* Password */}
-      <div>
-        <label style={labelStyle}>SMTP Password</label>
-        <input
-          name="smtp_pass"
-          type="password"
-          placeholder="Leave blank to keep the existing password"
-          autoComplete="new-password"
-          style={inputStyle}
-        />
-        <p className="text-xs mt-1" style={{ color: "var(--color-gray)" }}>
-          Only fill this in if you want to change the stored password.
-        </p>
-      </div>
-
-      {/* Admin Emails */}
       <div>
         <label style={labelStyle}>
-          Admin Email(s)
+          Admin notification email(s)
           <span style={{ color: "var(--color-primary)", marginLeft: 2 }}>*</span>
         </label>
         <textarea
@@ -146,11 +145,10 @@ export default function EmailSettingsForm({ initialValues }: Props) {
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
         />
         <p className="text-xs mt-1" style={{ color: "var(--color-gray)" }}>
-          Separate multiple addresses with commas. All listed addresses receive every notification.
+          Comma-separated. These addresses receive contact forms, meeting registrations, and 1-2-1 alerts.
         </p>
       </div>
 
-      {/* Footer row: Save + last-updated */}
       <div className="flex items-center gap-4 flex-wrap pt-2">
         <button
           type="submit"
@@ -159,6 +157,15 @@ export default function EmailSettingsForm({ initialValues }: Props) {
           style={{ opacity: isPending ? 0.7 : 1, minWidth: 140 }}
         >
           {isPending ? "Saving…" : "Save Settings"}
+        </button>
+        <button
+          type="button"
+          onClick={runTestEmail}
+          disabled={isTesting || isPending || !resendConfigured}
+          className="text-sm font-semibold px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-60"
+          style={{ color: "var(--color-dark)" }}
+        >
+          {isTesting ? "Sending test…" : "Send test email"}
         </button>
         <p className="text-xs" style={{ color: "var(--color-gray)" }}>
           Last saved: {formatTimestamp(initialValues?.updated_at ?? null)}

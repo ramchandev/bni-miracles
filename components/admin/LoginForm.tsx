@@ -15,7 +15,7 @@ export default function LoginForm() {
         <input
           name="email"
           type="email"
-          placeholder="admin@bnimiracles.in"
+          placeholder="admin@miraclemembers.in"
           required
           autoComplete="email"
           className="w-full px-4 py-3 rounded-lg border text-sm focus:outline-none focus:ring-2"

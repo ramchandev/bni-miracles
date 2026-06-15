@@ -343,7 +343,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'BNI Miracles — Business Networking Chennai',
     description: '...',
-    url: 'https://bnimiracles.in',
+    url: 'https://miraclemembers.in',
     siteName: 'BNI Miracles',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
     locale: 'en_IN',

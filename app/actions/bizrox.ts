@@ -3,6 +3,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getMemberSession } from "@/lib/member-session";
 import { sendMemberEmail, emailTemplate } from "@/lib/email";
+import { SITE_URL } from "@/lib/seo";
 import { createMemberNotification } from "@/app/actions/notifications";
 import { revalidatePath } from "next/cache";
 import type {
@@ -247,7 +248,7 @@ export async function addCommentAction(
           { label: "Comment",     value: (content as string) },
           {
             label: "Action",
-            value: `<a href="https://bnimiracles.in/bizrox/${postId}" style="color:#C8102E;font-weight:600;">View Post →</a> &nbsp;&nbsp; <a href="${waLink}" style="color:#25D366;font-weight:600;">WhatsApp ${member.name} →</a>`,
+            value: `<a href="${SITE_URL}/bizrox/${postId}" style="color:#C8102E;font-weight:600;">View Post →</a> &nbsp;&nbsp; <a href="${waLink}" style="color:#25D366;font-weight:600;">WhatsApp ${member.name} →</a>`,
           },
         ])
       ).catch(console.error);

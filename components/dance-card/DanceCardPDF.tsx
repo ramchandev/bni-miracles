@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { DanceCardRow } from "@/lib/dance-card-types";
+import { SITE_DOMAIN } from "@/lib/seo";
 
 /* ── Palette ─────────────────────────────────────────────────────────── */
 const RED  = "#C8102E";
@@ -293,7 +294,7 @@ export function DanceCardPDF({
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerText}>Miracle Members · Chennai · bnimiracles.in</Text>
+          <Text style={s.footerText}>Miracle Members · Chennai · {SITE_DOMAIN}</Text>
           <Text style={s.footerText}>Page 1 of 3 · {generatedAt}</Text>
         </View>
       </Page>
@@ -322,7 +323,7 @@ export function DanceCardPDF({
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerText}>Miracle Members · Chennai · bnimiracles.in</Text>
+          <Text style={s.footerText}>Miracle Members · Chennai · {SITE_DOMAIN}</Text>
           <Text style={s.footerText}>Page 2 of 3 · {generatedAt}</Text>
         </View>
       </Page>
