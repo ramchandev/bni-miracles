@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import BrandLogo from "@/components/BrandLogo";
 import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";

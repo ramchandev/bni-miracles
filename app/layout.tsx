@@ -1,4 +1,5 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
+import NavigationProgress from "@/components/NavigationProgress";
 import { rootMetadata } from "@/lib/seo";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col"
         style={{ fontFamily: "var(--font-plus-jakarta), sans-serif" }}
       >
+        <NavigationProgress />
         {children}
       </body>
     </html>
