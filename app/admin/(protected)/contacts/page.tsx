@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-export const metadata: Metadata = { title: 'Contacts — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Contacts — Miracle Members Admin' };
 
 export default async function ContactsPage() {
   const supabase = await createSupabaseServerClient();

@@ -7,7 +7,7 @@ import type { GivesAsksCategory } from "@/lib/supabase";
 
 type Props = { params: Promise<{ id: string }> };
 
-export const metadata: Metadata = { title: "Edit Gives & Asks Category — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Edit Gives & Asks Category — Miracle Members Admin" };
 
 export default async function EditGivesAsksCategoryPage({ params }: Props) {
   const { id } = await params;

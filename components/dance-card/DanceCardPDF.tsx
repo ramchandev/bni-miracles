@@ -229,8 +229,8 @@ export function DanceCardPDF({
 
   return (
     <Document
-      title={`BNI Dance Card — ${memberName}`}
-      author="BNI Miracles Chennai"
+      title={`Dance Card — ${memberName}`}
+      author="Miracle Members Chennai"
       subject="One-on-One Dance Card Planner"
     >
 
@@ -293,7 +293,7 @@ export function DanceCardPDF({
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerText}>BNI Miracles · Chennai · bnimiracles.in</Text>
+          <Text style={s.footerText}>Miracle Members · Chennai · bnimiracles.in</Text>
           <Text style={s.footerText}>Page 1 of 3 · {generatedAt}</Text>
         </View>
       </Page>
@@ -322,7 +322,7 @@ export function DanceCardPDF({
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerText}>BNI Miracles · Chennai · bnimiracles.in</Text>
+          <Text style={s.footerText}>Miracle Members · Chennai · bnimiracles.in</Text>
           <Text style={s.footerText}>Page 2 of 3 · {generatedAt}</Text>
         </View>
       </Page>
@@ -390,7 +390,7 @@ export function DanceCardPDF({
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerText}>BNI Miracles · One-on-One Dance Card Planner · Chennai Chapter</Text>
+          <Text style={s.footerText}>Miracle Members · One-on-One Dance Card Planner · Chennai Chapter</Text>
           <Text style={s.footerText}>Page 3 of 3 · {generatedAt}</Text>
         </View>
       </Page>

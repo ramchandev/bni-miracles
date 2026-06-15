@@ -9,9 +9,9 @@ import { breadcrumbJsonLd, createPageMetadata, initiativesListJsonLd } from "@/l
 export const metadata = createPageMetadata({
   title: "Chapter Initiatives — ஆஹா ஆற்புதங்கள்!",
   description:
-    "Discover the unique chapter initiatives of BNI Miracles that keep our Chennai BNI chapter active, connected, and growing through referrals and community programs.",
+    "Discover the unique chapter initiatives of Miracle Members that keep our Chennai business chapter active, connected, and growing through referrals and community programs.",
   path: "/initiatives",
-  keywords: ["BNI initiatives", "BNI Miracles programs", "chapter activities Chennai"],
+  keywords: ["chapter initiatives", "Miracle Members programs", "chapter activities Chennai"],
 });
 
 export default function InitiativesPage() {
@@ -30,7 +30,7 @@ export default function InitiativesPage() {
         <div className="absolute inset-0 opacity-20">
           <Image
             src="/Initiative-Banner.JPG"
-            alt="BNI Miracles initiatives"
+            alt="Miracle Members initiatives"
             fill
             style={{ objectFit: "cover" }}
             priority
@@ -47,7 +47,7 @@ export default function InitiativesPage() {
             Our Chapter Initiatives
           </h1>
           <p className="text-lg text-white/70 max-w-xl mx-auto">
-            Chapter programs that keep BNI Miracles energised, connected, and growing.
+            Chapter programs that keep Miracle Members energised, connected, and growing.
           </p>
         </div>
       </section>

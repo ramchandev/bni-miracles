@@ -51,7 +51,7 @@ export default async function ChapterLeadershipSection() {
           <h2 className="section-title mb-3">Our Leadership Team</h2>
           <p className="text-base max-w-2xl mx-auto" style={{ color: "var(--color-gray)", lineHeight: 1.75 }}>
             {hasAnyAssignee
-              ? "The members who lead, coordinate, and grow BNI Miracles every week."
+              ? "The members who lead, coordinate, and grow Miracle Members every week."
               : "Leadership roles are being assigned — check back soon."}
           </p>
         </div>

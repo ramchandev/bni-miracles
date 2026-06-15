@@ -31,10 +31,10 @@ export async function generateMetadata({ params }: Props) {
     title: `${team.name} Power Team`,
     description:
       team.focus_area
-        ? `${team.focus_area} — meet the members of the ${team.name} Power Team at BNI Miracles Chennai.`
-        : `Meet the members of the ${team.name} Power Team at BNI Miracles Chennai.`,
+        ? `${team.focus_area} — meet the members of the ${team.name} Power Team at Miracle Members Chennai.`
+        : `Meet the members of the ${team.name} Power Team at Miracle Members Chennai.`,
     path: `/power-team/${team.slug}`,
-    keywords: ["BNI Power Team", "Power Teams Chennai", team.name, team.focus_area ?? "", "BNI Miracles"],
+    keywords: ["Power Team", "Power Teams Chennai", team.name, team.focus_area ?? "", "Miracle Members"],
     ogType: "article",
   });
 }

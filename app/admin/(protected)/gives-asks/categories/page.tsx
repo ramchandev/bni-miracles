@@ -7,7 +7,7 @@ import type { GivesAsksCategory } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Gives & Asks Categories — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Gives & Asks Categories — Miracle Members Admin" };
 
 export default async function GivesAsksCategoriesPage() {
   const supabase = await createSupabaseServerClient();

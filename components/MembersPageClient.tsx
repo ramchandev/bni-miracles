@@ -124,7 +124,7 @@ export default function MembersPageClient() {
         <div className="absolute inset-0 opacity-20">
           <Image
             src="/Member-Banner.JPG"
-            alt="BNI Miracles members"
+            alt="Miracle Members members"
             fill
             style={{ objectFit: "cover" }}
             priority

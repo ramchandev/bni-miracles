@@ -8,13 +8,13 @@ import { breadcrumbJsonLd, createPageMetadata, powerTeamsListJsonLd } from "@/li
 export const metadata = createPageMetadata({
   title: `${POWER_TEAM_PROGRAM.englishName} — ${POWER_TEAM_PROGRAM.tamilName}`,
   description:
-    "Explore BNI Miracles Power Teams in Chennai — synergy groups built around a shared client base. Meet each team’s members and captain, and discover the referral chain.",
+    "Explore Miracle Members Power Teams in Chennai — synergy groups built around a shared client base. Meet each team’s members and captain, and discover the referral chain.",
   path: "/power-team",
   keywords: [
-    "BNI Power Team",
+    "Power Team",
     "Power Teams Chennai",
     "referral synergy",
-    "BNI Miracles Chennai",
+    "Miracle Members Chennai",
     POWER_TEAM_PROGRAM.tamilName,
   ],
   ogType: "website",

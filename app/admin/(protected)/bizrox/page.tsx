@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { adminDeletePostAction, adminDeleteCommentAction } from "@/app/actions/bizrox";
 
-export const metadata: Metadata = { title: "BizRox Moderation — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "BizRox Moderation — Miracle Members Admin" };
 
 const TYPE_BADGE: Record<string, { label: string; bg: string; color: string }> = {
   need:         { label: "Need",         bg: "#FEE2E2", color: "#DC2626" },

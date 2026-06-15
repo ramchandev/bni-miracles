@@ -25,7 +25,7 @@ export default function PrintableCard({ member, card }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#1A1A2E", letterSpacing: -0.5 }}>
-              BNI Miracles Dance Card
+              Miracle Members Dance Card
             </div>
             <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
               One-on-One Planner · Chennai Chapter
@@ -142,8 +142,8 @@ export default function PrintableCard({ member, card }: Props) {
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
       <div style={{ marginTop: 24, paddingTop: 12, borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", color: "#9CA3AF", fontSize: 9 }}>
-        <span>BNI Miracles · Chennai · bnimiracles.in</span>
-        <span>© BNI, Business Network Int&apos;l · Adapted for BNI Miracles Chapter</span>
+        <span>Miracle Members · Chennai · bnimiracles.in</span>
+        <span>© Miracle Members Chapter · Chennai</span>
       </div>
     </div>
   );

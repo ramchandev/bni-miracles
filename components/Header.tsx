@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import BrandLogo from "@/components/BrandLogo";
 import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 import { useMemberSession } from "@/components/MemberSessionContext";
@@ -148,7 +149,7 @@ export default function Header({ powerTeams = [] }: Props) {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem" }}>
         <div className="flex items-center justify-between" style={{ height: 70 }}>
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/BNI-Miracles-Logo.png" alt="BNI Miracles Logo" width={120} height={50} style={{ objectFit: "contain" }} priority />
+            <BrandLogo className="text-lg md:text-xl text-white" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-5 lg:gap-6">

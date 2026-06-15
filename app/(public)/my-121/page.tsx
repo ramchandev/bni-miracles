@@ -5,8 +5,8 @@ import { fetchMy121Calendar } from "@/lib/one-on-one-queries";
 import { getMemberSession } from "@/lib/member-session";
 
 export const metadata: Metadata = {
-  title: "My 1-2-1 Calendar — BNI Miracles",
-  description: "BNI Miracles members: view and manage your one-to-one meetings.",
+  title: "My 1-2-1 Calendar — Miracle Members",
+  description: "Miracle Members members: view and manage your one-to-one meetings.",
   robots: { index: false },
 };
 

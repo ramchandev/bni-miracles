@@ -31,7 +31,7 @@ export async function submitRegistrationAction(
   // Must await on Vercel — the function freezes when the response is sent
   try {
     await sendAdminEmail(
-      `📅 New Meeting Registration – ${data.name} — BNI Miracles`,
+      `📅 New Meeting Registration – ${data.name} — Miracle Members`,
       emailTemplate("📅 New Meeting Registration", [
         { label: "Name",         value: data.name },
         { label: "Phone",        value: `<a href="tel:${data.phone}" style="color:#C8102E;">${data.phone}</a>` },

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import BrandLogo from "@/components/BrandLogo";
 import { POWER_TEAM_PROGRAM } from "@/lib/power-teams-content";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 
@@ -23,9 +23,9 @@ export default function Footer({ powerTeams = [] }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <Image src="/BNI-Miracles-Logo.png" alt="BNI Miracles" width={130} height={55} style={{ objectFit: "contain" }} />
+            <BrandLogo className="text-xl text-white" />
             <p className="mt-3 text-sm" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
-              A hybrid BNI chapter meeting every Thursday in Chennai, India.
+              A hybrid business chapter meeting every Thursday in Chennai, India.
             </p>
             <p className="mt-2 text-sm" style={{ color: "var(--color-accent)", fontFamily: "Noto Sans Tamil, sans-serif" }}>
               ஆஹா ஆற்புதங்கள்!
@@ -122,7 +122,7 @@ export default function Footer({ powerTeams = [] }: Props) {
           className="flex flex-col md:flex-row items-center justify-between pt-6 text-sm"
           style={{ borderTop: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}
         >
-          <p>© {new Date().getFullYear()} BNI Miracles. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Miracle Members. All rights reserved.</p>
           <p className="mt-2 md:mt-0">Chennai, Tamil Nadu, India</p>
         </div>
       </div>

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import BrandLogo from '@/components/BrandLogo';
 import { logoutAction } from '@/app/admin/actions/auth';
 
 const navLinks = [
@@ -29,7 +29,7 @@ export default function AdminSidebar() {
     >
       {/* Logo */}
       <div className="px-5 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <Image src="/BNI-Miracles-Logo.png" alt="BNI Miracles" width={110} height={46} style={{ objectFit: 'contain' }} />
+        <BrandLogo className="text-lg text-white" />
         <p className="text-xs mt-1 font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
           Admin Panel
         </p>

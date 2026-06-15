@@ -8,7 +8,7 @@ import type { Member } from '@/lib/supabase';
 
 type Props = { params: Promise<{ id: string }> };
 
-export const metadata: Metadata = { title: 'Edit Member — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Edit Member — Miracle Members Admin' };
 
 export default async function EditMemberPage({ params }: Props) {
   const { id } = await params;

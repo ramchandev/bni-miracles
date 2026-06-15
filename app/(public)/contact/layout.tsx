@@ -4,9 +4,9 @@ import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Contact Us",
   description:
-    "Contact BNI Miracles in Chennai. Ask about membership, visitors, or chapter meetings. Reach us by form, phone, or WhatsApp.",
+    "Contact Miracle Members in Chennai. Ask about membership, visitors, or chapter meetings. Reach us by form, phone, or WhatsApp.",
   path: "/contact",
-  keywords: ["contact BNI Chennai", "BNI Miracles contact", "visit BNI chapter"],
+  keywords: ["contact Miracle Members Chennai", "Miracle Members contact", "visit business chapter"],
 });
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

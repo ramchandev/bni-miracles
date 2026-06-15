@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { DeleteGroupButton, DeleteCategoryButton } from '@/components/admin/CategoryDeleteButtons';
 import type { BusinessCategory, CategoryGroup } from '@/lib/supabase';
 
-export const metadata: Metadata = { title: 'Categories — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Categories — Miracle Members Admin' };
 
 export default async function AdminCategoriesPage() {
   const supabase = await createSupabaseServerClient();

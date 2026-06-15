@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import CategoryForm from '@/components/admin/CategoryForm';
 import type { CategoryGroup } from '@/lib/supabase';
 
-export const metadata: Metadata = { title: 'Add Category — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Add Category — Miracle Members Admin' };
 
 export default async function NewCategoryPage() {
   const supabase = await createSupabaseServerClient();

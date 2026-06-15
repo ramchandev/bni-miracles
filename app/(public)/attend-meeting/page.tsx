@@ -6,9 +6,9 @@ import { breadcrumbJsonLd, createPageMetadata, eventJsonLd } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Attend a Meeting — Book Your Seat",
   description:
-    "Book your seat at a BNI Miracles Thursday meeting in Chennai. Free for first-time visitors online. Hybrid format — attend in person or on Zoom.",
+    "Book your seat at a Miracle Members Thursday meeting in Chennai. Free for first-time visitors online. Hybrid format — attend in person or on Zoom.",
   path: "/attend-meeting",
-  keywords: ["attend BNI meeting Chennai", "BNI visitor", "Thursday networking Chennai"],
+  keywords: ["attend chapter meeting Chennai", "visitor", "Thursday networking Chennai"],
 });
 
 export default function AttendMeetingPage() {
@@ -32,7 +32,7 @@ export default function AttendMeetingPage() {
           Every Thursday
         </p>
         <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">
-          Attend a BNI Miracles Meeting
+          Attend a Miracle Members Meeting
         </h1>
         <p className="text-lg text-white/70 max-w-xl mx-auto">
           Experience the power of structured business networking — free for first-time visitors.
@@ -76,7 +76,7 @@ export default function AttendMeetingPage() {
                 "60-second business presentations from 35+ professionals",
                 "Structured referral passing — real business connections",
                 "A featured 10-minute business presentation",
-                "BNI education slot with practical takeaways",
+                "education slot with practical takeaways",
                 "Post-meeting networking over refreshments",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm" style={{ color: "var(--color-gray)" }}>
@@ -132,7 +132,7 @@ export default function AttendMeetingPage() {
       <section className="py-12 px-6 text-center" style={{ background: "var(--color-primary)" }}>
         <p className="text-white/90 font-semibold mb-2">Already a member? Or want to know more?</p>
         <Link href="/about" className="btn-secondary text-sm">
-          Learn About BNI Miracles
+          Learn About Miracle Members
         </Link>
       </section>
     </>

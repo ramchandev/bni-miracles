@@ -463,7 +463,7 @@ function ContactTab({ data, set }: { data: DanceCardData; set: (k: keyof DanceCa
           ))}
         </div>
         <p className="text-xs mt-3 italic" style={{ color: "var(--color-gray)" }}>
-          💡 Make a commitment to your dance partner to help fill their Contact Sphere by inviting these professionals to BNI!
+          💡 Make a commitment to your dance partner to help fill their Contact Sphere by inviting these professionals to the chapter!
         </p>
       </div>
     </div>

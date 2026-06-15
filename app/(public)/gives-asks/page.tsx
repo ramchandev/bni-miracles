@@ -11,8 +11,8 @@ import { getMemberSession } from "@/lib/member-session";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata: Metadata = {
-  title: "My Gives & Asks — BNI Miracles",
-  description: "BNI Miracles members: manage your referral gives and asks.",
+  title: "My Gives & Asks — Miracle Members",
+  description: "Miracle Members members: manage your referral gives and asks.",
   robots: { index: false },
 };
 

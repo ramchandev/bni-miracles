@@ -5,7 +5,7 @@ import DeleteLeadershipGroupButton from "@/components/admin/DeleteLeadershipGrou
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Chapter Leadership — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Chapter Leadership — Miracle Members Admin" };
 
 export default async function AdminLeadershipPage() {
   const supabase = await createSupabaseServerClient();

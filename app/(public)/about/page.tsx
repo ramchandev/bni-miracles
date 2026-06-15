@@ -7,9 +7,9 @@ import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "About Us",
   description:
-    "Learn about BNI Miracles, Chennai's hybrid BNI chapter. Discover our story, hybrid Thursday meetings, and why we're one of Tamil Nadu's most dynamic business networks.",
+    "Learn about Miracle Members, Chennai's hybrid business chapter. Discover our story, hybrid Thursday meetings, and why we're one of Tamil Nadu's most dynamic business networks.",
   path: "/about",
-  keywords: ["about BNI Miracles", "BNI chapter Chennai", "hybrid BNI meeting"],
+  keywords: ["about Miracle Members", "business chapter Chennai", "hybrid business meeting"],
 });
 
 export default function AboutPage() {
@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 opacity-20">
           <Image
             src="/About-Banner.JPG"
-            alt="BNI Miracles chapter"
+            alt="Miracle Members chapter"
             fill
             style={{ objectFit: "cover" }}
           />
@@ -35,25 +35,25 @@ export default function AboutPage() {
           <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: "var(--color-accent)" }}>
             Our Story
           </p>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">About BNI Miracles</h1>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">About Miracle Members</h1>
           <p className="text-lg text-white/70">
             Chennai&apos;s hybrid business networking chapter — where real business relationships are built.
           </p>
         </div>
       </section>
 
-      {/* What is BNI */}
+      {/* Structured referral networking */}
       <section className="py-20 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 className="section-title mb-6">What is BNI?</h2>
+          <h2 className="section-title mb-6">Structured Referral Networking</h2>
           <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.85 }}>
-            Business Network International (BNI) is the world&apos;s largest referral networking organisation, founded in 1985 by Dr. Ivan Misner. Today, BNI operates in 76 countries with over 11,728 chapters and 355,000+ members who pass millions of referrals to each other every year.
+            Referral networking works best when it is structured, consistent, and built on trust. Miracle Members follows a proven weekly format used by thousands of business chapters worldwide — members meet every week, share referrals, and hold each other accountable to real business results.
           </p>
           <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.85 }}>
-            BNI&apos;s philosophy is simple and powerful: <strong>Givers Gain®</strong>. The more you give to others — in the form of referrals, support, and knowledge — the more you receive in return. This creates a culture of proactive, structured giving that translates directly into business growth.
+            The philosophy is simple and powerful: <strong>Givers Gain</strong>. The more you give to others — in the form of referrals, support, and knowledge — the more you receive in return. That creates a culture of proactive giving that translates directly into business growth.
           </p>
           <p className="text-base" style={{ color: "var(--color-gray)", lineHeight: 1.85 }}>
-            Unlike casual networking events, BNI is a structured, weekly meeting where members make a commitment to each other. Each chapter allows only one member per business category, ensuring you&apos;re the exclusive representative of your profession in the room.
+            Unlike casual networking events, our chapter is a structured, weekly meeting where members make a commitment to each other. Each chapter allows only one member per business category, ensuring you&apos;re the exclusive representative of your profession in the room.
           </p>
         </div>
       </section>
@@ -64,7 +64,7 @@ export default function AboutPage() {
           <div>
             <Image
               src="/About-BNI-Miracles.JPG"
-              alt="BNI Miracles chapter meeting"
+              alt="Miracle Members chapter meeting"
               width={600}
               height={440}
               className="rounded-2xl"
@@ -75,9 +75,9 @@ export default function AboutPage() {
             <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: "var(--color-primary)" }}>
               Our Chapter
             </p>
-            <h2 className="section-title mb-6">About BNI Miracles</h2>
+            <h2 className="section-title mb-6">About Miracle Members</h2>
             <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.85 }}>
-              BNI Miracles is a chapter in Chennai, Tamil Nadu — part of BNI India&apos;s growing network of 1,498 chapters across 143 cities. Our chapter brings together 35+ professionals from diverse industries who meet every Thursday to pass referrals, share knowledge, and build genuine business partnerships.
+              Miracle Members is a chapter in Chennai, Tamil Nadu — part of a growing network of referral chapters across India. Our chapter brings together 35+ professionals from diverse industries who meet every Thursday to pass referrals, share knowledge, and build genuine business partnerships.
             </p>
             <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.85 }}>
               The name &apos;Miracles&apos; reflects our belief: that when dedicated business professionals come together with a spirit of giving, remarkable things happen. Our Tamil tagline <span style={{ fontFamily: "Noto Sans Tamil, sans-serif", color: "var(--color-primary)" }}>ஆஹா ஆற்புதங்கள்!</span> — meaning &quot;Ahh, Miracles!&quot; — captures that spirit of wonder and achievement.
@@ -106,7 +106,7 @@ export default function AboutPage() {
               {
                 icon: "🏢",
                 title: "In-Person Energy",
-                desc: "Physical attendees experience the full energy of a BNI meeting — face-to-face connections, handshakes, and the buzz of a room full of motivated entrepreneurs.",
+                desc: "Physical attendees experience the full energy of a chapter meeting — face-to-face connections, handshakes, and the buzz of a room full of motivated entrepreneurs.",
               },
               {
                 icon: "💻",
@@ -161,7 +161,7 @@ export default function AboutPage() {
       <section className="py-16 px-6 text-center" style={{ background: "var(--color-primary)" }}>
         <h2 className="text-3xl font-extrabold text-white mb-4">Ready to Join the Miracles?</h2>
         <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
-          Visit us as a guest — no commitment. Just come and experience what BNI Miracles is all about.
+          Visit us as a guest — no commitment. Just come and experience what Miracle Members is all about.
         </p>
         <Link href="/attend-meeting" className="btn-secondary text-base">
           Book Your Free Visit

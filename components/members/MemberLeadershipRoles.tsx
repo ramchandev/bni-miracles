@@ -50,7 +50,7 @@ export default function MemberLeadershipRoles({ roles }: Props) {
             Chapter Leadership Roles
           </h2>
           <p className="text-xs" style={{ color: "var(--color-gray)" }}>
-            Positions held at BNI Miracles
+            Positions held at Miracle Members
           </p>
         </div>
       </div>

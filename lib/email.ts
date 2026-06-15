@@ -111,7 +111,7 @@ export async function sendEmail(
     await transporter.verify();
 
     const info = await transporter.sendMail({
-      from: `"BNI Miracles" <${fromAddress}>`,
+      from: `"Miracle Members" <${fromAddress}>`,
       replyTo: fromAddress,
       to: recipients,
       subject,
@@ -169,7 +169,7 @@ export async function sendMemberEmail(
   return sendEmail(to.trim(), subject, html);
 }
 
-/** Shared HTML wrapper matching BNI Miracles brand colours */
+/** Shared HTML wrapper matching Miracle Members brand colours */
 export function emailTemplate(title: string, rows: { label: string; value: string }[]): string {
   const rowsHtml = rows
     .map(
@@ -197,7 +197,7 @@ export function emailTemplate(title: string, rows: { label: string; value: strin
           <tr>
             <td style="background:#C8102E;padding:20px 24px;">
               <p style="margin:0;font-size:18px;font-weight:700;color:#fff;">${title}</p>
-              <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.7);">BNI Miracles · Chennai</p>
+              <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.7);">Miracle Members · Chennai</p>
             </td>
           </tr>
           <!-- Body -->
@@ -212,7 +212,7 @@ export function emailTemplate(title: string, rows: { label: string; value: strin
           <tr>
             <td style="background:#F9FAFB;padding:14px 24px;border-top:1px solid #E5E7EB;">
               <p style="margin:0;font-size:11px;color:#9CA3AF;">
-                This is an automated notification from the BNI Miracles website.
+                This is an automated notification from the Miracle Members website.
                 Log in to the <a href="https://bnimiracles.in/admin" style="color:#C8102E;">admin panel</a> to manage submissions.
               </p>
             </td>

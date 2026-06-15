@@ -6,8 +6,8 @@ import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "All Asks — BNI Miracles Members",
-  description: "BNI Miracles members: browse chapter asks grouped by category.",
+  title: "All Asks — Miracle Members",
+  description: "Miracle Members members: browse chapter asks grouped by category.",
   path: "/members/all-asks",
   noIndex: true,
 });
@@ -26,7 +26,7 @@ export default async function AllAsksPage() {
             className="text-sm font-semibold tracking-widest uppercase mb-3"
             style={{ color: "var(--color-accent)" }}
           >
-            BNI Miracles Members
+            Miracle Members
           </p>
           <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">All Asks</h1>
           <p className="text-white/60 text-sm max-w-lg mx-auto leading-relaxed">
@@ -60,7 +60,7 @@ export default async function AllAsksPage() {
           className="text-sm font-semibold tracking-widest uppercase mb-3"
           style={{ color: "var(--color-accent)" }}
         >
-          BNI Miracles Members
+          Miracle Members
         </p>
         <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">All Asks</h1>
         <p className="text-white/60 text-sm max-w-lg mx-auto leading-relaxed">

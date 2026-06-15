@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import MemberForm from '@/components/admin/MemberForm';
 import { fetchAllGivesAsksCategories } from '@/lib/gives-asks-categories';
 
-export const metadata: Metadata = { title: 'Add Member — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Add Member — Miracle Members Admin' };
 
 export default async function NewMemberPage() {
   const supabase = await createSupabaseServerClient();

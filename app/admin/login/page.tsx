@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import BrandLogo from '@/components/BrandLogo';
 import LoginForm from '@/components/admin/LoginForm';
 
-export const metadata: Metadata = { title: 'Admin Login — BNI Miracles' };
+export const metadata: Metadata = { title: 'Admin Login — Miracle Members' };
 
 export default function LoginPage() {
   return (
@@ -13,7 +13,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Image src="/logo.webp" alt="BNI Miracles" width={140} height={60} style={{ objectFit: 'contain', margin: '0 auto' }} />
+          <BrandLogo className="text-2xl" accentClassName="text-[var(--color-primary)]" />
           <p className="text-sm font-semibold mt-2" style={{ color: 'var(--color-gray)' }}>
             Admin Panel
           </p>
@@ -24,7 +24,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="text-sm mb-6" style={{ color: 'var(--color-gray)' }}>
-            Sign in to manage BNI Miracles members and data.
+            Sign in to manage chapter members and data.
           </p>
           <LoginForm />
         </div>

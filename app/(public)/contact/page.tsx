@@ -37,7 +37,7 @@ export default function ContactPage() {
         <div className="absolute inset-0 opacity-20">
           <Image
             src="/Contact-Banner.JPG"
-            alt="Contact BNI Miracles"
+            alt="Contact Miracle Members"
             fill
             style={{ objectFit: "cover" }}
             priority

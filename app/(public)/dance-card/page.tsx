@@ -6,8 +6,8 @@ import DanceCardLoader from "@/components/dance-card/DanceCardLoader";
 import MemberPageGate from "@/components/MemberPageGate";
 
 export const metadata: Metadata = {
-  title: "My Dance Card — BNI Miracles",
-  description: "Complete your BNI One-on-One Dance Card Planner.",
+  title: "My Dance Card — Miracle Members",
+  description: "Complete your One-on-One Dance Card Planner.",
   robots: { index: false },
 };
 
@@ -79,7 +79,7 @@ export default async function DanceCardPage() {
           One-on-One Dance Card
         </h1>
         <p className="text-white/60 max-w-lg mx-auto text-sm leading-relaxed">
-          Your personal BNI planner — fill in your details, share with dance partners,
+          Your personal planner — fill in your details, share with dance partners,
           and generate a ready-to-print PDF for your One-on-One meetings.
         </p>
 

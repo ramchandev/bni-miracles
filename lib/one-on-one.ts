@@ -4,7 +4,7 @@ import type {
   OneOnOneSlot,
 } from "@/lib/supabase";
 
-export const MIRACLES_CHAPTER = "BNI Miracles";
+export const MIRACLES_CHAPTER = "Miracle Members";
 export const SLOT_HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] as const;
 export const TIMEZONE = "Asia/Kolkata";
 
@@ -217,7 +217,7 @@ export function generateIcsContent(params: {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//BNI Miracles//121 Scheduler//EN",
+    "PRODID:-//Miracle Members//121 Scheduler//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:REQUEST",
     "BEGIN:VEVENT",
@@ -231,7 +231,7 @@ export function generateIcsContent(params: {
   ];
 
   if (params.organizerEmail) {
-    lines.push(`ORGANIZER;CN=BNI Miracles:mailto:${params.organizerEmail}`);
+    lines.push(`ORGANIZER;CN=Miracle Members:mailto:${params.organizerEmail}`);
   }
   if (params.attendeeEmail) {
     lines.push(`ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${params.attendeeEmail}`);

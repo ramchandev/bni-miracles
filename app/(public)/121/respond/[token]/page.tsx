@@ -7,7 +7,7 @@ type Props = {
 };
 
 export const metadata = {
-  title: "1-2-1 Response — BNI Miracles",
+  title: "1-2-1 Response — Miracle Members",
   robots: { index: false },
 };
 

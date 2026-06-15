@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LeadershipGroupForm from "@/components/admin/LeadershipGroupForm";
 
-export const metadata: Metadata = { title: "New Leadership Group — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "New Leadership Group — Miracle Members Admin" };
 
 export default function NewLeadershipGroupPage() {
   return (

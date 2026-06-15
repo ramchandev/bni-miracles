@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import EmailSettingsForm from "@/components/admin/EmailSettingsForm";
 
-export const metadata: Metadata = { title: "Settings — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Settings — Miracle Members Admin" };
 
 export default async function AdminSettingsPage() {
   const supabase = await createSupabaseServerClient();

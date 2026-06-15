@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import GroupForm from '@/components/admin/GroupForm';
 
-export const metadata: Metadata = { title: 'Add Group — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Add Group — Miracle Members Admin' };
 
 export default function NewGroupPage() {
   return (

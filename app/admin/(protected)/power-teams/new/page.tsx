@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PowerTeamForm from "@/components/admin/PowerTeamForm";
 
-export const metadata: Metadata = { title: "New Power Team — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "New Power Team — Miracle Members Admin" };
 
 export default function NewPowerTeamPage() {
   return (

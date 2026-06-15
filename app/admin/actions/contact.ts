@@ -19,7 +19,7 @@ export async function submitContactAction(
   // Must await on Vercel — the function freezes when the response is sent
   try {
     await sendAdminEmail(
-      `📬 New Contact from ${data.name} — BNI Miracles`,
+      `📬 New Contact from ${data.name} — Miracle Members`,
       emailTemplate("📬 New Contact Form Submission", [
         { label: "Name",    value: data.name },
         { label: "Email",   value: `<a href="mailto:${data.email}" style="color:#C8102E;">${data.email}</a>` },

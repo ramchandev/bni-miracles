@@ -10,7 +10,7 @@ import {
 } from '@/lib/member-profile-status';
 import type { Member } from '@/lib/supabase';
 
-export const metadata: Metadata = { title: 'Members — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Members — Miracle Members Admin' };
 
 export default async function AdminMembersPage() {
   const supabase = await createSupabaseServerClient();

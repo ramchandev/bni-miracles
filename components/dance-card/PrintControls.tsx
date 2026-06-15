@@ -16,7 +16,7 @@ export default function PrintControls() {
       }}
     >
       <span style={{ color: "white", fontFamily: "Arial", fontSize: 14, fontWeight: 600 }}>
-        🎴 BNI Miracles Dance Card — Print Preview
+        🎴 Miracle Members Dance Card — Print Preview
       </span>
       <div style={{ display: "flex", gap: 10 }}>
         <button

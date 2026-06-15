@@ -6,9 +6,9 @@ import MemberPageGate from "@/components/MemberPageGate";
 import { getMemberSession } from "@/lib/member-session";
 
 export const metadata: Metadata = {
-  title: "BizRox — BNI Miracles Member Feed",
+  title: "BizRox — Miracle Members Member Feed",
   description:
-    "BizRox is the BNI Miracles member feed — share business needs, offers, and promos. Connect with members directly on WhatsApp.",
+    "BizRox is the Miracle Members member feed — share business needs, offers, and promos. Connect with members directly on WhatsApp.",
 };
 
 export const dynamic = "force-dynamic"; // always fresh
@@ -31,7 +31,7 @@ export default async function BizRoxPage() {
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-3">BizRox</h1>
           <p className="text-white/60 max-w-lg mx-auto text-sm leading-relaxed">
-            Log in to post business needs, share promos, and connect with fellow BNI Miracles members.
+            Log in to post business needs, share promos, and connect with fellow Miracle Members members.
           </p>
         </section>
         <MemberPageGate
@@ -60,7 +60,7 @@ export default async function BizRoxPage() {
         <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-3">BizRox</h1>
         <p className="text-white/60 max-w-lg mx-auto text-sm leading-relaxed">
           Post your business needs, give referrals, share promos, and connect with fellow
-          BNI Miracles members — all in one place.
+          Miracle Members members — all in one place.
         </p>
 
         {/* Quick stats */}

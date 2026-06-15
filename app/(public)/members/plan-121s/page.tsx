@@ -5,11 +5,11 @@ import { fetchPlan121Availability } from "@/lib/plan-121s";
 import { breadcrumbJsonLd, createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Plan 1-2-1s — BNI Miracles Members",
+  title: "Plan 1-2-1s — Miracle Members",
   description:
-    "Browse open one-to-one availability across BNI Miracles members and schedule your next 1-2-1 in one place.",
+    "Browse open one-to-one availability across Miracle Members members and schedule your next 1-2-1 in one place.",
   path: "/members/plan-121s",
-  keywords: ["BNI 1-2-1", "BNI Miracles meetings", "schedule one to one"],
+  keywords: ["1-2-1", "Miracle Members meetings", "schedule one to one"],
 });
 
 export default async function Plan121sPage() {
@@ -33,7 +33,7 @@ export default async function Plan121sPage() {
           className="text-sm font-semibold tracking-widest uppercase mb-3"
           style={{ color: "var(--color-accent)" }}
         >
-          BNI Miracles Members
+          Miracle Members
         </p>
         <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">Plan 1-2-1s</h1>
         <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">

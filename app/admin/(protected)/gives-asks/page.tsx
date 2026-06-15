@@ -5,7 +5,7 @@ import ReferralPairsSection from "@/components/admin/ReferralPairsSection";
 import AllGivesAsksTable from "@/components/admin/AllGivesAsksTable";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
-export const metadata: Metadata = { title: "Gives & Asks Intelligence — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Gives & Asks Intelligence — Miracle Members Admin" };
 
 /* ══════════════════════════════════════════════════════════════════════════
    SIMILARITY ENGINE

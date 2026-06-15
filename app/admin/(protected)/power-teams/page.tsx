@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import DeletePowerTeamButton from "@/components/admin/DeletePowerTeamButton";
 
-export const metadata: Metadata = { title: "Power Teams — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Power Teams — Miracle Members Admin" };
 
 export default async function AdminPowerTeamsPage() {
   const supabase = await createSupabaseServerClient();

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-export const metadata: Metadata = { title: 'Registrations — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Registrations — Miracle Members Admin' };
 
 function formatDate(str: string) {
   return new Date(str).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });

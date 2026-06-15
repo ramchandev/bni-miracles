@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await fetchPostByIdAction(postId);
   if (!post) return { title: "Post Not Found" };
   return {
-    title: `${post.members.name}'s BizRox Post — BNI Miracles`,
+    title: `${post.members.name}'s BizRox Post — Miracle Members`,
     description: post.content.slice(0, 160),
   };
 }

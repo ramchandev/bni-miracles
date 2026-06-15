@@ -8,7 +8,7 @@ import type { Member, PowerTeam, PowerTeamMemberWithMember } from "@/lib/supabas
 
 type Props = { params: Promise<{ id: string }> };
 
-export const metadata: Metadata = { title: "Edit Power Team — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Edit Power Team — Miracle Members Admin" };
 
 export default async function EditPowerTeamPage({ params }: Props) {
   const { id } = await params;

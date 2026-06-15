@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import StatCard from '@/components/admin/StatCard';
 
-export const metadata: Metadata = { title: 'Dashboard — BNI Miracles Admin' };
+export const metadata: Metadata = { title: 'Dashboard — Miracle Members Admin' };
 
 function formatDate(str: string) {
   return new Date(str).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -33,7 +33,7 @@ export default async function AdminDashboard() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: 'var(--color-dark)' }}>Dashboard</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-gray)' }}>Welcome back to BNI Miracles Admin</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-gray)' }}>Welcome back to Miracle Members Admin</p>
         </div>
         <Link href="/admin/members/new" className="btn-primary text-sm">
           + Add Member

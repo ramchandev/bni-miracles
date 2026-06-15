@@ -51,7 +51,7 @@ export default async function HomePage() {
       <section className="relative flex items-center justify-center" style={{ minHeight: "100vh" }}>
         <Image
           src="/hero.jpg"
-          alt="BNI Miracles chapter members — Chennai"
+          alt="Miracle Members chapter members — Chennai"
           fill
           sizes="100vw"
           style={{ objectFit: "cover", objectPosition: "center 30%" }}
@@ -74,13 +74,13 @@ export default async function HomePage() {
             className="text-sm font-semibold tracking-widest mb-4 uppercase"
             style={{ color: "var(--color-accent)" }}
           >
-            Chennai North Hybrid BNI Chapter
+            Chennai North Hybrid Business Chapter
           </p>
           <h1
             className="text-5xl md:text-7xl font-extrabold text-white mb-4"
             style={{ lineHeight: 1.1 }}
           >
-            BNI Miracles
+            Miracle Members
           </h1>
           <p
             className="text-2xl md:text-3xl font-bold mb-4"
@@ -89,7 +89,7 @@ export default async function HomePage() {
             ஆஹா ஆற்புதங்கள்!
           </p>
           <p className="text-lg text-white/80 mb-10">
-            A hybrid BNI chapter — meeting every Thursday in Chennai
+            A hybrid business chapter — meeting every Thursday in Chennai
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/attend-meeting" className="btn-primary text-base" style={{ padding: "1rem 2rem" }}>
@@ -107,13 +107,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* BNI Global Stats */}
-      <StatCounter stats={globalStats} title="BNI — Building Business Globally" />
+      {/* Global network stats */}
+      <StatCounter stats={globalStats} title="Building Business Globally" />
 
-      {/* BNI India Stats */}
-      <StatCounter stats={indiaStats} title="BNI India — A Powerhouse Network" />
+      {/* India network stats */}
+      <StatCounter stats={indiaStats} title="India — A Powerhouse Network" />
 
-      {/* About BNI Miracles */}
+      {/* About Miracle Members */}
       <section className="py-20 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }} className="grid md:grid-cols-2 gap-12 items-center">
           <div>
@@ -124,13 +124,13 @@ export default async function HomePage() {
               Where Chennai&apos;s Best Businesses Connect
             </h2>
             <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.8 }}>
-              BNI Miracles is a vibrant, hybrid BNI chapter based in Chennai, Tamil Nadu. We bring together entrepreneurs, business owners, and professionals from 36 diverse categories every Thursday — both in-person and online — to build genuine business relationships.
+              Miracle Members is a vibrant, hybrid business chapter based in Chennai, Tamil Nadu. We bring together entrepreneurs, business owners, and professionals from 36 diverse categories every Thursday — both in-person and online — to build genuine business relationships.
             </p>
             <p className="text-base mb-4" style={{ color: "var(--color-gray)", lineHeight: 1.8 }}>
-              Our chapter is built on the foundation of BNI&apos;s core philosophy: <strong>Givers Gain®</strong>. Members don&apos;t just network — they actively refer, support, and grow each other&apos;s businesses.
+              Our chapter is built on a simple philosophy: <strong>Givers Gain</strong>. Members don&apos;t just network — they actively refer, support, and grow each other&apos;s businesses.
             </p>
             <p className="text-base mb-8" style={{ color: "var(--color-gray)", lineHeight: 1.8 }}>
-              Whether you&apos;re a seasoned entrepreneur or just starting your business journey, BNI Miracles offers the community, structure, and tools to help you grow systematically.
+              Whether you&apos;re a seasoned entrepreneur or just starting your business journey, Miracle Members offers the community, structure, and tools to help you grow systematically.
             </p>
             <Link href="/about" className="btn-primary">
               Learn More About Us
@@ -139,7 +139,7 @@ export default async function HomePage() {
           <div className="relative">
             <Image
               src="/Home-Page-Featured-2.JPG"
-              alt="BNI Miracles hybrid Thursday meeting"
+              alt="Miracle Members hybrid Thursday meeting"
               width={600}
               height={420}
               className="rounded-2xl"
@@ -202,7 +202,7 @@ export default async function HomePage() {
             </p>
             <h2 className="section-title mb-3">Our Chapter Initiatives</h2>
             <p className="text-base max-w-xl mx-auto" style={{ color: "var(--color-gray)" }}>
-              Ten unique programs that make BNI Miracles one of Chennai&apos;s most active and innovative chapters.
+              Ten unique programs that make Miracle Members one of Chennai&apos;s most active and innovative chapters.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,7 +225,7 @@ export default async function HomePage() {
             Ready to grow your business?
           </h2>
           <p className="text-white/80 text-lg mb-8">
-            Attend a Thursday meeting and experience the BNI Miracles difference.
+            Attend a Thursday meeting and experience the Miracle Members difference.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/attend-meeting" className="btn-secondary text-base">

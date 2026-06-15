@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GivesAsksCategoryForm from "@/components/admin/GivesAsksCategoryForm";
 
-export const metadata: Metadata = { title: "Add Gives & Asks Category — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Add Gives & Asks Category — Miracle Members Admin" };
 
 export default function NewGivesAsksCategoryPage() {
   return (

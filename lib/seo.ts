@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 export const SITE_URL = "https://bnimiracles.in";
-export const SITE_NAME = "BNI Miracles";
+export const SITE_NAME = "Miracle Members";
 export const SITE_TAGLINE = "Hybrid Business Networking Chapter | Chennai";
 export const DEFAULT_DESCRIPTION =
-  "BNI Miracles is a hybrid BNI chapter meeting every Thursday in Chennai. Connect with 36+ business categories, pass referrals, and grow your business.";
+  "Miracle Members is a hybrid business chapter meeting every Thursday in Chennai. Connect with 36+ business categories, pass referrals, and grow your business.";
 
 /** Default social share image (1200×630) */
 export const DEFAULT_OG_IMAGE = "/og-image.jpg";
@@ -12,12 +12,12 @@ export const DEFAULT_OG_IMAGE_WIDTH = 1200;
 export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 
 const DEFAULT_KEYWORDS = [
-  "BNI Miracles",
-  "BNI Chennai",
+  "Miracle Members",
   "business networking Chennai",
-  "BNI chapter Tamil Nadu",
+  "referral networking Chennai",
+  "business chapter Tamil Nadu",
   "referral networking",
-  "hybrid BNI meeting",
+  "hybrid business meeting",
 ];
 
 export type PageSeoInput = {
@@ -38,7 +38,7 @@ export type PageSeoInput = {
   twitterCard?: "summary" | "summary_large_image";
   noIndex?: boolean;
   ogType?: "website" | "article" | "profile";
-  /** Use full title as-is without the `%s | BNI Miracles` template */
+  /** Use full title as-is without the `%s | Miracle Members` template */
   absoluteTitle?: boolean;
 };
 
@@ -106,8 +106,8 @@ export function createInitiativeMetadata(init: {
     keywords: [
       init.englishName,
       init.tamilName,
-      "BNI Miracles initiatives",
-      "BNI Chennai programs",
+      "Miracle Members initiatives",
+      "Chennai chapter programs",
     ],
   });
 }
@@ -300,9 +300,9 @@ export function eventJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: "BNI Miracles Weekly Chapter Meeting",
+    name: "Miracle Members Weekly Chapter Meeting",
     description:
-      "Hybrid BNI Miracles chapter meeting every Thursday in Chennai. Visitors welcome — attend in person or online.",
+      "Hybrid Miracle Members chapter meeting every Thursday in Chennai. Visitors welcome — attend in person or online.",
     eventAttendanceMode: "https://schema.org/MixedEventAttendanceMode",
     eventSchedule: {
       "@type": "Schedule",
@@ -313,7 +313,7 @@ export function eventJsonLd() {
     },
     location: {
       "@type": "Place",
-      name: "BNI Miracles — Chennai",
+      name: "Miracle Members — Chennai",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Chennai",

@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!member) {
     return createPageMetadata({
       title: "Member Not Found",
-      description: "This member profile could not be found on BNI Miracles Chennai.",
+      description: "This member profile could not be found on Miracle Members Chennai.",
       path: `/members/${slug}`,
       noIndex: true,
     });
@@ -72,15 +72,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description =
     member.services?.trim() ||
-    `${member.name} is a ${member.category} professional at ${member.business_name}, member of BNI Miracles — Chennai's hybrid BNI chapter.`;
+    `${member.name} is a ${member.category} professional at ${member.business_name}, member of Miracle Members — Chennai's hybrid business chapter.`;
 
   return createPageMetadata({
     title: `${member.name} — ${member.business_name}`,
     description: description.slice(0, 160),
     path: `/members/${slug}`,
-    keywords: [member.name, member.business_name, member.category, "BNI Miracles member"],
+    keywords: [member.name, member.business_name, member.category, "Miracle Members member"],
     ogImage:       member.profile_picture_url ?? undefined,
-    ogImageAlt:    `${member.name} — ${member.business_name} | BNI Miracles`,
+    ogImageAlt:    `${member.name} — ${member.business_name} | Miracle Members`,
     // Profile photos are square — declare 1:1 so platforms don't letterbox them
     ogImageWidth:  400,
     ogImageHeight: 400,

@@ -291,7 +291,7 @@ export async function submit121RequestAction(input: {
 
   await sendNew121RequestEmails({
     hostMemberId: slot.host_member_id as string,
-    hostName: (host?.name as string) ?? "BNI Miracles member",
+    hostName: (host?.name as string) ?? "Miracle Members member",
     hostEmail: (host?.email as string | null) ?? "",
     requesterName: name,
     requesterChapter: chapter,
@@ -385,7 +385,7 @@ export async function accept121RequestAction(
     request.requester_email,
     `1-2-1 confirmed with ${host?.name ?? "your host"}`,
     emailTemplate("1-2-1 Confirmed", [
-      { label: "Host", value: (host?.name as string) ?? "BNI Miracles member" },
+      { label: "Host", value: (host?.name as string) ?? "Miracle Members member" },
       { label: "When", value: summary },
       {
         label: "Meeting",
@@ -445,7 +445,7 @@ export async function decline121RequestAction(
 
   const declineResult = await sendMemberEmail(
     request.requester_email,
-    "1-2-1 request update — BNI Miracles",
+    "1-2-1 request update — Miracle Members",
     emailTemplate("1-2-1 Request Declined", [
       { label: "Host", value: "The member was unable to confirm this time." },
       {
@@ -529,7 +529,7 @@ export async function generate121IcsAction(
 
   const content = generateIcsContent({
     uid: `121-${requestId}@bnimiracles.in`,
-    title: `1-2-1: ${request.requester_name} × ${(host?.name as string) ?? "BNI Miracles"}`,
+    title: `1-2-1: ${request.requester_name} × ${(host?.name as string) ?? "Miracle Members"}`,
     description: formatSlotSummary(slotRaw),
     location,
     start,

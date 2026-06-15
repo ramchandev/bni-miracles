@@ -12,7 +12,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Edit Leadership Group — BNI Miracles Admin" };
+export const metadata: Metadata = { title: "Edit Leadership Group — Miracle Members Admin" };
 
 export default async function EditLeadershipGroupPage({ params }: Props) {
   const { id } = await params;
