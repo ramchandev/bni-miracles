@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import PowerTeamInitials from "@/components/power-team/PowerTeamInitials";
 import type { PowerTeamWithMembers } from "@/lib/supabase";
@@ -43,13 +42,15 @@ export default function PowerTeamMemberIconGrid({ team, avatarSize = 64 }: Props
                 }}
               >
                 {member.profile_picture_url ? (
-                  <Image
+                  <img
                     src={member.profile_picture_url}
                     alt={member.name}
                     width={avatarSize}
                     height={avatarSize}
                     className="rounded-full object-cover bg-white"
                     style={{ width: avatarSize, height: avatarSize }}
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <PowerTeamInitials name={member.name} size={avatarSize} />

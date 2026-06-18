@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useMemberSession } from "@/components/MemberSessionContext";
 import type { Member } from "@/lib/supabase";
 
@@ -63,13 +62,15 @@ function MemberCardFront({
             </span>
           )}
           {member.profile_picture_url ? (
-            <Image
+            <img
               src={member.profile_picture_url}
               alt={`${member.name} profile picture`}
               width={80}
               height={80}
               className="rounded-full object-cover mx-auto"
               style={{ width: 80, height: 80 }}
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <Initials name={member.name} />
@@ -221,12 +222,14 @@ export default function MemberCard({
           <div className="px-5 pt-5 pb-3 flex items-center gap-2 border-b border-white/10">
             <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
               {member.profile_picture_url ? (
-                <Image
+                <img
                   src={member.profile_picture_url}
                   alt={member.name}
                   width={32}
                   height={32}
                   className="object-cover w-full h-full"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div
