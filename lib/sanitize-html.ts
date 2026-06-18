@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 const ALLOWED_TAGS = [
   "p",
@@ -19,8 +19,8 @@ const ALLOWED_TAGS = [
 /** Sanitize stored HTML before rendering on public pages */
 export function sanitizeRichHtml(dirty: string | null | undefined): string {
   if (!dirty?.trim()) return "";
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: [],
+  return sanitizeHtml(dirty, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {},
   });
 }
