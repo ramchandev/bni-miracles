@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { sendAdminEmail, emailTemplate } from "@/lib/email";
 
 type RegistrationData = {
@@ -17,6 +19,15 @@ function formatDate(dateStr: string): string {
     month: "long",
     year: "numeric",
   });
+}
+
+async function requireAdmin() {
+  const client = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return { error: "You must be logged in." } as const;
+  return { user, supabase: client } as const;
 }
 
 export async function submitRegistrationAction(
@@ -42,5 +53,23 @@ export async function submitRegistrationAction(
     console.error("[submitRegistrationAction] Admin email failed:", err);
   }
 
+  return { success: true };
+}
+
+export async function deleteRegistrationAction(
+  id: string
+): Promise<{ success?: boolean; error?: string }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return { error: auth.error };
+
+  const { error } = await auth.supabase
+    .from("meeting_registrations")
+    .delete()
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/registrations");
+  revalidatePath("/admin");
   return { success: true };
 }

@@ -1,21 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
-import PowerTeamMemberCards from "@/components/power-team/PowerTeamMemberCards";
+import PowerTeamLogsPanel from "@/components/power-team/PowerTeamLogsPanel";
+import PowerTeamMembersColumn from "@/components/power-team/PowerTeamMembersColumn";
 import RichTextContent from "@/components/RichTextContent";
 import {
   countTeamMembers,
+  fetchAttendanceCountsForTeam,
   fetchCategoryIconMap,
   fetchGivesAsksForMembers,
+  fetchLogsForTeam,
   fetchPowerTeamBySlug,
   fetchPowerTeamsWithMembers,
   sortTeamMembers,
 } from "@/lib/power-teams-server";
+import { canCreateTeamLog, canManageTeamLog } from "@/lib/power-team-permissions";
 import { teamLightBg } from "@/lib/power-teams";
 import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata, powerTeamMembersListJsonLd } from "@/lib/seo";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ logsPage?: string }>;
+};
+
+export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
   const teams = await fetchPowerTeamsWithMembers();
@@ -39,23 +48,48 @@ export async function generateMetadata({ params }: Props) {
   });
 }
 
-export default async function PowerTeamDetailPage({ params }: Props) {
+export default async function PowerTeamDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const logsPage = Math.max(1, parseInt(sp.logsPage ?? "1", 10) || 1);
   const team = await fetchPowerTeamBySlug(slug);
   if (!team) notFound();
 
   const members = sortTeamMembers(team);
   const memberIds = members.map((r) => r.members!.id);
   const session = await getMemberSession();
-  const [givesAsksByMemberId, categoryIcons] = await Promise.all([
-    session ? fetchGivesAsksForMembers(memberIds) : Promise.resolve(new Map()),
-    fetchCategoryIconMap(),
-  ]);
+  const [givesAsksByMemberId, categoryIcons, logsResultRaw, canCreate, manage, attendanceCounts] =
+    await Promise.all([
+      session ? fetchGivesAsksForMembers(memberIds) : Promise.resolve(new Map()),
+      fetchCategoryIconMap(),
+      fetchLogsForTeam(team.id, { page: logsPage, pageSize: 5 }),
+      session ? canCreateTeamLog(session.id, team) : Promise.resolve(false),
+      canManageTeamLog(team),
+      fetchAttendanceCountsForTeam(team.id),
+    ]);
+  const canManage = manage.allowed;
+
+  const maxPage = Math.max(1, Math.ceil(logsResultRaw.total / logsResultRaw.pageSize));
+  const logsResult =
+    logsPage > maxPage && logsResultRaw.total > 0
+      ? await fetchLogsForTeam(team.id, { page: maxPage, pageSize: 5 })
+      : logsResultRaw;
   const memberCount = countTeamMembers(team);
   const captainMember = team.captain_member_id
     ? members.find((r) => r.members!.id === team.captain_member_id)?.members
     : null;
   const lightBg = teamLightBg(team.color);
+
+  // Serialize for client components
+  const categoryIconsObj = Object.fromEntries(categoryIcons);
+  const givesAsksObj: Record<string, { gives: string[]; asks: string[] }> = {};
+  for (const [id, ga] of givesAsksByMemberId) {
+    givesAsksObj[id] = ga;
+  }
+
+  const teamMembersForForm = members
+    .filter((r) => r.members)
+    .map((r) => ({ id: r.members!.id, name: r.members!.name }));
 
   return (
     <>
@@ -141,17 +175,34 @@ export default async function PowerTeamDetailPage({ params }: Props) {
       )}
 
       <section className="py-10 px-6" style={{ background: "var(--color-bg)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 className="text-xl font-extrabold mb-6" style={{ color: "var(--color-dark)" }}>
-            Team Members
-          </h2>
-          <PowerTeamMemberCards
-            members={members}
-            captainMemberId={team.captain_member_id}
-            teamColor={team.color}
-            categoryIcons={categoryIcons}
-            givesAsksByMemberId={givesAsksByMemberId}
-          />
+        <div
+          style={{ maxWidth: 1200, margin: "0 auto" }}
+          className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start"
+        >
+          <div className="lg:col-span-3">
+            <PowerTeamLogsPanel
+              logs={logsResult.logs}
+              powerTeamId={team.id}
+              teamSlug={team.slug}
+              teamColor={team.color}
+              canCreate={canCreate}
+              canManage={canManage}
+              teamMembers={teamMembersForForm}
+              page={logsResult.page}
+              pageSize={logsResult.pageSize}
+              total={logsResult.total}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <PowerTeamMembersColumn
+              members={members}
+              captainMemberId={team.captain_member_id}
+              teamColor={team.color}
+              categoryIcons={categoryIconsObj}
+              givesAsksByMemberId={givesAsksObj}
+              attendanceCounts={attendanceCounts}
+            />
+          </div>
         </div>
       </section>
 

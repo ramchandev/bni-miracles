@@ -104,6 +104,27 @@ export type PowerTeamWithMembers = PowerTeam & {
   power_team_members: PowerTeamMemberWithMember[];
 };
 
+export type PowerTeamMeetingLog = {
+  id: string;
+  power_team_id: string;
+  created_by_member_id: string;
+  meeting_date: string;
+  venue: string | null;
+  comments: string;
+  referrals_exchanged: number | null;
+  business_value: number | null;
+  image_url: string | null;
+  created_at: string;
+};
+
+export type PowerTeamLogReaction = {
+  id: string;
+  log_id: string;
+  member_id: string;
+  reaction: string;
+  created_at: string;
+};
+
 export type LeadershipGroup = {
   id: string;
   name: string;
@@ -216,6 +237,30 @@ export type ReactionSummary = {
   reaction: string;
   count: number;
   memberIds: string[];
+};
+
+export type PowerTeamLogAttendance = {
+  id: string;
+  log_id: string;
+  member_id: string;
+  present: boolean;
+};
+
+export type PowerTeamLogAttendanceEntry = {
+  member_id: string;
+  present: boolean;
+  name: string;
+  profile_picture_url: string | null;
+};
+
+export type PowerTeamMeetingLogWithMeta = PowerTeamMeetingLog & {
+  members: {
+    name: string;
+    slug: string;
+    profile_picture_url: string | null;
+  } | null;
+  reactions: ReactionSummary[];
+  attendance: PowerTeamLogAttendanceEntry[];
 };
 
 /** Post row as returned by Supabase join (members FK → object) */
