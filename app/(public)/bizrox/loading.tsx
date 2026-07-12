@@ -21,8 +21,8 @@ export default function BizRoxLoading() {
 
       <section className="py-10 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div className="grid gap-6" style={{ gridTemplateColumns: "minmax(0,1fr) 280px" }}>
-            <div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="min-w-0">
               <div className="mb-6 animate-pulse">
                 <div
                   className="rounded-2xl h-28 bg-white"

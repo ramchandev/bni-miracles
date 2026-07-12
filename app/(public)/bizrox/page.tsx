@@ -81,9 +81,9 @@ export default async function BizRoxPage() {
       {/* Feed + Sidebar */}
       <section className="py-10 px-6" style={{ background: "var(--color-bg)" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div className="grid gap-6" style={{ gridTemplateColumns: "minmax(0,1fr) 280px" }}>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
             {/* Main feed */}
-            <div>
+            <div className="min-w-0">
               <BizRoxFeed initialPosts={posts} initialHasMore={hasMore} />
             </div>
             {/* Right sidebar — hidden on mobile, sticky on desktop */}
