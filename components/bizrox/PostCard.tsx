@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { deletePostAction } from "@/app/actions/bizrox";
@@ -25,6 +25,111 @@ function timeAgo(dateStr: string): string {
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
   return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+/**
+ * Normalize older Power Team meeting-log announcement footers into a
+ * "View Power Team" markdown link (covers posts already in DB).
+ */
+function normalizeMeetingLogFooter(text: string): string {
+  let out = text.replace(
+    /\[Read More About This Meeting\]\((\/power-team\/[^)\s]+)\)/gi,
+    "[View Power Team]($1)"
+  );
+  out = out.replace(
+    /View Power Team:\s*https?:\/\/[^/\s]+(\/power-team\/[a-z0-9-]+(?:\?[^\s]*)?)/gi,
+    "[View Power Team]($1)"
+  );
+  out = out.replace(
+    /View Power Team:\s*(\/power-team\/[a-z0-9-]+(?:\?[^\s]*)?)/gi,
+    "[View Power Team]($1)"
+  );
+  // Intermediate format: bare /power-team/slug on its own line
+  out = out.replace(
+    /(^|\n)(\/power-team\/[a-z0-9-]+(?:\?[^\s]*)?)(?=\n|$)/gi,
+    "$1[View Power Team]($2)"
+  );
+  return out;
+}
+
+/** Renders [label](url) markdown links and bare https URLs as clickable anchors. */
+function PostContent({ text }: { text: string }) {
+  const normalized = normalizeMeetingLogFooter(text);
+  const nodes: ReactNode[] = [];
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)|(https?:\/\/[^\s]+)/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = re.exec(normalized)) !== null) {
+    if (match.index > last) {
+      nodes.push(normalized.slice(last, match.index));
+    }
+    if (match[1] && match[2]) {
+      const href = match[2];
+      const isInternal = href.startsWith("/");
+      nodes.push(
+        isInternal ? (
+          <Link
+            key={key++}
+            href={href}
+            className="font-semibold underline"
+            style={{ color: "var(--color-primary)" }}
+          >
+            {match[1]}
+          </Link>
+        ) : (
+          <a
+            key={key++}
+            href={href}
+            className="font-semibold underline"
+            style={{ color: "var(--color-primary)" }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {match[1]}
+          </a>
+        )
+      );
+    } else if (match[3]) {
+      const href = match[3];
+      const powerTeamPath = href.match(/(\/power-team\/[a-z0-9-]+(?:\?[^\s]*)?)/i)?.[1];
+      if (powerTeamPath) {
+        nodes.push(
+          <Link
+            key={key++}
+            href={powerTeamPath}
+            className="font-semibold underline"
+            style={{ color: "var(--color-primary)" }}
+          >
+            View Power Team
+          </Link>
+        );
+      } else {
+        nodes.push(
+          <a
+            key={key++}
+            href={href}
+            className="font-semibold underline"
+            style={{ color: "var(--color-primary)" }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {href}
+          </a>
+        );
+      }
+    }
+    last = match.index + match[0].length;
+  }
+
+  if (last < normalized.length) nodes.push(normalized.slice(last));
+
+  return (
+    <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--color-dark)" }}>
+      {nodes}
+    </p>
+  );
 }
 
 export default function PostCard({
@@ -117,9 +222,7 @@ export default function PostCard({
 
       {/* Content */}
       <div className="px-5 pb-3">
-        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--color-dark)" }}>
-          {post.content}
-        </p>
+        <PostContent text={post.content} />
       </div>
 
       {/* Media */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -25,6 +25,7 @@ type Props = {
   page: number;
   pageSize: number;
   total: number;
+  initialOpenLog?: PowerTeamMeetingLogWithMeta | null;
 };
 
 export default function PowerTeamLogsPanel({
@@ -38,14 +39,26 @@ export default function PowerTeamLogsPanel({
   page,
   pageSize,
   total,
+  initialOpenLog = null,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [openId, setOpenId] = useState<string | null>(logs[0]?.id ?? null);
-  const [viewing, setViewing] = useState<PowerTeamMeetingLogWithMeta | null>(null);
+  const [openId, setOpenId] = useState<string | null>(
+    initialOpenLog?.id ?? logs[0]?.id ?? null
+  );
+  const [viewing, setViewing] = useState<PowerTeamMeetingLogWithMeta | null>(
+    initialOpenLog
+  );
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<PowerTeamMeetingLogWithMeta | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialOpenLog) return;
+    setViewing(initialOpenLog);
+    setOpenId(initialOpenLog.id);
+    document.getElementById("meeting-logs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [initialOpenLog]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const hasPrev = page > 1;

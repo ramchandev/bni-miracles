@@ -231,6 +231,87 @@ export async function fetchLogsForTeam(
   };
 }
 
+/** Single log with reactions + attendance (for deep links). */
+export async function fetchPowerTeamLogById(
+  logId: string,
+  powerTeamId: string
+): Promise<PowerTeamMeetingLogWithMeta | null> {
+  const admin = createSupabaseAdminClient();
+
+  const { data, error } = await admin
+    .from("power_team_meeting_logs")
+    .select(
+      `
+      id, power_team_id, created_by_member_id, meeting_date, venue, comments,
+      referrals_exchanged, business_value, image_url, created_at,
+      members:created_by_member_id(name, slug, profile_picture_url)
+    `
+    )
+    .eq("id", logId)
+    .eq("power_team_id", powerTeamId)
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error) console.error("[fetchPowerTeamLogById]", error.message);
+    return null;
+  }
+
+  type RawLog = Omit<PowerTeamMeetingLogWithMeta, "reactions" | "members" | "attendance"> & {
+    members:
+      | PowerTeamMeetingLogWithMeta["members"]
+      | PowerTeamMeetingLogWithMeta["members"][];
+  };
+
+  const log = data as RawLog;
+
+  const [{ data: reactionRows }, { data: attendanceRows }] = await Promise.all([
+    admin
+      .from("power_team_log_reactions")
+      .select("log_id, reaction, member_id")
+      .eq("log_id", logId),
+    admin
+      .from("power_team_log_attendance")
+      .select("log_id, member_id, present, members:member_id(name, profile_picture_url)")
+      .eq("log_id", logId),
+  ]);
+
+  const byLog = aggregateLogReactions(
+    (reactionRows ?? []) as { log_id: string; reaction: string; member_id: string }[]
+  );
+
+  type AttRow = {
+    log_id: string;
+    member_id: string;
+    present: boolean;
+    members:
+      | { name: string; profile_picture_url: string | null }
+      | { name: string; profile_picture_url: string | null }[]
+      | null;
+  };
+
+  const attendance: PowerTeamMeetingLogWithMeta["attendance"] = [];
+  for (const row of (attendanceRows ?? []) as AttRow[]) {
+    const nameRef = Array.isArray(row.members) ? row.members[0] : row.members;
+    attendance.push({
+      member_id: row.member_id,
+      present: row.present,
+      name: nameRef?.name ?? "Member",
+      profile_picture_url: nameRef?.profile_picture_url ?? null,
+    });
+  }
+  attendance.sort((a, b) => {
+    if (a.present !== b.present) return a.present ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    ...log,
+    members: Array.isArray(log.members) ? log.members[0] ?? null : log.members,
+    reactions: byLog[log.id] ?? [],
+    attendance,
+  };
+}
+
 /** Count of meetings each member attended (present=true) for this team. */
 export async function fetchAttendanceCountsForTeam(
   powerTeamId: string

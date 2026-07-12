@@ -9,7 +9,6 @@ import {
   isSiteAdmin,
 } from "@/lib/power-team-permissions";
 import { formatMeetingDateLabel } from "@/lib/power-team-log-format";
-import { SITE_URL } from "@/lib/seo";
 
 const LOG_REACTIONS = [
   "like",
@@ -143,6 +142,7 @@ async function publishLogAnnouncement(params: {
   teamName: string;
   teamEmoji: string;
   teamSlug: string;
+  logId: string;
   meetingDate: string;
   venue: string | null;
   comments: string;
@@ -155,7 +155,12 @@ async function publishLogAnnouncement(params: {
     formatMeetingDateLabel(params.meetingDate),
   ];
   if (params.venue) lines.push(`Venue: ${params.venue}`);
-  lines.push("", params.comments.trim(), "", `View Power Team: ${SITE_URL}/power-team/${params.teamSlug}`);
+  lines.push(
+    "",
+    params.comments.trim(),
+    "",
+    `[View Power Team](/power-team/${params.teamSlug}?log=${params.logId})`
+  );
 
   const content = lines.join("\n");
   const hasImage = Boolean(params.imageUrl?.trim());
@@ -287,6 +292,7 @@ export async function createPowerTeamLogAction(input: {
     teamName: (team.name as string) || "Power Team",
     teamEmoji: (team.emoji as string) || "⚡",
     teamSlug: (team.slug as string) || input.teamSlug,
+    logId: inserted.id as string,
     meetingDate: fields.meetingDate,
     venue: fields.venue,
     comments: fields.comments,

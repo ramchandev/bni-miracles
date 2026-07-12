@@ -10,6 +10,7 @@ import {
   fetchCategoryIconMap,
   fetchGivesAsksForMembers,
   fetchLogsForTeam,
+  fetchPowerTeamLogById,
   fetchPowerTeamBySlug,
   fetchPowerTeamsWithMembers,
   sortTeamMembers,
@@ -21,7 +22,7 @@ import { breadcrumbJsonLd, createPageMetadata, powerTeamMembersListJsonLd } from
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ logsPage?: string }>;
+  searchParams: Promise<{ logsPage?: string; log?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export default async function PowerTeamDetailPage({ params, searchParams }: Prop
   const { slug } = await params;
   const sp = await searchParams;
   const logsPage = Math.max(1, parseInt(sp.logsPage ?? "1", 10) || 1);
+  const focusLogId = typeof sp.log === "string" && sp.log.trim() ? sp.log.trim() : null;
   const team = await fetchPowerTeamBySlug(slug);
   if (!team) notFound();
 
@@ -74,6 +76,12 @@ export default async function PowerTeamDetailPage({ params, searchParams }: Prop
     logsPage > maxPage && logsResultRaw.total > 0
       ? await fetchLogsForTeam(team.id, { page: maxPage, pageSize: 5 })
       : logsResultRaw;
+
+  const focusLog =
+    focusLogId != null
+      ? (logsResult.logs.find((l) => l.id === focusLogId) ??
+          (await fetchPowerTeamLogById(focusLogId, team.id)))
+      : null;
   const memberCount = countTeamMembers(team);
   const captainMember = team.captain_member_id
     ? members.find((r) => r.members!.id === team.captain_member_id)?.members
@@ -179,7 +187,7 @@ export default async function PowerTeamDetailPage({ params, searchParams }: Prop
           style={{ maxWidth: 1200, margin: "0 auto" }}
           className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start"
         >
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3" id="meeting-logs">
             <PowerTeamLogsPanel
               logs={logsResult.logs}
               powerTeamId={team.id}
@@ -191,6 +199,7 @@ export default async function PowerTeamDetailPage({ params, searchParams }: Prop
               page={logsResult.page}
               pageSize={logsResult.pageSize}
               total={logsResult.total}
+              initialOpenLog={focusLog}
             />
           </div>
           <div className="lg:col-span-2">
