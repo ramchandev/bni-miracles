@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import BvdCountdown from "@/components/bvd/BvdCountdown";
 import BvdRegisterForm from "@/components/bvd/BvdRegisterForm";
+import BvdGallery from "@/components/bvd/BvdGallery";
 import {
   BvdBulletList,
   BvdChairmenSection,
@@ -472,6 +473,9 @@ export default async function BvdPage() {
           </div>
         </div>
       </section>
+
+      {/* Gallery Section */}
+      <BvdGallery />
 
       {/* Registration Section */}
       <section
