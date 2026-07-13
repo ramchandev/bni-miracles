@@ -61,6 +61,47 @@ export type MeetingRegistration = {
   created_at: string;
 };
 
+export type BvdPaymentStatus = "payment_pending" | "paid";
+
+export type BvdSettings = {
+  id: number;
+  event_date: string;
+  breakfast_amount: number;
+  payment_qr_url: string | null;
+  chairman_member_id: string | null;
+  co_chairman_member_id: string | null;
+  notification_emails: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BvdAttendanceStatus = "pending" | "present" | "absent";
+
+export type BvdRegistration = {
+  id: string;
+  name: string;
+  business_name: string;
+  business_category: string;
+  invited_by: string;
+  phone: string;
+  email: string;
+  wants_breakfast: boolean;
+  status: BvdPaymentStatus;
+  payment_screenshot_url: string | null;
+  attendance: BvdAttendanceStatus;
+  created_at: string;
+};
+
+export type BvdChairMember = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  business_name: string | null;
+  profile_picture_url: string | null;
+  phone: string | null;
+};
+
 export type Contact = {
   id: string;
   name: string;

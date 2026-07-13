@@ -104,7 +104,7 @@ export default function Header({ powerTeams = [] }: Props) {
   const memberMenuRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
-  const { member, setMember } = useMemberSession();
+  const { member, setMember, canManageBvd } = useMemberSession();
 
   const handleLogout = async () => {
     setMemberMenuOpen(false);
@@ -324,6 +324,9 @@ export default function Header({ powerTeams = [] }: Props) {
                     <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
                     <Link href="/my-121" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
                     <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🎴 Dance Card</Link>
+                    {canManageBvd && (
+                      <Link href="/bvd/registrations" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>🎉 BVD Registrations</Link>
+                    )}
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -531,6 +534,9 @@ export default function Header({ powerTeams = [] }: Props) {
                 <Link href="/gives-asks" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
                 <Link href="/my-121" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
                 <Link href="/dance-card" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎴 Dance Card</Link>
+                {canManageBvd && (
+                  <Link href="/bvd/registrations" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎉 BVD Registrations</Link>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}

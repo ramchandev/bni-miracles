@@ -13,6 +13,7 @@ const navLinks = [
   { href: '/admin/leadership', label: 'Leadership', icon: '👔' },
   { href: '/admin/categories', label: 'Categories', icon: '🏷️' },
   { href: '/admin/registrations', label: 'Registrations', icon: '📅' },
+  { href: '/admin/bvd', label: 'BVD', icon: '🎉' },
   { href: '/admin/contacts', label: 'Contacts', icon: '✉️' },
   { href: '/admin/gives-asks', label: 'Gives & Asks', icon: '🤝' },
   { href: '/admin/gives-asks/categories', label: 'GA Categories', icon: '🏷️' },

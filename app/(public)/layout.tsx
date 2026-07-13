@@ -10,6 +10,7 @@ import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { getMemberSession } from "@/lib/member-session";
 import { MemberSessionProvider } from "@/components/MemberSessionContext";
 import MemberLoginHost from "@/components/MemberLoginHost";
+import { canManageBvdRegistrations } from "@/lib/bvd-permissions";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const [powerTeams, initialMember] = await Promise.all([
@@ -17,8 +18,10 @@ export default async function PublicLayout({ children }: { children: React.React
     getMemberSession(),
   ]);
 
+  const canManageBvd = await canManageBvdRegistrations(initialMember?.id ?? null);
+
   return (
-    <MemberSessionProvider initialMember={initialMember}>
+    <MemberSessionProvider initialMember={initialMember} canManageBvd={canManageBvd}>
       <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       <Header powerTeams={powerTeams} />
       <main className="flex-1">{children}</main>
