@@ -15,7 +15,10 @@ import {
   fetchPowerTeamsWithMembers,
   sortTeamMembers,
 } from "@/lib/power-teams-server";
-import { canCreateTeamLog, canManageTeamLog } from "@/lib/power-team-permissions";
+import {
+  canCreateTeamLog,
+  memberCanManageTeamLog,
+} from "@/lib/power-team-permissions";
 import { teamLightBg } from "@/lib/power-teams";
 import { getMemberSession } from "@/lib/member-session";
 import { breadcrumbJsonLd, createPageMetadata, powerTeamMembersListJsonLd } from "@/lib/seo";
@@ -60,16 +63,16 @@ export default async function PowerTeamDetailPage({ params, searchParams }: Prop
   const members = sortTeamMembers(team);
   const memberIds = members.map((r) => r.members!.id);
   const session = await getMemberSession();
-  const [givesAsksByMemberId, categoryIcons, logsResultRaw, canCreate, manage, attendanceCounts] =
+  const [givesAsksByMemberId, categoryIcons, logsResultRaw, canCreate, canManage, attendanceCounts] =
     await Promise.all([
       session ? fetchGivesAsksForMembers(memberIds) : Promise.resolve(new Map()),
       fetchCategoryIconMap(),
       fetchLogsForTeam(team.id, { page: logsPage, pageSize: 5 }),
       session ? canCreateTeamLog(session.id, team) : Promise.resolve(false),
-      canManageTeamLog(team),
+      // Public UI: only logged-in captain / coordinator / Head Table — never admin-cookie alone
+      session ? memberCanManageTeamLog(session.id, team) : Promise.resolve(false),
       fetchAttendanceCountsForTeam(team.id),
     ]);
-  const canManage = manage.allowed;
 
   const maxPage = Math.max(1, Math.ceil(logsResultRaw.total / logsResultRaw.pageSize));
   const logsResult =
