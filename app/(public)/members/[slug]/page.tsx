@@ -5,11 +5,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
+import ExternalTextOrLink from "@/components/ExternalTextOrLink";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
 import { getMemberSession } from "@/lib/member-session";
 import { fetchPublic121Profile } from "@/lib/one-on-one-queries";
 import OneOnOneScheduler from "@/components/members/OneOnOneScheduler";
 import { breadcrumbJsonLd, createPageMetadata, personJsonLd } from "@/lib/seo";
+import { isExternalUrl } from "@/lib/external-url";
 
 function giveAskCategoryName(row: GiveAsk): string | null {
   const raw = row.gives_asks_categories;
@@ -79,12 +81,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: description.slice(0, 160),
     path: `/members/${slug}`,
     keywords: [member.name, member.business_name, member.category, "Miracle Members member"],
-    ogImage:       member.profile_picture_url ?? undefined,
-    ogImageAlt:    `${member.name} — ${member.business_name} | Miracle Members`,
-    // Profile photos are square — declare 1:1 so platforms don't letterbox them
-    ogImageWidth:  400,
-    ogImageHeight: 400,
-    twitterCard:   member.profile_picture_url ? "summary" : "summary_large_image",
+    // Same-origin OG card (embeds profile photo) — more reliable for WhatsApp/LinkedIn than raw avatar URL
+    ogImage: `/api/og/member/${slug}`,
+    ogImageAlt: `${member.name} — ${member.business_name} | Miracle Members`,
+    ogImageWidth: 1200,
+    ogImageHeight: 630,
+    twitterCard: "summary_large_image",
     ogType: "profile",
   });
 }
@@ -207,7 +209,16 @@ export default async function MemberDetailPage({ params }: Props) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
               </svg>
-              {member.business_location}
+              {isExternalUrl(member.business_location) ? (
+                <ExternalTextOrLink
+                  text={member.business_location}
+                  linkLabel="Location Link"
+                  className="text-sm"
+                  style={{ color: "var(--color-accent)" }}
+                />
+              ) : (
+                member.business_location
+              )}
             </p>
           )}
 

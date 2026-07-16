@@ -16,11 +16,20 @@ import { createPageMetadata } from "@/lib/seo";
 import { fetchLeadershipGroupsWithRoles, getRoleAssignee } from "@/lib/leadership-server";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Big Visitor Day (BVD) — Reserve Your Seat",
+  title: "Big Visitor Day (BVD) 2.0 — Reserve Your Seat",
   description:
-    "Join Miracle Members Big Visitor Day in Chennai. One morning of structured networking with entrepreneurs across industries. Reserve your seat today.",
+    "Miracle Members' BVD 2.0 invites you to change the way you do business. Meet 37+ entrepreneurs under one roof. Date: 13 Aug. Venue texted after registration. Register, Participate, Grow!",
   path: "/bvd",
-  keywords: ["Big Visitor Day Chennai", "BVD BNI", "networking event Chennai", "Miracle Members"],
+  keywords: [
+    "Big Visitor Day Chennai",
+    "BVD 2.0",
+    "BVD BNI",
+    "networking event Chennai",
+    "Miracle Members",
+  ],
+  ogImage: "/api/og/bvd",
+  ogImageAlt:
+    "Miracle Members BVD 2.0 — Meet 37+ entrepreneurs on 13 Aug. Register, Participate, Grow!",
 });
 
 export const dynamic = "force-dynamic";

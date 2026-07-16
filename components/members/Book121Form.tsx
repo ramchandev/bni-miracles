@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { submit121RequestAction } from "@/app/actions/one-on-one";
 import { getRequesterPrefillAction } from "@/app/actions/one-on-one-queries";
-import { formatSlotSummary, MIRACLES_CHAPTER, requiresGuestDanceCardUpload } from "@/lib/one-on-one";
+import { formatHourLabel, formatProfileDate, MIRACLES_CHAPTER, parseStartTime, requiresGuestDanceCardUpload } from "@/lib/one-on-one";
 import type { OneOnOneSlot } from "@/lib/supabase";
+import ExternalTextOrLink from "@/components/ExternalTextOrLink";
+import { isExternalUrl } from "@/lib/external-url";
 
 type Props = {
   slot: OneOnOneSlot;
@@ -98,7 +100,25 @@ export default function Book121Form({ slot, hostName, onSuccess, onCancel }: Pro
         <h3 className="font-bold text-sm mb-1" style={{ color: "var(--color-dark)" }}>
           Book 1-2-1 with {hostName}
         </h3>
-        <p className="text-xs text-gray-500">{formatSlotSummary(slot)}</p>
+        <p className="text-xs text-gray-500">
+          {formatProfileDate(slot.slot_date)}, {formatHourLabel(parseStartTime(slot.start_time))} –{" "}
+          {formatHourLabel(parseStartTime(slot.start_time) + 1)} IST ·{" "}
+          {slot.meeting_type === "online" ? "Online" : "In person"}
+          {(slot.meeting_type === "online" ? slot.meeting_url : slot.location) && (
+            <>
+              {" · "}
+              {isExternalUrl(slot.meeting_type === "online" ? slot.meeting_url : slot.location) ? (
+                <ExternalTextOrLink
+                  text={(slot.meeting_type === "online" ? slot.meeting_url : slot.location)!}
+                  linkLabel={slot.meeting_type === "online" ? "Meeting Link" : "Location Link"}
+                  className="text-xs"
+                />
+              ) : (
+                (slot.meeting_type === "online" ? slot.meeting_url : slot.location)
+              )}
+            </>
+          )}
+        </p>
       </div>
 
       <label className="block text-xs font-semibold text-gray-500">

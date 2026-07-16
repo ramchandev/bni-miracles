@@ -12,6 +12,7 @@ import {
 } from "@/lib/one-on-one";
 import type { OneOnOneSlot, SessionMember } from "@/lib/supabase";
 import Book121Form from "./Book121Form";
+import ExternalTextOrLink from "@/components/ExternalTextOrLink";
 
 type HostMember = {
   id: string;
@@ -245,7 +246,11 @@ function SlotCard({
           </div>
           {place && (
             <p className="text-xs truncate" style={{ color: "var(--color-gray)" }}>
-              {place}
+              <ExternalTextOrLink
+                text={place}
+                linkLabel={slot.meeting_type === "online" ? "Meeting Link" : "Location Link"}
+                className="text-xs"
+              />
             </p>
           )}
         </div>

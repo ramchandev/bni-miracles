@@ -147,10 +147,13 @@ export default function AvailabilitySlotForm({
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Our usual meeting place"
+            placeholder="Address or Google Maps link"
             className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             required
           />
+          <span className="mt-1 block text-[11px] font-normal text-gray-400">
+            Tip: paste a Maps link — it will show as “Location Link” on your profile.
+          </span>
         </label>
       ) : (
         <label className="block text-xs font-semibold text-gray-500">

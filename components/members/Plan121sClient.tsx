@@ -13,6 +13,8 @@ import {
 } from "@/lib/one-on-one";
 import type { Plan121Entry } from "@/lib/plan-121s";
 import type { OneOnOneSlot } from "@/lib/supabase";
+import ExternalTextOrLink from "@/components/ExternalTextOrLink";
+import { isExternalUrl } from "@/lib/external-url";
 
 type Props = {
   initial: Plan121Entry[];
@@ -59,6 +61,7 @@ function SlotMeta({ slot }: { slot: OneOnOneSlot }) {
     slot.meeting_type === "online"
       ? slot.meeting_url?.trim() || "Link shared on confirm"
       : slot.location?.trim() || "Location on profile";
+  const placeIsUrl = isExternalUrl(place);
 
   return (
     <>
@@ -66,7 +69,17 @@ function SlotMeta({ slot }: { slot: OneOnOneSlot }) {
         {formatHourLabel(hour)} – {formatHourLabel(hour + 1)} IST
       </span>
       <span className="text-gray-500 ml-2">{typeLabel}</span>
-      <span className="block text-xs text-gray-500 mt-0.5">{place}</span>
+      <span className="block text-xs text-gray-500 mt-0.5">
+        {placeIsUrl ? (
+          <ExternalTextOrLink
+            text={place}
+            linkLabel={slot.meeting_type === "online" ? "Meeting Link" : "Location Link"}
+            className="text-xs"
+          />
+        ) : (
+          place
+        )}
+      </span>
     </>
   );
 }
