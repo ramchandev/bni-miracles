@@ -1,5 +1,9 @@
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { kolkataDateString } from "@/lib/one-on-one";
+import {
+  isAvailabilitySlotInPast,
+  kolkataDateString,
+  parseStartTime,
+} from "@/lib/one-on-one";
 import type { OneOnOneSlot } from "@/lib/supabase";
 
 export type Plan121Host = {
@@ -72,8 +76,11 @@ export async function fetchPlan121Availability(
     if (pendingSlotIds.has(slotId)) continue;
 
     const { members: _m, ...slotFields } = record;
+    const slot = slotFields as OneOnOneSlot;
+    if (isAvailabilitySlotInPast(slot.slot_date, parseStartTime(slot.start_time))) continue;
+
     out.push({
-      slot: slotFields as OneOnOneSlot,
+      slot,
       host,
     });
   }

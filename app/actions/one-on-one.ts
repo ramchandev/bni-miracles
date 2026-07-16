@@ -15,8 +15,10 @@ import {
   formatHourOption,
   formatSlotSummary,
   generateIcsContent,
+  isAvailabilitySlotInPast,
   isValidSlotHour,
   MIRACLES_CHAPTER,
+  parseStartTime,
   slotDateTime,
   slotEndDateTime,
 } from "@/lib/one-on-one";
@@ -254,6 +256,11 @@ export async function submit121RequestAction(input: {
     .single();
 
   if (!slot) return { error: "This slot is no longer available." };
+
+  const startHour = parseStartTime(String(slot.start_time));
+  if (isAvailabilitySlotInPast(String(slot.slot_date), startHour)) {
+    return { error: "This slot has already passed." };
+  }
 
   if (requesterMemberId && requesterMemberId === slot.host_member_id) {
     return { error: "You cannot book your own slot." };

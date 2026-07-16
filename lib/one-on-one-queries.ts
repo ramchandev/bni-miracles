@@ -1,7 +1,13 @@
 import { GUEST_DANCE_CARD_BUCKET } from "@/lib/121-dance-card-upload";
 import { getMemberSession } from "@/lib/member-session";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { MIRACLES_CHAPTER, type Member121CalendarData, type Public121ProfileData } from "@/lib/one-on-one";
+import {
+  isAvailabilitySlotInPast,
+  MIRACLES_CHAPTER,
+  parseStartTime,
+  type Member121CalendarData,
+  type Public121ProfileData,
+} from "@/lib/one-on-one";
 import type { OneOnOneRequest, OneOnOneSlot } from "@/lib/supabase";
 
 export function normalizeSlot(row: Record<string, unknown>): OneOnOneSlot {
@@ -57,9 +63,12 @@ export async function fetchPublic121Profile(hostMemberId: string): Promise<Publi
     .order("start_time");
 
   const slots = ((slotsRaw ?? []) as Record<string, unknown>[]).map(normalizeSlot);
+  const isUpcoming = (s: OneOnOneSlot) =>
+    !isAvailabilitySlotInPast(s.slot_date, parseStartTime(s.start_time));
+
   return {
-    openSlots: slots.filter((s) => s.status === "open"),
-    bookedSlots: slots.filter((s) => s.status === "booked"),
+    openSlots: slots.filter((s) => s.status === "open" && isUpcoming(s)),
+    bookedSlots: slots.filter((s) => s.status === "booked" && isUpcoming(s)),
   };
 }
 
