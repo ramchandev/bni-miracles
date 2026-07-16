@@ -25,6 +25,42 @@ type Props = {
   initialData: Public121ProfileData;
 };
 
+function OnlineIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M5 12a7 7 0 0 1 7-7M19 12a7 7 0 0 0-7-7" />
+      <path d="M2 12a10 10 0 0 1 10-10M22 12a10 10 0 0 0-10-10" />
+    </svg>
+  );
+}
+
+function InPersonIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function MeetingTypePill({ meetingType }: { meetingType: OneOnOneSlot["meeting_type"] }) {
+  const online = meetingType === "online";
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shrink-0"
+      style={
+        online
+          ? { background: "#DBEAFE", color: "#1D4ED8" }
+          : { background: "#FFEDD5", color: "#C2410C" }
+      }
+    >
+      {online ? <OnlineIcon /> : <InPersonIcon />}
+      {online ? "Online" : "In Person"}
+    </span>
+  );
+}
+
 export default function OneOnOneScheduler({ host, sessionMember, initialData }: Props) {
   const isOwner = sessionMember?.id === host.id;
   const [data, setData] = useState(initialData);
@@ -155,26 +191,15 @@ function SlotGroup({
             <p className="text-xs font-semibold mb-2" style={{ color: accent }}>
               {formatProfileDate(date)}
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {slots.map((slot) => (
                 <li key={slot.id}>
-                  {onBook ? (
-                    <button
-                      type="button"
-                      onClick={() => onBook(slot)}
-                      className="w-full text-left rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-white/80"
-                      style={{ background: "white", border: "1px solid #E5E7EB" }}
-                    >
-                      <SlotLine slot={slot} showPlace />
-                    </button>
-                  ) : (
-                    <div
-                      className="rounded-lg px-3 py-2.5 text-sm"
-                      style={{ background: "white", border: "1px solid #E5E7EB", opacity: isOpen ? 1 : 0.85 }}
-                    >
-                      <SlotLine slot={slot} showPlace={isOpen} />
-                    </div>
-                  )}
+                  <SlotCard
+                    slot={slot}
+                    showPlace={isOpen || Boolean(onBook)}
+                    onBook={onBook}
+                    booked={!isOpen}
+                  />
                 </li>
               ))}
             </ul>
@@ -185,24 +210,60 @@ function SlotGroup({
   );
 }
 
-function SlotLine({ slot, showPlace }: { slot: OneOnOneSlot; showPlace?: boolean }) {
+function SlotCard({
+  slot,
+  showPlace,
+  onBook,
+  booked,
+}: {
+  slot: OneOnOneSlot;
+  showPlace?: boolean;
+  onBook?: (slot: OneOnOneSlot) => void;
+  booked?: boolean;
+}) {
   const hour = parseStartTime(slot.start_time);
-  const typeLabel = slot.meeting_type === "online" ? "Online" : "In person";
   const place =
     showPlace &&
-    (slot.meeting_type === "online"
-      ? slot.meeting_url
-      : slot.location);
+    (slot.meeting_type === "online" ? slot.meeting_url : slot.location);
 
   return (
-    <span className="block">
-      <span className="font-semibold" style={{ color: "var(--color-dark)" }}>
-        {formatHourLabel(hour)} – {formatHourLabel(hour + 1)}
-      </span>
-      <span className="text-gray-500 ml-2">{typeLabel}</span>
-      {place && (
-        <span className="block text-xs text-gray-500 mt-0.5 truncate">{place}</span>
-      )}
-    </span>
+    <div
+      className="rounded-xl px-3.5 py-3"
+      style={{
+        background: "white",
+        border: "1px solid #E5E7EB",
+        opacity: booked ? 0.88 : 1,
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="font-bold text-sm" style={{ color: "var(--color-dark)" }}>
+              {formatHourLabel(hour)} – {formatHourLabel(hour + 1)}
+            </span>
+            <MeetingTypePill meetingType={slot.meeting_type} />
+          </div>
+          {place && (
+            <p className="text-xs truncate" style={{ color: "var(--color-gray)" }}>
+              {place}
+            </p>
+          )}
+        </div>
+        {onBook && (
+          <button
+            type="button"
+            onClick={() => onBook(slot)}
+            className="shrink-0 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition-opacity hover:opacity-90"
+            style={{
+              background: "var(--color-primary)",
+              color: "white",
+              lineHeight: 1.4,
+            }}
+          >
+            Book
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
