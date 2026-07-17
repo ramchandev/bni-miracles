@@ -1,13 +1,18 @@
-import type { Metadata } from "next";
 import { fetchPostsAction } from "@/app/actions/bizrox";
 import BizRoxFeed from "@/components/bizrox/BizRoxFeed";
 import BizRoxSidebar from "@/components/bizrox/BizRoxSidebar";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: "BizRox — Miracle Members Member Feed",
   description:
-    "BizRox is the Miracle Members member feed — share business needs, offers, and promos. Connect with members directly on WhatsApp.",
-};
+    "BizRox is the Miracle Members member feed — latest announcements, specific asks and gives, and promo content all in one place. Connect with members directly on WhatsApp.",
+  path: "/bizrox",
+  keywords: ["BizRox", "member feed", "business announcements Chennai"],
+  ogImage: "/api/og/bizrox",
+  ogImageAlt:
+    "BizRox — Miracle Members member feed. Latest announcements, asks and gives, and promos all in one place.",
+});
 
 export const dynamic = "force-dynamic"; // always fresh
 
