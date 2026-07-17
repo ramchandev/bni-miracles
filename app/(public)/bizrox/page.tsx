@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { fetchPostsAction } from "@/app/actions/bizrox";
 import BizRoxFeed from "@/components/bizrox/BizRoxFeed";
 import BizRoxSidebar from "@/components/bizrox/BizRoxSidebar";
-import MemberPageGate from "@/components/MemberPageGate";
-import { getMemberSession } from "@/lib/member-session";
 
 export const metadata: Metadata = {
   title: "BizRox — Miracle Members Member Feed",
@@ -14,34 +12,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"; // always fresh
 
 export default async function BizRoxPage() {
-  const member = await getMemberSession();
-
-  if (!member) {
-    return (
-      <>
-        <section
-          className="px-6 text-center"
-          style={{ background: "var(--color-dark)", paddingTop: 96, paddingBottom: 48 }}
-        >
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-4"
-            style={{ background: "rgba(124,58,237,0.25)", color: "#C4B5FD", border: "1px solid rgba(167,139,250,0.3)" }}
-          >
-            📣 Member Feed
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-3">BizRox</h1>
-          <p className="text-white/60 max-w-lg mx-auto text-sm leading-relaxed">
-            Log in to post business needs, share promos, and connect with fellow Miracle Members members.
-          </p>
-        </section>
-        <MemberPageGate
-          title="BizRox"
-          description="Log in with your phone number and meeting place to access the member feed."
-        />
-      </>
-    );
-  }
-
   const { posts, hasMore } = await fetchPostsAction();
 
   return (

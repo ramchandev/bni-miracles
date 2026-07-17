@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+// Must match the serving domain exactly — the apex 308-redirects to www, and
+// social scrapers (WhatsApp/Facebook) won't follow redirects for og:image.
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://miraclemembers.in"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.miraclemembers.in"
 ).replace(/\/$/, "");
 export const SITE_DOMAIN = new URL(SITE_URL).hostname;
 export const SITE_NAME = "Miracle Members";

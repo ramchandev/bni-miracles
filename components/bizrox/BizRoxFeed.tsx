@@ -78,9 +78,25 @@ export default function BizRoxFeed({
 
   return (
     <div>
-      {member && (
+      {member ? (
         <div className="mb-6">
           <PostComposer onPosted={handlePosted} />
+        </div>
+      ) : (
+        <div
+          className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl px-5 py-4"
+          style={{ background: "white", border: "1px solid #E5E7EB" }}
+        >
+          <p className="text-sm text-center sm:text-left" style={{ color: "var(--color-gray)" }}>
+            Want to share a business need, give, or promo? Members can post here.
+          </p>
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent("open-login"))}
+            className="shrink-0 text-xs font-bold px-4 py-2 rounded-full text-white transition-opacity hover:opacity-90"
+            style={{ background: "var(--color-primary)" }}
+          >
+            Log in to Post
+          </button>
         </div>
       )}
 
