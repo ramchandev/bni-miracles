@@ -47,6 +47,7 @@ export default function AddAvailabilityModal({
       />
       <div
         className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-xl bg-white"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-availability-title"

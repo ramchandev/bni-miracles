@@ -170,9 +170,9 @@ export default function MemberDockLiquid() {
     <>
       <GlassFilter />
 
-      {/* Horizontal dock — phones & tablets */}
+      {/* Horizontal dock — phones & tablets. z-40 keeps it under modals/sheets (z-50). */}
       <div
-        className="lg:hidden fixed left-1/2 -translate-x-1/2 z-50"
+        className="lg:hidden fixed left-1/2 -translate-x-1/2 z-40"
         style={{
           bottom:
             "calc(0.75rem + env(safe-area-inset-bottom, 0px) + var(--install-banner-offset, 0px))",
@@ -185,8 +185,8 @@ export default function MemberDockLiquid() {
         </GlassEffect>
       </div>
 
-      {/* Vertical dock — desktop, pinned to the right edge */}
-      <div className="hidden lg:block fixed right-4 top-1/2 -translate-y-1/2 z-50">
+      {/* Vertical dock — desktop, pinned to the right edge. z-40 keeps it under modals. */}
+      <div className="hidden lg:block fixed right-4 top-1/2 -translate-y-1/2 z-40">
         <GlassEffect tint="dark" className="rounded-3xl p-1.5">
           <nav aria-label="Member quick navigation" className="flex flex-col items-center gap-1">
             {items}
