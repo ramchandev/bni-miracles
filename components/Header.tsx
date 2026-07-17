@@ -9,12 +9,10 @@ import { initiatives } from "@/lib/initiatives";
 import type { PowerTeamNavItem } from "@/lib/power-teams-server";
 import { useMemberSession } from "@/components/MemberSessionContext";
 import MemberNotificationsBell from "@/components/MemberNotificationsBell";
+import BizRoxNewBadge from "@/components/bizrox/BizRoxNewBadge";
 import { logoutMemberAction } from "@/app/actions/session";
 
-const navLinksBeforeDropdowns = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-];
+const ALL_INITIATIVES_KEY = "__all-initiatives";
 
 const memberNavItems = [
   { key: "all-gives", href: "/members/all-gives", label: "All Gives", icon: "✅", hint: "Grouped by category" },
@@ -94,20 +92,130 @@ function NavMegaDropdown<T extends { key: string }>({
   );
 }
 
+type MemberInfo = {
+  name: string;
+  slug: string;
+  profile_picture_url: string | null;
+};
+
+function MemberAvatarMenu({
+  member,
+  canManageBvd,
+  onLogout,
+}: {
+  member: MemberInfo;
+  canManageBvd: boolean;
+  onLogout: () => void | Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const close = () => setOpen(false);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center rounded-full transition-all hover:opacity-90"
+        style={{ border: "2px solid rgba(255,255,255,0.25)" }}
+        aria-label={`${member.name} — account menu`}
+      >
+        {member.profile_picture_url ? (
+          <Image
+            src={member.profile_picture_url}
+            alt={member.name}
+            width={34} height={34}
+            className="rounded-full object-cover"
+            style={{ width: 34, height: 34 }}
+          />
+        ) : (
+          <div
+            className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold text-white"
+            style={{ background: "var(--color-primary)" }}
+          >
+            {member.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-2 w-56 rounded-xl overflow-hidden shadow-xl z-50"
+          style={{ background: "rgba(26,26,46,0.98)", border: "1px solid rgba(255,255,255,0.12)" }}
+        >
+          <Link
+            href={`/members/${member.slug}`}
+            className="flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/5 border-b border-white/10"
+            onClick={close}
+          >
+            {member.profile_picture_url ? (
+              <Image
+                src={member.profile_picture_url}
+                alt={member.name}
+                width={32}
+                height={32}
+                className="rounded-full object-cover shrink-0"
+                style={{ width: 32, height: 32 }}
+              />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ background: "var(--color-primary)" }}
+              >
+                {member.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="min-w-0">
+              <span className="block font-semibold truncate">{member.name}</span>
+              <span className="block text-xs text-white/50">My Profile</span>
+            </span>
+          </Link>
+          <Link href="/bizrox" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>📣 BizRox Feed</Link>
+          <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>✏️ New Post</Link>
+          <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={close}>👤 Edit Profile</Link>
+          <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>🤝 Gives &amp; Asks</Link>
+          <Link href="/my-121" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>📅 My 1-2-1 Calendar</Link>
+          <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>🎴 Dance Card</Link>
+          {canManageBvd && (
+            <Link href="/bvd/registrations" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={close}>🎉 BVD Registrations</Link>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              void onLogout();
+            }}
+            className="flex items-center gap-2 w-full px-4 py-3 text-sm text-white/50 hover:bg-white/5 hover:text-white border-t border-white/10"
+          >
+            🚪 Log Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Header({ powerTeams = [] }: Props) {
   const [menuOpen, setMenuOpen]           = useState(false);
   const [membersOpen, setMembersOpen]     = useState(false);
   const [initiativesOpen, setInitiativesOpen] = useState(false);
   const [powerTeamsOpen, setPowerTeamsOpen]   = useState(false);
   const [scrolled, setScrolled]           = useState(false);
-  const [memberMenuOpen, setMemberMenuOpen] = useState(false);
-  const memberMenuRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
   const { member, setMember, canManageBvd } = useMemberSession();
 
   const handleLogout = async () => {
-    setMemberMenuOpen(false);
     setMenuOpen(false);
     setMember(null);
     await logoutMemberAction();
@@ -115,24 +223,22 @@ export default function Header({ powerTeams = [] }: Props) {
     router.refresh();
   };
 
-  // Close member dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (memberMenuRef.current && !memberMenuRef.current.contains(e.target as Node)) {
-        setMemberMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const initiativeItems = initiatives.map((i) => ({ ...i, key: i.slug }));
+  const aboutMenuItems = [
+    {
+      slug: ALL_INITIATIVES_KEY,
+      englishName: "All Initiatives",
+      tamilName: "Chapter programs & drives",
+      icon: "🚀",
+      key: ALL_INITIATIVES_KEY,
+    },
+    ...initiatives.map((i) => ({ ...i, key: i.slug })),
+  ];
   const powerTeamItems = powerTeams.map((t) => ({ ...t, key: t.slug }));
 
   const openLogin = () => document.dispatchEvent(new CustomEvent("open-login"));
@@ -153,11 +259,33 @@ export default function Header({ powerTeams = [] }: Props) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-5 lg:gap-6">
-            {navLinksBeforeDropdowns.map((link) => (
-              <Link key={link.href} href={link.href} className={linkClass} style={{ letterSpacing: "0.01em" }}>
-                {link.label}
-              </Link>
-            ))}
+            <NavMegaDropdown
+              label="About"
+              href="/about"
+              overviewHref="/about"
+              overviewLabel="About Miracle Members"
+              items={aboutMenuItems}
+              panelMinWidth={560}
+              renderItem={(init) => (
+                <Link
+                  href={init.slug === ALL_INITIATIVES_KEY ? "/initiatives" : `/initiatives/${init.slug}`}
+                  className="flex items-start gap-2.5 px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 hover:text-yellow-400 transition-colors"
+                >
+                  <span className="shrink-0 text-base leading-none mt-0.5" aria-hidden>
+                    {init.icon}
+                  </span>
+                  <span>
+                    <span className="block font-medium leading-snug">{init.englishName}</span>
+                    <span
+                      className="block text-xs text-white/50 mt-0.5 leading-snug"
+                      style={{ fontFamily: "Noto Sans Tamil, sans-serif" }}
+                    >
+                      {init.tamilName}
+                    </span>
+                  </span>
+                </Link>
+              )}
+            />
 
             <NavMegaDropdown
               label="Members"
@@ -202,34 +330,6 @@ export default function Header({ powerTeams = [] }: Props) {
               )}
             />
 
-            <NavMegaDropdown
-              label="Initiatives"
-              href="/initiatives"
-              overviewHref="/initiatives"
-              overviewLabel="All Initiatives"
-              items={initiativeItems}
-              panelMinWidth={560}
-              renderItem={(init) => (
-                <Link
-                  href={`/initiatives/${init.slug}`}
-                  className="flex items-start gap-2.5 px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 hover:text-yellow-400 transition-colors"
-                >
-                  <span className="shrink-0 text-base leading-none mt-0.5" aria-hidden>
-                    {init.icon}
-                  </span>
-                  <span>
-                    <span className="block font-medium leading-snug">{init.englishName}</span>
-                    <span
-                      className="block text-xs text-white/50 mt-0.5 leading-snug"
-                      style={{ fontFamily: "Noto Sans Tamil, sans-serif" }}
-                    >
-                      {init.tamilName}
-                    </span>
-                  </span>
-                </Link>
-              )}
-            />
-
             {navLinksAfterDropdowns.map((link) => (
               <Link key={link.href} href={link.href} className={linkClass} style={{ letterSpacing: "0.01em" }}>
                 {link.label}
@@ -243,6 +343,7 @@ export default function Header({ powerTeams = [] }: Props) {
               style={{ background: "rgba(124,58,237,0.18)", color: "#C4B5FD", border: "1px solid rgba(167,139,250,0.3)" }}
             >
               📣 BizRox
+              <BizRoxNewBadge />
             </Link>
 
             <Link href="/attend-meeting" className="btn-primary text-sm" style={{ padding: "0.5rem 1.25rem" }}>
@@ -259,84 +360,7 @@ export default function Header({ powerTeams = [] }: Props) {
                 Log In
               </button>
             ) : (
-              <div className="relative" ref={memberMenuRef}>
-                <button
-                  onClick={() => setMemberMenuOpen((o) => !o)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all hover:bg-white/10"
-                  style={{ border: "1px solid rgba(255,255,255,0.2)" }}
-                >
-                  {member.profile_picture_url ? (
-                    <Image
-                      src={member.profile_picture_url}
-                      alt={member.name}
-                      width={28} height={28}
-                      className="rounded-full object-cover"
-                      style={{ width: 28, height: 28 }}
-                    />
-                  ) : (
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ background: "var(--color-primary)" }}
-                    >
-                      {member.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-sm font-semibold text-white max-w-[80px] truncate">
-                    {member.name.split(" ")[0]}
-                  </span>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="white" className={`transition-transform opacity-60 ${memberMenuOpen ? "rotate-180" : ""}`}>
-                    <path d="M2 3.5L5 7l3-3.5H2z" />
-                  </svg>
-                </button>
-
-                {memberMenuOpen && (
-                  <div
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl overflow-hidden shadow-xl z-50"
-                    style={{ background: "rgba(26,26,46,0.98)", border: "1px solid rgba(255,255,255,0.12)" }}
-                  >
-                    <Link
-                      href={`/members/${member.slug}`}
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/5 border-b border-white/10"
-                      onClick={() => setMemberMenuOpen(false)}
-                    >
-                      {member.profile_picture_url ? (
-                        <Image
-                          src={member.profile_picture_url}
-                          alt={member.name}
-                          width={32}
-                          height={32}
-                          className="rounded-full object-cover shrink-0"
-                          style={{ width: 32, height: 32 }}
-                        />
-                      ) : (
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                          style={{ background: "var(--color-primary)" }}
-                        >
-                          {member.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="font-semibold">My Profile</span>
-                    </Link>
-                    <Link href="/bizrox" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📣 BizRox Feed</Link>
-                    <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>✏️ New Post</Link>
-                    <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>👤 Edit Profile</Link>
-                    <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
-                    <Link href="/my-121" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
-                    <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={() => setMemberMenuOpen(false)}>🎴 Dance Card</Link>
-                    {canManageBvd && (
-                      <Link href="/bvd/registrations" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={() => setMemberMenuOpen(false)}>🎉 BVD Registrations</Link>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-3 text-sm text-white/50 hover:bg-white/5 hover:text-white border-t border-white/10"
-                    >
-                      🚪 Log Out
-                    </button>
-                  </div>
-                )}
-              </div>
+              <MemberAvatarMenu member={member} canManageBvd={canManageBvd} onLogout={handleLogout} />
             )}
 
             {member ? (
@@ -358,6 +382,9 @@ export default function Header({ powerTeams = [] }: Props) {
           </nav>
 
           <div className="md:hidden flex items-center gap-2">
+            {member && (
+              <MemberAvatarMenu member={member} canManageBvd={canManageBvd} onLogout={handleLogout} />
+            )}
             {member && <MemberNotificationsBell />}
             <button
               className="flex flex-col gap-1.5 p-2"
@@ -373,16 +400,40 @@ export default function Header({ powerTeams = [] }: Props) {
 
         {menuOpen && (
           <nav className="md:hidden pb-4 flex flex-col gap-2">
-            {navLinksBeforeDropdowns.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-white font-medium py-2 px-1 border-b border-white/10"
-                onClick={() => setMenuOpen(false)}
+            <div className="border-b border-white/10">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between text-white font-medium py-2 px-1"
+                onClick={() => setInitiativesOpen(!initiativesOpen)}
+                aria-expanded={initiativesOpen}
               >
-                {link.label}
-              </Link>
-            ))}
+                About
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor" className={`transition-transform ${initiativesOpen ? "rotate-180" : ""}`} aria-hidden>
+                  <path d="M2 3.5L5 7l3-3.5H2z" />
+                </svg>
+              </button>
+              {initiativesOpen && (
+                <div className="pb-2 pl-3 flex flex-col gap-0.5">
+                  <Link href="/about" className="text-yellow-400 text-sm font-semibold py-2" onClick={() => setMenuOpen(false)}>
+                    About Miracle Members
+                  </Link>
+                  <Link href="/initiatives" className="text-yellow-400 text-sm font-semibold py-2" onClick={() => setMenuOpen(false)}>
+                    All Initiatives
+                  </Link>
+                  {initiatives.map((init) => (
+                    <Link
+                      key={init.slug}
+                      href={`/initiatives/${init.slug}`}
+                      className="text-white/80 text-sm py-2 flex items-center gap-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <span aria-hidden>{init.icon}</span>
+                      {init.englishName}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="border-b border-white/10">
               <button
@@ -448,38 +499,6 @@ export default function Header({ powerTeams = [] }: Props) {
               )}
             </div>
 
-            <div className="border-b border-white/10">
-              <button
-                type="button"
-                className="w-full flex items-center justify-between text-white font-medium py-2 px-1"
-                onClick={() => setInitiativesOpen(!initiativesOpen)}
-                aria-expanded={initiativesOpen}
-              >
-                Initiatives
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor" className={`transition-transform ${initiativesOpen ? "rotate-180" : ""}`} aria-hidden>
-                  <path d="M2 3.5L5 7l3-3.5H2z" />
-                </svg>
-              </button>
-              {initiativesOpen && (
-                <div className="pb-2 pl-3 flex flex-col gap-0.5">
-                  <Link href="/initiatives" className="text-yellow-400 text-sm font-semibold py-2" onClick={() => setMenuOpen(false)}>
-                    All Initiatives
-                  </Link>
-                  {initiatives.map((init) => (
-                    <Link
-                      key={init.slug}
-                      href={`/initiatives/${init.slug}`}
-                      className="text-white/80 text-sm py-2 flex items-center gap-2"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <span aria-hidden>{init.icon}</span>
-                      {init.englishName}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {navLinksAfterDropdowns.map((link) => (
               <Link
                 key={link.href}
@@ -503,10 +522,11 @@ export default function Header({ powerTeams = [] }: Props) {
               onClick={() => setMenuOpen(false)}
             >
               📣 BizRox Feed
+              <BizRoxNewBadge />
             </Link>
 
-            {/* Mobile login / member */}
-            {!member ? (
+            {/* Mobile login (profile items live in the avatar dropdown when logged in) */}
+            {!member && (
               <button
                 onClick={() => { setMenuOpen(false); openLogin(); }}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mt-1"
@@ -514,37 +534,6 @@ export default function Header({ powerTeams = [] }: Props) {
               >
                 🔐 Member Login
               </button>
-            ) : (
-              <>
-                <Link
-                  href={`/members/${member.slug}`}
-                  className="flex items-center gap-3 py-2 px-1 mt-1 border-t border-white/10"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {member.profile_picture_url ? (
-                    <Image src={member.profile_picture_url} alt={member.name} width={32} height={32} className="rounded-full object-cover shrink-0" style={{ width: 32, height: 32 }} />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: "var(--color-primary)" }}>
-                      {member.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-white font-semibold text-sm">My Profile</span>
-                </Link>
-                <Link href="/edit-my-details" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>👤 Edit Profile</Link>
-                <Link href="/gives-asks" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🤝 Gives &amp; Asks</Link>
-                <Link href="/my-121" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>📅 My 1-2-1 Calendar</Link>
-                <Link href="/dance-card" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎴 Dance Card</Link>
-                {canManageBvd && (
-                  <Link href="/bvd/registrations" className="text-white/70 text-sm py-2 px-1" onClick={() => setMenuOpen(false)}>🎉 BVD Registrations</Link>
-                )}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="text-left text-white/50 text-sm py-2 px-1"
-                >
-                  🚪 Log Out
-                </button>
-              </>
             )}
           </nav>
         )}

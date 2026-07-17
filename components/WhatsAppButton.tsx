@@ -1,6 +1,13 @@
 "use client";
 
+import { useMemberSession } from "@/components/MemberSessionContext";
+
 export default function WhatsAppButton() {
+  const { member } = useMemberSession();
+
+  // Logged-in members get the bottom dock instead — WhatsApp CTA is for the public
+  if (member) return null;
+
   return (
     <a
       href="https://wa.me/919841767641"

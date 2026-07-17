@@ -109,6 +109,22 @@ export async function fetchPostsAction(cursor?: string): Promise<{
   return { posts, hasMore };
 }
 
+/** Count of active posts newer than the given timestamp — powers the nav badge. */
+export async function fetchBizRoxNewCountAction(sinceIso: string): Promise<number> {
+  const since = new Date(sinceIso);
+  if (Number.isNaN(since.getTime())) return 0;
+
+  const admin = createSupabaseAdminClient();
+  const { count, error } = await admin
+    .from("bizrox_posts")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true)
+    .gt("created_at", since.toISOString());
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
 export async function fetchPostByIdAction(postId: string): Promise<PostWithMember | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
