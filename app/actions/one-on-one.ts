@@ -619,6 +619,27 @@ export async function mark121MeetingMetAction(requestId: string): Promise<{ erro
   return {};
 }
 
+/**
+ * Mark a past meeting as cancelled without freeing/deleting the slot —
+ * used when neither party marked the 1-2-1 after its time passed.
+ */
+export async function mark121MeetingCancelledAction(
+  requestId: string
+): Promise<{ error?: string }> {
+  const loaded = await loadAcceptedMeetingForMember(requestId);
+  if ("error" in loaded) return { error: loaded.error };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("one_on_one_requests")
+    .update({ status: "cancelled" })
+    .eq("id", requestId)
+    .eq("status", "accepted");
+
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function cancel121MeetingAction(requestId: string): Promise<{ error?: string }> {
   const loaded = await loadAcceptedMeetingForMember(requestId);
   if ("error" in loaded) return { error: loaded.error };

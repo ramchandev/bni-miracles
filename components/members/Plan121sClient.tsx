@@ -14,6 +14,7 @@ import {
 import type { Plan121Entry } from "@/lib/plan-121s";
 import type { OneOnOneSlot } from "@/lib/supabase";
 import ExternalTextOrLink from "@/components/ExternalTextOrLink";
+import MeetingTypePill from "@/components/members/MeetingTypePill";
 import { isExternalUrl } from "@/lib/external-url";
 
 type Props = {
@@ -56,7 +57,6 @@ function HostAvatar({ host }: { host: Plan121Entry["host"] }) {
 
 function SlotMeta({ slot }: { slot: OneOnOneSlot }) {
   const hour = parseStartTime(slot.start_time);
-  const typeLabel = slot.meeting_type === "online" ? "Online" : "In person";
   const place =
     slot.meeting_type === "online"
       ? slot.meeting_url?.trim() || "Link shared on confirm"
@@ -65,10 +65,12 @@ function SlotMeta({ slot }: { slot: OneOnOneSlot }) {
 
   return (
     <>
-      <span className="font-semibold" style={{ color: "var(--color-dark)" }}>
-        {formatHourLabel(hour)} – {formatHourLabel(hour + 1)} IST
+      <span className="inline-flex items-center gap-2 flex-wrap">
+        <span className="font-semibold" style={{ color: "var(--color-dark)" }}>
+          {formatHourLabel(hour)} – {formatHourLabel(hour + 1)} IST
+        </span>
+        <MeetingTypePill meetingType={slot.meeting_type} />
       </span>
-      <span className="text-gray-500 ml-2">{typeLabel}</span>
       <span className="block text-xs text-gray-500 mt-0.5">
         {placeIsUrl ? (
           <ExternalTextOrLink

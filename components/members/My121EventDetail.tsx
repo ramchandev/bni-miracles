@@ -33,6 +33,8 @@ export default function My121EventDetail({
 
   const style = EVENT_STYLES[event.kind];
   const req = event.request;
+  const isCompleted =
+    event.kind === "completed_host" || event.kind === "completed_guest";
 
   const act = async (action: "accept" | "decline") => {
     if (!req) return;
@@ -115,7 +117,17 @@ export default function My121EventDetail({
           </div>
         )}
 
-        {event.role === "guest" && req && (
+        {isCompleted && (
+          <p
+            className="text-xs rounded-lg px-3 py-2 flex items-center gap-2"
+            style={{ background: "#ECFDF5", color: "#065F46" }}
+          >
+            <span aria-hidden>✅</span>
+            This 1-2-1 took place and was marked as met. Great networking!
+          </p>
+        )}
+
+        {!isCompleted && event.role === "guest" && req && (
           <p className="text-xs text-gray-500">
             You requested this 1-2-1 as a guest. The host will accept or decline from their calendar.
           </p>
@@ -160,26 +172,28 @@ export default function My121EventDetail({
           )}
 
           {req &&
+            (event.kind === "confirmed_host" || event.kind === "confirmed_guest") && (
+            <a
+              href={`/api/121-ics/${req.id}`}
+              className="text-xs font-semibold px-3 py-2 rounded-lg"
+              style={{ background: "#FEE2E2", color: "var(--color-primary)" }}
+            >
+              Download .ics
+            </a>
+          )}
+
+          {req &&
             (event.kind === "confirmed_host" ||
               event.kind === "confirmed_guest" ||
               event.kind === "completed_host" ||
               event.kind === "completed_guest") && (
-            <>
-              <a
-                href={`/api/121-ics/${req.id}`}
-                className="text-xs font-semibold px-3 py-2 rounded-lg"
-                style={{ background: "#FEE2E2", color: "var(--color-primary)" }}
-              >
-                Download .ics
-              </a>
-              <button
-                type="button"
-                onClick={loadLinks}
-                className="text-xs font-semibold px-3 py-2 rounded-lg border border-gray-200"
-              >
-                Dance cards
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={loadLinks}
+              className="text-xs font-semibold px-3 py-2 rounded-lg border border-gray-200"
+            >
+              Dance cards
+            </button>
           )}
         </div>
 

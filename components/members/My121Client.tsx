@@ -125,6 +125,7 @@ export default function My121Client({ memberId, initial }: Props) {
               <CompletedMeetingsPanel
                 asHost={data.asHost}
                 asRequester={data.asRequester}
+                onUpdate={refresh}
               />
             </div>
           </div>

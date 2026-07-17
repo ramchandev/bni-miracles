@@ -89,18 +89,21 @@ export function buildMeetingRows(
   options: {
     statuses: OneOnOneRequestStatus[];
     upcomingOnly?: boolean;
+    pastOnly?: boolean;
   }
 ): MeetingRow[] {
-  const { statuses, upcomingOnly = false } = options;
+  const { statuses, upcomingOnly = false, pastOnly = false } = options;
   const statusSet = new Set(statuses);
   const rows: MeetingRow[] = [];
+  const skipByTime = (slotDate: string, startTime: string) => {
+    const past = isAvailabilitySlotInPast(slotDate, parseStartTime(startTime));
+    return (upcomingOnly && past) || (pastOnly && !past);
+  };
 
   for (const req of asHost.filter((r) => statusSet.has(r.status))) {
     const slot = slotFromRequest(req);
     if (!slot) continue;
-    if (upcomingOnly && isAvailabilitySlotInPast(slot.slot_date, parseStartTime(slot.start_time))) {
-      continue;
-    }
+    if (skipByTime(slot.slot_date, slot.start_time)) continue;
 
     const joined = pickJoined(
       (req as OneOnOneRequest & { requester?: JoinedMember | JoinedMember[] | null }).requester
@@ -127,9 +130,7 @@ export function buildMeetingRows(
   for (const req of asRequester.filter((r) => statusSet.has(r.status))) {
     const slot = slotFromRequest(req);
     if (!slot) continue;
-    if (upcomingOnly && isAvailabilitySlotInPast(slot.slot_date, parseStartTime(slot.start_time))) {
-      continue;
-    }
+    if (skipByTime(slot.slot_date, slot.start_time)) continue;
 
     const host = pickJoined(
       (req as OneOnOneRequest & { members?: JoinedMember | JoinedMember[] | null }).members
