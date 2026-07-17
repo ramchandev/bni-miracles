@@ -5,6 +5,7 @@ import { getMemberSession } from "@/lib/member-session";
 import { sendMemberEmail, emailTemplate } from "@/lib/email";
 import { SITE_URL } from "@/lib/seo";
 import { createMemberNotification } from "@/app/actions/notifications";
+import { sendPushToMembers, sendPushToAllMembers } from "@/lib/push-server";
 import { revalidatePath } from "next/cache";
 import type {
   PostType,
@@ -163,8 +164,21 @@ export async function createPostAction(data: {
 
   if (error) return { error: error.message };
 
+  const postId = (post as { id: string }).id;
+
+  const excerpt = data.content.trim().slice(0, 120);
+  void sendPushToAllMembers(
+    {
+      title: `${member.name} posted in BizRox`,
+      body: excerpt,
+      href: `/bizrox/${postId}`,
+      tag: `bizrox-post-${postId}`,
+    },
+    { excludeMemberId: member.id }
+  );
+
   revalidatePath("/bizrox");
-  return { postId: (post as { id: string }).id };
+  return { postId };
 }
 
 export async function deletePostAction(
@@ -232,6 +246,13 @@ export async function addCommentAction(
       body: (content as string).slice(0, 120),
       href: `/bizrox/${postId}`,
       sourceId: comment.id as string,
+    });
+
+    void sendPushToMembers([authorId], {
+      title: `${member.name} commented on your post`,
+      body: (content as string).slice(0, 120),
+      href: `/bizrox/${postId}`,
+      tag: `bizrox-comment-${comment.id as string}`,
     });
 
     if (author?.email) {
@@ -309,6 +330,17 @@ export async function adminDeleteCommentAction(
 
 /* ── Reactions ───────────────────────────────────────────────────────── */
 
+const REACTION_EMOJIS: Record<string, string> = {
+  connect: "🤝",
+  love: "❤️",
+  thanks: "🙏",
+  thinking: "🤔",
+  fire: "🔥",
+  idea: "💡",
+  spread: "📢",
+  good: "👍",
+};
+
 export async function toggleReactionAction(
   postId: string,
   reaction: string
@@ -334,6 +366,25 @@ export async function toggleReactionAction(
     await admin
       .from("bizrox_reactions")
       .insert({ post_id: postId, member_id: member.id, reaction });
+
+    // Notify the post author (skip self-reactions)
+    const { data: post } = await admin
+      .from("bizrox_posts")
+      .select("member_id")
+      .eq("id", postId)
+      .single();
+
+    const authorId = post?.member_id as string | undefined;
+    if (authorId && authorId !== member.id) {
+      const emoji = REACTION_EMOJIS[reaction] ?? "👍";
+      void sendPushToMembers([authorId], {
+        title: `${member.name} reacted ${emoji} to your post`,
+        body: "Open BizRox to see it.",
+        href: `/bizrox/${postId}`,
+        tag: `bizrox-reaction-${postId}-${member.id}`,
+      });
+    }
+
     revalidatePath("/bizrox");
     return { added: true };
   }

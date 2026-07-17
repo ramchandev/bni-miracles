@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import JsonLd from "@/components/JsonLd";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import { fetchPowerTeamsNav } from "@/lib/power-teams-server";
@@ -28,6 +29,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <Footer powerTeams={powerTeams} />
       <WhatsAppButton />
       <InstallAppBanner />
+      <PushNotificationsPrompt />
       <MemberLoginHost />
       <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </MemberSessionProvider>

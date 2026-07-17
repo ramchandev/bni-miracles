@@ -23,6 +23,7 @@ import {
   slotEndDateTime,
 } from "@/lib/one-on-one";
 import { SITE_DOMAIN, SITE_URL } from "@/lib/seo";
+import { sendPushToMembers } from "@/lib/push-server";
 import type {
   OneOnOneMeetingType,
   OneOnOneRequest,
@@ -49,6 +50,13 @@ async function sendNew121RequestEmails(params: {
     body: `${params.requesterChapter} · ${params.summary}`,
     href: "/my-121",
     sourceId: params.requestId,
+  });
+
+  void sendPushToMembers([params.hostMemberId], {
+    title: `1-2-1 request from ${params.requesterName}`,
+    body: `${params.requesterChapter} · ${params.summary}`,
+    href: "/my-121",
+    tag: `121-request-${params.requestId}`,
   });
 
   const hostHtml = emailTemplate("New 1-2-1 Request", [
@@ -422,6 +430,13 @@ export async function accept121RequestAction(
       href: "/my-121",
       sourceId: requestId,
     });
+
+    void sendPushToMembers([request.requester_member_id], {
+      title: `1-2-1 confirmed with ${(host?.name as string) ?? "your host"}`,
+      body: summary,
+      href: "/my-121",
+      tag: `121-accepted-${requestId}`,
+    });
   }
 
   return {};
@@ -474,6 +489,13 @@ export async function decline121RequestAction(
       body: "The host was unable to confirm this time. Try another slot.",
       href: "/my-121",
       sourceId: requestId,
+    });
+
+    void sendPushToMembers([request.requester_member_id], {
+      title: "1-2-1 request declined",
+      body: "The host was unable to confirm this time. Try another slot.",
+      href: "/my-121",
+      tag: `121-declined-${requestId}`,
     });
   }
 
