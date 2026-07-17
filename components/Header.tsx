@@ -525,6 +525,18 @@ export default function Header({ powerTeams = [] }: Props) {
               <BizRoxNewBadge />
             </Link>
 
+            {/* BVD Registrations — chairman, co-chairman, head table & LVH only */}
+            {member && canManageBvd && (
+              <Link
+                href="/bvd/registrations"
+                className="flex items-center gap-2 py-2 px-3 mt-1 rounded-lg font-semibold text-sm"
+                style={{ background: "rgba(200,16,46,0.18)", color: "#FCA5A5" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                🎉 BVD Registrations
+              </Link>
+            )}
+
             {/* Mobile login (profile items live in the avatar dropdown when logged in) */}
             {!member && (
               <button

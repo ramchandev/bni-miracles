@@ -2,7 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import MemberDock from "@/components/MemberDock";
+import MemberDockLiquid from "@/components/MemberDockLiquid";
 import InstallAppBanner from "@/components/InstallAppBanner";
 import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import JsonLd from "@/components/JsonLd";
@@ -29,7 +29,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="flex-1">{children}</main>
       <Footer powerTeams={powerTeams} />
       <WhatsAppButton />
-      <MemberDock />
+      <MemberDockLiquid />
       <InstallAppBanner />
       <PushNotificationsPrompt />
       <MemberLoginHost />
