@@ -57,6 +57,11 @@ export default function BvdRegistrationsTable({
   async function onScreenshot(id: string, file: File | null) {
     if (!file) return;
     setError("");
+    const MAX_MB = 8;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Screenshot is too large — max ${MAX_MB} MB. Try a smaller image.`);
+      return;
+    }
     const fd = new FormData();
     fd.set("id", id);
     fd.set("file", file);

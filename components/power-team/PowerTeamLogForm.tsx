@@ -62,6 +62,13 @@ export default function PowerTeamLogForm({
       return;
     }
 
+    const MAX_MB = 8;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Image is too large — max ${MAX_MB} MB. Try a smaller image.`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
     setUploading(true);
     const fd = new FormData();
     fd.set("file", file);

@@ -45,6 +45,11 @@ export default function BvdSettingsForm({ settings, members }: Props) {
     if (!file) return;
     setError("");
     setSuccess("");
+    const MAX_MB = 5;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Image is too large — max ${MAX_MB} MB. Try a smaller image.`);
+      return;
+    }
     const fd = new FormData();
     fd.set("file", file);
     startTransition(async () => {

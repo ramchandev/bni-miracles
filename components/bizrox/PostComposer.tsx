@@ -54,6 +54,12 @@ export default function PostComposer({ onPosted }: { onPosted?: () => void }) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const MAX_MB = 8;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Image is too large — max ${MAX_MB} MB. Try a smaller photo.`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     // Show local blob preview immediately
     setImagePreview(URL.createObjectURL(file));
     setUploading(true);

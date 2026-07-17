@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
     // doesn't get confused by a package-lock.json in a parent directory.
     root: process.cwd(),
   },
+  experimental: {
+    serverActions: {
+      // Default is 1MB, which rejects most phone-photo uploads (BizRox posts,
+      // payment screenshots) before the action runs. Uploads allow up to 8MB
+      // files; 10MB leaves headroom for FormData overhead.
+      bodySizeLimit: "10mb",
+    },
+  },
   images: {
     remotePatterns: [
       {
