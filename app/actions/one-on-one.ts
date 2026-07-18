@@ -43,22 +43,6 @@ async function sendNew121RequestEmails(params: {
   declineUrl: string;
   profileUrl: string;
 }): Promise<void> {
-  await createMemberNotification({
-    memberId: params.hostMemberId,
-    type: "121_request",
-    title: `1-2-1 request from ${params.requesterName}`,
-    body: `${params.requesterChapter} · ${params.summary}`,
-    href: "/my-121",
-    sourceId: params.requestId,
-  });
-
-  void sendPushToMembers([params.hostMemberId], {
-    title: `1-2-1 request from ${params.requesterName}`,
-    body: `${params.requesterChapter} · ${params.summary}`,
-    href: "/my-121",
-    tag: `121-request-${params.requestId}`,
-  });
-
   const hostHtml = emailTemplate("New 1-2-1 Request", [
     { label: "Requester", value: params.requesterName },
     { label: "Chapter", value: params.requesterChapter },
@@ -302,9 +286,26 @@ export async function submit121RequestAction(input: {
   const profileUrl = `${SITE_URL}/members/${host?.slug ?? ""}#one-on-one`;
   const acceptUrl = `${SITE_URL}/121/respond/${token}?action=accept`;
   const declineUrl = `${SITE_URL}/121/respond/${token}?action=decline`;
+  const hostMemberId = String(slot.host_member_id);
+
+  // Push first (before emails) so the host is notified even if email delivery is slow/fails
+  await createMemberNotification({
+    memberId: hostMemberId,
+    type: "121_request",
+    title: `1-2-1 request from ${name}`,
+    body: `${chapter} · ${summary}`,
+    href: "/my-121",
+    sourceId: inserted.id as string,
+  });
+  await sendPushToMembers([hostMemberId], {
+    title: `1-2-1 request from ${name}`,
+    body: `${chapter} · ${summary}`,
+    href: "/my-121",
+    tag: `121-request-${inserted.id as string}`,
+  });
 
   await sendNew121RequestEmails({
-    hostMemberId: slot.host_member_id as string,
+    hostMemberId,
     hostName: (host?.name as string) ?? "Miracle Members member",
     hostEmail: (host?.email as string | null) ?? "",
     requesterName: name,
@@ -431,7 +432,7 @@ export async function accept121RequestAction(
       sourceId: requestId,
     });
 
-    void sendPushToMembers([request.requester_member_id], {
+    await sendPushToMembers([request.requester_member_id], {
       title: `1-2-1 confirmed with ${(host?.name as string) ?? "your host"}`,
       body: summary,
       href: "/my-121",
@@ -491,7 +492,7 @@ export async function decline121RequestAction(
       sourceId: requestId,
     });
 
-    void sendPushToMembers([request.requester_member_id], {
+    await sendPushToMembers([request.requester_member_id], {
       title: "1-2-1 request declined",
       body: "The host was unable to confirm this time. Try another slot.",
       href: "/my-121",

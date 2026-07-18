@@ -90,10 +90,19 @@ export async function sendPushToMembers(
       .in("member_id", memberIds);
 
     if (error) {
-      // Table may not exist yet — degrade silently
+      console.error("[sendPushToMembers] query failed:", error.message);
       return;
     }
-    await sendToSubscriptions((data ?? []) as SubscriptionRow[], payload);
+    if (!data?.length) {
+      console.warn(
+        "[sendPushToMembers] no subscriptions for members:",
+        memberIds.join(", "),
+        "— payload:",
+        payload.tag ?? payload.title
+      );
+      return;
+    }
+    await sendToSubscriptions(data as SubscriptionRow[], payload);
   } catch (err) {
     console.error("[sendPushToMembers]", err);
   }

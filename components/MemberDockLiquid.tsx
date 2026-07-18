@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemberSession } from "@/components/MemberSessionContext";
-import { useBizRoxNewCount } from "@/components/bizrox/useBizRoxNewCount";
-import { fetchMemberNotificationsAction } from "@/app/actions/notifications";
+import { fetchDockBadgeCountsAction } from "@/app/actions/notifications";
 import { GlassEffect, GlassFilter } from "@/components/ui/liquid-glass";
+
+const BIZROX_LAST_SEEN_KEY = "bizrox-last-seen";
 
 function DockBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -66,6 +67,22 @@ function EmojiIcon({ emoji }: { emoji: string }) {
   );
 }
 
+function readBizroxLastSeen(): string | null {
+  try {
+    return localStorage.getItem(BIZROX_LAST_SEEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function markBizroxSeen() {
+  try {
+    localStorage.setItem(BIZROX_LAST_SEEN_KEY, new Date().toISOString());
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Liquid-glass member dock — dark smoked glass with emoji icons.
  * Horizontal bar at the bottom on phones/tablets, vertical rail on
@@ -74,25 +91,50 @@ function EmojiIcon({ emoji }: { emoji: string }) {
 export default function MemberDockLiquid() {
   const { member } = useMemberSession();
   const pathname = usePathname();
-  const bizroxCount = useBizRoxNewCount();
   const [count121, setCount121] = useState(0);
+  const [countBizrox, setCountBizrox] = useState(0);
+
+  const refreshBadges = useCallback(async () => {
+    if (!member) return;
+
+    const onBizrox = pathname === "/bizrox" || pathname?.startsWith("/bizrox/");
+    if (onBizrox) {
+      markBizroxSeen();
+      setCountBizrox(0);
+    }
+
+    try {
+      if (!onBizrox && !readBizroxLastSeen()) {
+        markBizroxSeen();
+      }
+      const counts = await fetchDockBadgeCountsAction(
+        onBizrox ? new Date().toISOString() : readBizroxLastSeen()
+      );
+      setCount121(counts.count121);
+      if (!onBizrox) setCountBizrox(counts.countBizrox);
+    } catch (err) {
+      console.error("[MemberDock] badge refresh failed:", err);
+    }
+  }, [member, pathname]);
 
   useEffect(() => {
     if (!member) return;
 
-    const load = async () => {
-      try {
-        const { notifications } = await fetchMemberNotificationsAction();
-        setCount121(
-          notifications.filter((n) => !n.is_read && n.type.startsWith("121")).length
-        );
-      } catch {}
-    };
+    refreshBadges();
+    const interval = setInterval(refreshBadges, 15_000);
 
-    load();
-    const interval = setInterval(load, 60_000);
-    return () => clearInterval(interval);
-  }, [member, pathname]);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshBadges();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", refreshBadges);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", refreshBadges);
+    };
+  }, [member, refreshBadges]);
 
   if (!member) return null;
 
@@ -136,7 +178,7 @@ export default function MemberDockLiquid() {
         href="/bizrox"
         label="BizRox"
         active={pathname === "/bizrox" || pathname?.startsWith("/bizrox/") === true}
-        badge={bizroxCount}
+        badge={countBizrox}
       >
         <EmojiIcon emoji="📣" />
       </DockItem>

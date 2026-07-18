@@ -257,6 +257,72 @@ export async function fetchMemberNotificationsAction(): Promise<{
   return { notifications, unreadCount };
 }
 
+/**
+ * Lightweight badge counts for the member dock.
+ * - count121: pending requests for this host + unread accept/decline as requester
+ * - countBizrox: new posts since lastSeen + unread comments on own posts
+ */
+export async function fetchDockBadgeCountsAction(
+  bizroxLastSeenIso?: string | null
+): Promise<{ count121: number; countBizrox: number }> {
+  const session = await getMemberSession();
+  if (!session) return { count121: 0, countBizrox: 0 };
+
+  const admin = createSupabaseAdminClient();
+  const readKeys = await fetchReadKeys(session.id);
+
+  const [pendingResult, requesterResult, bizroxComments, newPostsResult] =
+    await Promise.all([
+      admin
+        .from("one_on_one_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("host_member_id", session.id)
+        .eq("status", "pending"),
+      admin
+        .from("one_on_one_requests")
+        .select("id, status")
+        .eq("requester_member_id", session.id)
+        .in("status", ["accepted", "declined"])
+        .order("created_at", { ascending: false })
+        .limit(30),
+      fetchLiveBizRoxNotifications(session.id, readKeys),
+      (async () => {
+        if (!bizroxLastSeenIso) return 0;
+        const since = new Date(bizroxLastSeenIso);
+        if (Number.isNaN(since.getTime())) return 0;
+        const { count } = await admin
+          .from("bizrox_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true)
+          .gt("created_at", since.toISOString());
+        return count ?? 0;
+      })(),
+    ]);
+
+  if (pendingResult.error) {
+    console.error("[fetchDockBadgeCountsAction] pending:", pendingResult.error.message);
+  }
+  if (requesterResult.error) {
+    console.error("[fetchDockBadgeCountsAction] requester:", requesterResult.error.message);
+  }
+
+  // All pending host requests are actionable — always count them
+  const pendingCount = pendingResult.count ?? 0;
+
+  let unreadRequester = 0;
+  for (const row of requesterResult.data ?? []) {
+    const type = row.status === "accepted" ? "121_accepted" : "121_declined";
+    if (!readKeys.has(readKey(type, row.id as string))) unreadRequester++;
+  }
+
+  const unreadBizroxComments = bizroxComments.filter((n) => !n.is_read).length;
+
+  return {
+    count121: pendingCount + unreadRequester,
+    countBizrox: newPostsResult + unreadBizroxComments,
+  };
+}
+
 /** Parse virtual id from bell UI: live-{type}-{sourceId} */
 function parseVirtualNotificationId(
   notificationId: string

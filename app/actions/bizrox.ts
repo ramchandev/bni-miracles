@@ -183,7 +183,7 @@ export async function createPostAction(data: {
   const postId = (post as { id: string }).id;
 
   const excerpt = data.content.trim().slice(0, 120);
-  void sendPushToAllMembers(
+  await sendPushToAllMembers(
     {
       title: `${member.name} posted in BizRox`,
       body: excerpt,
@@ -264,7 +264,7 @@ export async function addCommentAction(
       sourceId: comment.id as string,
     });
 
-    void sendPushToMembers([authorId], {
+    await sendPushToMembers([authorId], {
       title: `${member.name} commented on your post`,
       body: (content as string).slice(0, 120),
       href: `/bizrox/${postId}`,
@@ -393,7 +393,7 @@ export async function toggleReactionAction(
     const authorId = post?.member_id as string | undefined;
     if (authorId && authorId !== member.id) {
       const emoji = REACTION_EMOJIS[reaction] ?? "👍";
-      void sendPushToMembers([authorId], {
+      await sendPushToMembers([authorId], {
         title: `${member.name} reacted ${emoji} to your post`,
         body: "Open BizRox to see it.",
         href: `/bizrox/${postId}`,
