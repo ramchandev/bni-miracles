@@ -171,3 +171,18 @@ body {
 .rich-text-editor .ProseMirror-focused {
   outline: none;
 }
+
+@keyframes ask-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--pop-x)), calc(-50% + var(--pop-y))) scale(1.15);
+    opacity: 0;
+  }
+}
+
+.animate-ask-pop {
+  animation: ask-pop 900ms ease-out forwards;
+}

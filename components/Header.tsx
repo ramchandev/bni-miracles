@@ -18,6 +18,7 @@ const memberNavItems = [
   { key: "all-gives", href: "/members/all-gives", label: "All Gives", icon: "✅", hint: "Grouped by category" },
   { key: "all-asks", href: "/members/all-asks", label: "All Asks", icon: "🙏", hint: "Grouped by category" },
   { key: "plan-121s", href: "/members/plan-121s", label: "Plan 1-2-1s", icon: "📅", hint: "Book open slots chapter-wide" },
+  { key: "specific-asks", href: "/specific-asks", label: "Specific Asks", icon: "🎯", hint: "Meeting asks and who can connect" },
 ];
 
 const navLinksAfterDropdowns = [{ href: "/contact", label: "Contact" }];
@@ -184,6 +185,7 @@ function MemberAvatarMenu({
           <Link href="/bizrox/new" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>✏️ New Post</Link>
           <Link href="/edit-my-details" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white border-t border-white/10" onClick={close}>👤 Edit Profile</Link>
           <Link href="/gives-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>🤝 Gives &amp; Asks</Link>
+          <Link href="/specific-asks" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>🎯 Specific Asks</Link>
           <Link href="/my-121" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>📅 My 1-2-1 Calendar</Link>
           <Link href="/dance-card" className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white" onClick={close}>🎴 Dance Card</Link>
           {canManageBvd && (
