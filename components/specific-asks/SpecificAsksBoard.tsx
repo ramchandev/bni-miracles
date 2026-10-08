@@ -48,6 +48,15 @@ function titleCaseName(name: string): string {
   return name.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }
 
+function displayName(name: string): string {
+  if (name.trim().toLowerCase() === "cnr") return "CNR";
+  return titleCaseName(name);
+}
+
+function isCnr(name: string): boolean {
+  return name.trim().toLowerCase() === "cnr";
+}
+
 function seededShuffle<T>(items: T[], seed: number): T[] {
   let state = seed % 2147483647;
   if (state <= 0) state += 2147483646;
@@ -124,6 +133,7 @@ function AskMessage({
   const [draftNotes, setDraftNotes] = useState(ask.notes ?? "");
   const [keptConnectors, setKeptConnectors] = useState(ask.connectors);
   const [addedMembers, setAddedMembers] = useState<DirectoryMember[]>([]);
+  const [addCnr, setAddCnr] = useState(false);
   const [connectorQuery, setConnectorQuery] = useState("");
   const isSeeker = viewerId === ask.seeker.id;
   const alreadyConnector = Boolean(viewerId) && ask.connectors.some((c) => c.memberId === viewerId);
@@ -151,6 +161,7 @@ function AskMessage({
   return (
     <article
       id={`ask-${ask.id}`}
+      data-seeker={ask.seeker.id}
       className="flex gap-3 px-4 py-4 sm:px-5 bg-white rounded-2xl"
       style={{ border: "1px solid #E5E7EB" }}
     >
@@ -180,8 +191,14 @@ function AskMessage({
               onClick={() => {
                 setDraftText(ask.askText);
                 setDraftNotes(ask.notes ?? "");
-                setKeptConnectors(ask.connectors);
+                setKeptConnectors(
+                  ask.connectors.filter(
+                    (connector, index) =>
+                      !isCnr(connector.name) || ask.connectors.findIndex((item) => isCnr(item.name)) === index
+                  )
+                );
                 setAddedMembers([]);
+                setAddCnr(false);
                 setConnectorQuery("");
                 setError("");
                 setEditing(true);
@@ -211,6 +228,7 @@ function AskMessage({
                   notes: draftNotes,
                   keepConnectorIds: keptConnectors.map((c) => c.id),
                   addMemberIds: addedMembers.map((m) => m.id),
+                  addCnr,
                 });
                 if (!result.error) setEditing(false);
                 return result;
@@ -264,7 +282,7 @@ function AskMessage({
                     onClick={() => setKeptConnectors((list) => list.filter((item) => item.id !== c.id))}
                     className="cursor-pointer inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
                   >
-                    {titleCaseName(c.name)} ×
+                    {displayName(c.name)} ×
                   </button>
                 ))}
                 {addedMembers.map((m) => (
@@ -274,10 +292,29 @@ function AskMessage({
                     onClick={() => setAddedMembers((list) => list.filter((item) => item.id !== m.id))}
                     className="cursor-pointer inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
                   >
-                    {titleCaseName(m.name)} ×
+                    {displayName(m.name)} ×
                   </button>
                 ))}
+                {addCnr && (
+                  <button
+                    type="button"
+                    onClick={() => setAddCnr(false)}
+                    className="cursor-pointer inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
+                  >
+                    CNR ×
+                  </button>
+                )}
               </div>
+              {!keptConnectors.some((c) => isCnr(c.name)) && !addCnr && (
+                <button
+                  type="button"
+                  onClick={() => setAddCnr(true)}
+                  className="cursor-pointer mt-2 text-left text-xs font-semibold rounded-full px-2.5 py-1"
+                  style={{ border: "1px solid #D1D5DB", color: "var(--color-dark)" }}
+                >
+                  CNR <span className="font-normal text-gray-400">Escalation</span>
+                </button>
+              )}
             </div>
             <label className="block text-xs font-semibold text-gray-500">
               Notes
@@ -325,13 +362,13 @@ function AskMessage({
         <p className="mt-2 text-xs font-semibold text-gray-500">Connection Promised By:</p>
         {ask.connectors.length > 0 ? (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {ask.connectors.map((c) => (
+            {ask.connectors.filter((c, index) => !isCnr(c.name) || ask.connectors.findIndex((item) => isCnr(item.name)) === index).map((c) => (
               <span key={c.id} className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 pr-2.5 pl-1 py-0.5 text-xs text-gray-700">
                 <Avatar name={c.name} url={c.profilePictureUrl} size={18} />
                 {c.slug ? (
-                  <Link href={`/members/${c.slug}`} className="hover:underline">{titleCaseName(c.name)}</Link>
+                  <Link href={`/members/${c.slug}`} className="hover:underline">{displayName(c.name)}</Link>
                 ) : (
-                  titleCaseName(c.name)
+                  displayName(c.name)
                 )}
               </span>
             ))}
@@ -474,7 +511,6 @@ export default function SpecificAsksBoard({
   const router = useRouter();
   const { member } = useMemberSession();
   const stripRef = useRef<HTMLDivElement>(null);
-  const chronological = useMemo(() => [...meetings].reverse(), [meetings]);
   const latest = meetings[0]?.meetingDate ?? "";
   const highlightDate = useMemo(() => {
     if (!highlightAskId) return "";
@@ -494,6 +530,7 @@ export default function SpecificAsksBoard({
   const [openAsks, setOpenAsks] = useState<OpenAskOption[]>([]);
   const [connectorQuery, setConnectorQuery] = useState("");
   const [connectorIds, setConnectorIds] = useState<string[]>([]);
+  const [addCnr, setAddCnr] = useState(false);
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -508,10 +545,31 @@ export default function SpecificAsksBoard({
     return (hash >>> 0) || 1;
   }, []);
 
-  const dateIndex = chronological.findIndex((m) => m.meetingDate === selectedDate);
+  const dateIndex = meetings.findIndex((m) => m.meetingDate === selectedDate);
 
   const selectDate = (date: string) => {
     setSelectedDate(date);
+  };
+
+  const selectMember = (id: string | null) => {
+    if (!id) {
+      setFocusMemberId(null);
+      return;
+    }
+    const hasAsk = (date: string) =>
+      (asksByDate[date] ?? []).some((ask) => ask.seeker.id === id);
+    const date = hasAsk(selectedDate)
+      ? selectedDate
+      : meetings.find((meeting) => hasAsk(meeting.meetingDate))?.meetingDate;
+    if (date && date !== selectedDate) setSelectedDate(date);
+    const theirs = (asksByDate[date ?? selectedDate] ?? []).filter((ask) => ask.seeker.id === id);
+    const shown = theirs.some((ask) => {
+      if (filter === "connected") return ask.status === "connected";
+      if (filter === "not_connected") return ask.status !== "connected";
+      return true;
+    });
+    if (!shown) setFilter("all");
+    setFocusMemberId(id);
   };
 
   useEffect(() => {
@@ -527,6 +585,15 @@ export default function SpecificAsksBoard({
     if (!highlightAskId) return;
     document.getElementById(`ask-${highlightAskId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightAskId, selectedDate, filter, focusMemberId]);
+
+  useEffect(() => {
+    if (!focusMemberId) return;
+    const card = document.querySelector<HTMLElement>(`[data-seeker="${focusMemberId}"]`);
+    if (!card) return;
+    const headerHeight = document.querySelector("header")?.getBoundingClientRect().height ?? 72;
+    const top = card.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, [focusMemberId, selectedDate, filter]);
 
   useEffect(() => {
     if (!burstAskId) return;
@@ -622,6 +689,7 @@ export default function SpecificAsksBoard({
         askText,
         existingAskId,
         connectorMemberIds: connectorIds,
+        addCnr,
         notes,
       });
       if (result.error) {
@@ -632,6 +700,7 @@ export default function SpecificAsksBoard({
       setAskText("");
       setNotes("");
       setConnectorIds([]);
+      setAddCnr(false);
       setConnectorQuery("");
       setSeekerId("");
       setMemberQuery("");
@@ -805,24 +874,40 @@ export default function SpecificAsksBoard({
             ))}
           </ul>
         )}
-        {connectorIds.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {connectorIds.map((id) => {
-              const person = members.find((m) => m.id === id);
-              if (!person) return null;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setConnectorIds((ids) => ids.filter((x) => x !== id))}
-                  className="cursor-pointer text-xs rounded-full px-2.5 py-1 bg-gray-100"
-                >
-                  {person.name} ×
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {connectorIds.map((id) => {
+            const person = members.find((m) => m.id === id);
+            if (!person) return null;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setConnectorIds((ids) => ids.filter((x) => x !== id))}
+                className="cursor-pointer text-xs rounded-full px-2.5 py-1 bg-gray-100"
+              >
+                {displayName(person.name)} ×
+              </button>
+            );
+          })}
+          {addCnr ? (
+            <button
+              type="button"
+              onClick={() => setAddCnr(false)}
+              className="cursor-pointer text-xs font-semibold rounded-full px-2.5 py-1 bg-gray-100"
+            >
+              CNR ×
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAddCnr(true)}
+              className="cursor-pointer text-left text-xs font-semibold rounded-full px-2.5 py-1"
+              style={{ border: "1px solid #D1D5DB", color: "var(--color-dark)" }}
+            >
+              CNR <span className="font-normal text-gray-400">Escalation</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <label className="block text-xs font-semibold text-gray-500 mt-3">
@@ -848,16 +933,18 @@ export default function SpecificAsksBoard({
     </form>
   ) : null;
 
+  const focusedPerson = seekerStats.find((person) => person.id === focusMemberId) ?? null;
+
   return (
     <div className="mx-auto" style={{ maxWidth: canTrack ? 1180 : 980 }}>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-5">
         <button
           type="button"
-          aria-label="Back"
-          title="Back"
+          aria-label="Newer"
+          title="Newer"
           disabled={dateIndex <= 0}
           onClick={() => {
-            const previous = chronological[dateIndex - 1];
+            const previous = meetings[dateIndex - 1];
             if (previous) selectDate(previous.meetingDate);
           }}
           className="cursor-pointer shrink-0 w-9 h-9 rounded-full bg-white text-lg font-bold disabled:opacity-30"
@@ -866,8 +953,8 @@ export default function SpecificAsksBoard({
           ‹
         </button>
         <div ref={stripRef} className="flex gap-2 overflow-x-auto flex-1 py-1">
-          {chronological.length === 0 && <p className="text-sm text-gray-500">No meeting dates yet.</p>}
-          {chronological.map((meeting) => {
+          {meetings.length === 0 && <p className="text-sm text-gray-500">No meeting dates yet.</p>}
+          {meetings.map((meeting) => {
             const parts = meetingParts(meeting.meetingDate);
             const active = meeting.meetingDate === selectedDate;
             const isLatest = meeting.meetingDate === latest;
@@ -893,11 +980,11 @@ export default function SpecificAsksBoard({
         </div>
         <button
           type="button"
-          aria-label="Front"
-          title="Front"
-          disabled={dateIndex < 0 || dateIndex >= chronological.length - 1}
+          aria-label="Older"
+          title="Older"
+          disabled={dateIndex < 0 || dateIndex >= meetings.length - 1}
           onClick={() => {
-            const next = chronological[dateIndex + 1];
+            const next = meetings[dateIndex + 1];
             if (next) selectDate(next.meetingDate);
           }}
           className="cursor-pointer shrink-0 w-9 h-9 rounded-full bg-white text-lg font-bold disabled:opacity-30"
@@ -905,33 +992,6 @@ export default function SpecificAsksBoard({
         >
           ›
         </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-5">
-        {FILTERS.map((item) => {
-          const active = filter === item.id;
-          const count = asks.filter((ask) => {
-            if (item.id === "connected") return ask.status === "connected";
-            if (item.id === "not_connected") return ask.status !== "connected";
-            return true;
-          }).length;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setFilter(item.id)}
-              className="cursor-pointer rounded-full px-4 py-1.5 text-sm font-semibold"
-              style={{
-                background: active ? "var(--color-dark)" : "white",
-                color: active ? "white" : "#374151",
-                border: active ? "1px solid var(--color-dark)" : "1px solid #E5E7EB",
-              }}
-            >
-              {item.label}
-              <span className="ml-1.5 text-xs opacity-70">{count}</span>
-            </button>
-          );
-        })}
       </div>
 
       <div
@@ -943,27 +1003,47 @@ export default function SpecificAsksBoard({
       >
         <aside className="order-2 lg:order-1 lg:sticky lg:top-24">
           <div className="bg-white rounded-2xl overflow-hidden" style={{ border: "1px solid #E5E7EB" }}>
+            {focusedPerson ? (
+                  <div className="flex items-center gap-1 px-2 py-1.5">
+                    <button
+                      type="button"
+                      onClick={() => selectMember(null)}
+                      className="cursor-pointer min-w-0 flex-1 text-left px-1 py-1 flex items-center gap-2"
+                    >
+                      <Avatar name={focusedPerson.name} url={focusedPerson.profilePictureUrl} size={28} />
+                      <span className="min-w-0 text-xs font-semibold truncate" style={{ color: "var(--color-dark)" }}>
+                        {titleCaseName(focusedPerson.name)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Stop showing ${titleCaseName(focusedPerson.name)}`}
+                      onClick={() => selectMember(null)}
+                      className="cursor-pointer shrink-0 w-7 h-7 rounded-full text-sm font-semibold text-gray-500 hover:bg-gray-100"
+                    >
+                      ×
+                    </button>
+                  </div>
+            ) : (
+              <>
             <button
               type="button"
               onClick={() => setFocusMemberId(null)}
               className="cursor-pointer w-full text-left px-3 py-2 text-sm font-semibold border-b border-gray-100"
               style={{
-                background: focusMemberId === null ? "#F3F4F6" : "white",
+                background: "#F3F4F6",
                 color: "var(--color-dark)",
               }}
             >
               Members
             </button>
             <div className="max-h-80 overflow-y-auto">
-            {seekerStats.map((person) => {
-              const active = focusMemberId === person.id;
-              return (
+            {seekerStats.map((person) => (
                 <button
                   key={person.id}
                   type="button"
-                  onClick={() => setFocusMemberId(active ? null : person.id)}
+                  onClick={() => selectMember(person.id)}
                   className="cursor-pointer w-full text-left px-3 py-1.5 flex items-center gap-2 border-t border-gray-100"
-                  style={{ background: active ? "#FFF7ED" : "white" }}
                 >
                   <Avatar name={person.name} url={person.profilePictureUrl} size={28} />
                   <span className="min-w-0">
@@ -989,13 +1069,56 @@ export default function SpecificAsksBoard({
                     </span>
                   </span>
                 </button>
-              );
-            })}
+            ))}
             </div>
+              </>
+            )}
           </div>
         </aside>
 
         <div className="order-1 lg:order-2 min-w-0 flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {FILTERS.map((item) => {
+              const active = filter === item.id;
+              const count = asks.filter((ask) => {
+                if (item.id === "connected") return ask.status === "connected";
+                if (item.id === "not_connected") return ask.status !== "connected";
+                return true;
+              }).length;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setFilter(item.id)}
+                  className="cursor-pointer rounded-full px-4 py-1.5 text-sm font-semibold"
+                  style={{
+                    background: active ? "var(--color-dark)" : "white",
+                    color: active ? "white" : "#374151",
+                    border: active ? "1px solid var(--color-dark)" : "1px solid #E5E7EB",
+                  }}
+                >
+                  {item.label}
+                  <span className="ml-1.5 text-xs opacity-70">{count}</span>
+                </button>
+              );
+            })}
+            {focusedPerson && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-gray-600">
+                Showing:
+                <Avatar name={focusedPerson.name} url={focusedPerson.profilePictureUrl} size={22} />
+                <span className="font-semibold" style={{ color: "var(--color-dark)" }}>{titleCaseName(focusedPerson.name)}</span>
+                Asks
+                <button
+                  type="button"
+                  aria-label="Show all asks"
+                  onClick={() => selectMember(null)}
+                  className="cursor-pointer ml-0.5 w-6 h-6 rounded-full text-sm font-semibold text-gray-500 hover:bg-gray-100"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
           {visible.length === 0 ? (
             <p className="text-sm text-gray-500 px-4 py-10 text-center bg-white rounded-2xl" style={{ border: "1px solid #E5E7EB" }}>
               {selectedDate ? "No asks in this view." : "Pick a meeting date to see asks."}

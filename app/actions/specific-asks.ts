@@ -60,6 +60,7 @@ export async function logSpecificAskAction(input: {
   askText?: string;
   existingAskId?: string;
   connectorMemberIds: string[];
+  addCnr?: boolean;
   notes?: string;
 }): Promise<{ error?: string }> {
   const gate = await requireSpecificAskTracker();
@@ -132,6 +133,7 @@ export async function logSpecificAskAction(input: {
     }
 
     await addConnectors(ask.id as string, connectorMembers ?? []);
+    if (input.addCnr) await addCnrConnector(ask.id as string);
     revalidatePath("/specific-asks");
     return {};
   }
@@ -170,6 +172,7 @@ export async function logSpecificAskAction(input: {
   if (linkError) return { error: linkError.message };
 
   await addConnectors(askId, connectorMembers ?? []);
+  if (input.addCnr) await addCnrConnector(askId);
 
   const postId = await publishSpecificAskToBizrox({
     admin,
@@ -216,12 +219,31 @@ async function addConnectors(
   if (error) console.error("[addConnectors]", error.message);
 }
 
+async function addCnrConnector(askId: string): Promise<void> {
+  const admin = createSupabaseAdminClient();
+  const { data: existing } = await admin
+    .from("specific_ask_connectors")
+    .select("id, display_name")
+    .eq("ask_id", askId);
+
+  const already = (existing ?? []).some((row) => String(row.display_name).trim().toLowerCase() === "cnr");
+  if (already) return;
+
+  const { error } = await admin.from("specific_ask_connectors").insert({
+    ask_id: askId,
+    member_id: null,
+    display_name: "CNR",
+  });
+  if (error) console.error("[addCnrConnector]", error.message);
+}
+
 export async function updateSpecificAskDetailsAction(input: {
   askId: string;
   askText: string;
   notes: string;
   keepConnectorIds: string[];
   addMemberIds: string[];
+  addCnr?: boolean;
 }): Promise<{ error?: string }> {
   const gate = await requireSpecificAskTracker();
   if (!gate.allowed) return { error: gate.error };
@@ -272,6 +294,7 @@ export async function updateSpecificAskDetailsAction(input: {
     : { data: [] as { id: string; name: string }[] };
 
   await addConnectors(ask.id as string, connectorMembers ?? []);
+  if (input.addCnr) await addCnrConnector(ask.id as string);
 
   if (ask.bizrox_post_id) {
     await admin
