@@ -19,24 +19,51 @@ export default function PrintableCard({ member, card }: Props) {
   const c = card;
 
   return (
-    <div id="dance-card-print" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11, color: "#111", maxWidth: 780, margin: "0 auto", padding: "0 8px" }}>
+    <div id="dance-card-print" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11, color: "#1E293B", maxWidth: 780, margin: "0 auto", padding: "0 8px" }}>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div style={{ borderBottom: "3px solid #C8102E", paddingBottom: 12, marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#1A1A2E", letterSpacing: -0.5 }}>
-              Miracle Members Dance Card
-            </div>
-            <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-              One-on-One Planner · Chennai Chapter
+      {/* ── Executive Header (Page 1) ─────────────────────────────────── */}
+      <div style={{ borderBottom: "2.5px solid #C8102E", paddingBottom: 14, marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {member.profile_picture_url ? (
+              <img
+                src={member.profile_picture_url}
+                alt={member.name}
+                style={{ width: 62, height: 62, borderRadius: "50%", objectFit: "cover", border: "2px solid #C8102E" }}
+              />
+            ) : (
+              <div style={{ width: 62, height: 62, borderRadius: "50%", background: "#C8102E", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800 }}>
+                {member.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#0F172A", letterSpacing: -0.4 }}>
+                {member.name}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                {member.category && (
+                  <span style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#C8102E", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>
+                    {member.category}
+                  </span>
+                )}
+                {member.business_name && (
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                    {member.business_name}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: "#64748B", marginTop: 4 }}>
+                BNI Miracles Chapter · Chennai · 1-to-1 Dance Card Planner
+              </div>
             </div>
           </div>
+
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontWeight: 700, fontSize: 13 }}>{member.name}</div>
-            {member.category && <div style={{ color: "#6B7280", fontSize: 11 }}>{member.category}</div>}
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.8, background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "4px 8px", borderRadius: 4 }}>
+              MEMBER BIO SHEET
+            </div>
             {c?.pdf_generated_at && (
-              <div style={{ color: "#9CA3AF", fontSize: 10, marginTop: 4 }}>
+              <div style={{ color: "#94A3B8", fontSize: 10, marginTop: 6 }}>
                 Generated: {new Date(c.pdf_generated_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
               </div>
             )}
@@ -44,27 +71,134 @@ export default function PrintableCard({ member, card }: Props) {
         </div>
       </div>
 
-      {/* ── BIO Sheet ───────────────────────────────────────────────── */}
-      <SectionHead title="BIO Sheet" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px", marginBottom: 16 }}>
-        <Field label="Profession"         value={c?.bio_profession} />
-        <Field label="Location"           value={c?.bio_location} />
-        <Field label="Years in Business"  value={c?.bio_years} />
-        <Field label="City of Residence"  value={c?.bio_city} />
-        <Field label="How Long?"          value={c?.bio_city_duration} />
-        <Field label="Spouse"             value={c?.bio_spouse} />
-        <Field label="Children"           value={c?.bio_children} />
-        <Field label="Animals"            value={c?.bio_animals} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px", marginBottom: 16 }}>
-        <FieldBlock label="Previous Types of Jobs" value={c?.bio_previous_jobs} />
-        <FieldBlock label="Hobbies"                value={c?.bio_hobbies} />
-        <FieldBlock label="Activities of Interest" value={c?.bio_activities} />
-      </div>
-      <div style={{ display: "grid", gap: 6, marginBottom: 20 }}>
-        <FieldBlock label="My burning desire is to…"         value={c?.bio_burning_desire} />
-        <FieldBlock label="Something no one knows about me"  value={c?.bio_secret} />
-        <FieldBlock label="My key to success"                value={c?.bio_key_to_success} />
+      {/* ── BIO Sheet Resume 2-Column Layout ─────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 18, marginBottom: 24, alignItems: "start" }}>
+        
+        {/* Left Sidebar: Profile Snapshot & Family */}
+        <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: 14 }}>
+          {/* Snapshot */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #E2E8F0" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8102E" }} />
+            <div style={{ fontWeight: 800, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.8, color: "#0F172A" }}>
+              Profile Snapshot
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Profession</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#0F172A" }}>{c?.bio_profession || "Not specified"}</div>
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Business Location</div>
+            <div style={{ fontSize: 11, color: "#334155" }}>{c?.bio_location || "Not specified"}</div>
+          </div>
+
+          {c?.bio_years ? (
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "8px 10px", textAlign: "center", margin: "10px 0" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#C8102E" }}>{c.bio_years}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5 }}>Years in Business</div>
+            </div>
+          ) : null}
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>City of Residence</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#0F172A" }}>
+              {c?.bio_city || "Chennai"}
+              {c?.bio_city_duration ? <span style={{ fontWeight: 400, color: "#64748B", fontSize: 10 }}> ({c.bio_city_duration})</span> : null}
+            </div>
+          </div>
+
+          <div style={{ height: 1, background: "#E2E8F0", margin: "12px 0" }} />
+
+          {/* Family & Life */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #E2E8F0" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8102E" }} />
+            <div style={{ fontWeight: 800, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.8, color: "#0F172A" }}>
+              Family & Life
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Spouse / Partner</div>
+            <div style={{ fontSize: 10.5, color: c?.bio_spouse ? "#1E293B" : "#94A3B8" }}>{c?.bio_spouse || "—"}</div>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Children</div>
+            <div style={{ fontSize: 10.5, color: c?.bio_children ? "#1E293B" : "#94A3B8" }}>{c?.bio_children || "—"}</div>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Animals / Pets</div>
+            <div style={{ fontSize: 10.5, color: c?.bio_animals ? "#1E293B" : "#94A3B8" }}>{c?.bio_animals || "—"}</div>
+          </div>
+
+          <div style={{ marginTop: 14, paddingTop: 10, borderTop: "1px dashed #E2E8F0", fontSize: 9, color: "#64748B", fontStyle: "italic", lineHeight: 1.4 }}>
+            Tip: Use these bio details during your 1-to-1 to build meaningful rapport and find common ground.
+          </div>
+        </div>
+
+        {/* Right Main Column: Career, Passions, Philosophy */}
+        <div>
+          {/* Section 1: Career */}
+          <ResumeSectionHeader title="Career Background & Previous Roles" />
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "10px 12px", marginBottom: 14, fontSize: 11, lineHeight: 1.5, color: c?.bio_previous_jobs ? "#334155" : "#94A3B8" }}>
+            {c?.bio_previous_jobs || "No previous career background specified."}
+          </div>
+
+          {/* Section 2: Passions */}
+          <ResumeSectionHeader title="Passions & Personal Interests" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "8px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#990B22", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                Hobbies & Leisure
+              </div>
+              <div style={{ fontSize: 10.5, color: c?.bio_hobbies ? "#334155" : "#94A3B8", lineHeight: 1.45 }}>
+                {c?.bio_hobbies || "—"}
+              </div>
+            </div>
+            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "8px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#990B22", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                Activities & Community
+              </div>
+              <div style={{ fontSize: 10.5, color: c?.bio_activities ? "#334155" : "#94A3B8", lineHeight: 1.45 }}>
+                {c?.bio_activities || "—"}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Philosophy */}
+          <ResumeSectionHeader title="Core Philosophy & Key Insights" />
+          <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderLeft: "4px solid #C8102E", borderRadius: 6, padding: "10px 12px", marginBottom: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: "#C8102E", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 4 }}>
+              My Burning Desire
+            </div>
+            <div style={{ fontSize: 11, fontStyle: "italic", color: c?.bio_burning_desire ? "#0F172A" : "#94A3B8", lineHeight: 1.45 }}>
+              {c?.bio_burning_desire ? `"${c.bio_burning_desire}"` : "Not specified"}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "8px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                My Key to Success
+              </div>
+              <div style={{ fontSize: 10.5, color: c?.bio_key_to_success ? "#334155" : "#94A3B8", lineHeight: 1.45 }}>
+                {c?.bio_key_to_success || "—"}
+              </div>
+            </div>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "8px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                Something No One Knows
+              </div>
+              <div style={{ fontSize: 10.5, color: c?.bio_secret ? "#334155" : "#94A3B8", lineHeight: 1.45 }}>
+                {c?.bio_secret || "—"}
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <Divider />
@@ -152,6 +286,16 @@ export default function PrintableCard({ member, card }: Props) {
 
 /* ── Mini helpers ───────────────────────────────────────────────────── */
 
+function ResumeSectionHeader({ title }: { title: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, marginTop: 6 }}>
+      <div style={{ width: 3.5, height: 13, background: "#C8102E", borderRadius: 2 }} />
+      <div style={{ fontWeight: 800, fontSize: 11, color: "#0F172A", textTransform: "uppercase", letterSpacing: 0.5 }}>{title}</div>
+      <div style={{ flex: 1, height: 1, background: "#E2E8F0" }} />
+    </div>
+  );
+}
+
 function SectionHead({ title }: { title: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -163,15 +307,6 @@ function SectionHead({ title }: { title: string }) {
 
 function Divider() {
   return <div style={{ height: 1, background: "#E5E7EB", margin: "16px 0" }} />;
-}
-
-function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
-  return (
-    <div style={{ display: "flex", gap: 6, alignItems: "baseline", borderBottom: "1px dotted #E5E7EB", paddingBottom: 3 }}>
-      <span style={{ color: "#6B7280", fontSize: 10, whiteSpace: "nowrap", minWidth: 120 }}>{label}:</span>
-      <span style={{ fontWeight: 600, fontSize: 11 }}>{value || "—"}</span>
-    </div>
-  );
 }
 
 function FieldBlock({ label, value }: { label: string; value: string | null | undefined }) {
