@@ -46,6 +46,7 @@ export async function saveMemberAction(
     why_choose_us: (formData.get('why_choose_us') as string)?.trim() || null,
     success_stories: (formData.get('success_stories') as string)?.trim() || null,
     profile_picture_url: (formData.get('profile_picture_url') as string)?.trim() || null,
+    crorepathi_giver: formData.get('crorepathi_giver') === 'yes',
     is_active: formData.get('is_active') === 'true',
     updated_at: new Date().toISOString(),
   };

@@ -291,6 +291,25 @@ export default function MemberForm({
         </div>
       </div>
 
+      {/* Club status */}
+      <div className="card p-6 mb-6">
+        <h2 className="font-bold text-base mb-3" style={{ color: 'var(--color-dark)' }}>Club Status</h2>
+        <div>
+          <label style={labelStyle}>Crorepathi Giver</label>
+          <select
+            name="crorepathi_giver"
+            defaultValue={member?.crorepathi_giver ? 'yes' : 'no'}
+            style={{ ...inputStyle, background: 'white', maxWidth: 220 }}
+          >
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--color-gray)' }}>
+            When Yes, the public profile shows “Crorepathi Club Member” with the pin.
+          </p>
+        </div>
+      </div>
+
       {/* Visibility */}
       <div className="card p-6 mb-6">
         <h2 className="font-bold text-base mb-3" style={{ color: 'var(--color-dark)' }}>Visibility</h2>

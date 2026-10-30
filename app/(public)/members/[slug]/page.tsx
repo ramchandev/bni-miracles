@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
 import MemberLeadershipRoles from "@/components/members/MemberLeadershipRoles";
+import CrorepathiClubBadge from "@/components/CrorepathiClubBadge";
 import ExternalTextOrLink from "@/components/ExternalTextOrLink";
 import { fetchMemberLeadershipRoles } from "@/lib/leadership-server";
 import { getMemberSession } from "@/lib/member-session";
@@ -202,6 +203,11 @@ export default async function MemberDetailPage({ params }: Props) {
           <p className="text-xl font-semibold mb-3" style={{ color: "var(--color-accent)" }}>
             {member.business_name}
           </p>
+          {member.crorepathi_giver && (
+            <div className="flex justify-center mb-4">
+              <CrorepathiClubBadge size={64} dark />
+            </div>
+          )}
 
           {/* Location */}
           {member.business_location && (

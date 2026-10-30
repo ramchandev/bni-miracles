@@ -19,6 +19,7 @@ export type Member = {
   why_choose_us: string | null;
   success_stories: string | null;
   profile_picture_url: string | null;
+  crorepathi_giver?: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;

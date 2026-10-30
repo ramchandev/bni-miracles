@@ -28,6 +28,38 @@ export default function MembersPageClient() {
   const [givesAsksMap, setGivesAsks]  = useState<GivesAsksMap>(new Map());
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState("");
+  const [rosterDownloading, setRosterDownloading] = useState(false);
+  const [rosterError, setRosterError] = useState("");
+
+  const downloadRosterPdf = async () => {
+    if (!sessionMember) {
+      setRosterError("Sign in as a member to download the roster.");
+      return;
+    }
+    setRosterError("");
+    setRosterDownloading(true);
+    try {
+      const res = await fetch("/api/member-roster-pdf");
+      if (res.status === 401) {
+        setRosterError("Sign in as a member to download the roster.");
+        return;
+      }
+      if (!res.ok) throw new Error("PDF generation failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Miracle-Members-Roster.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setRosterError("Could not generate the roster PDF. Please try again.");
+    } finally {
+      setRosterDownloading(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -152,41 +184,66 @@ export default function MembersPageClient() {
         className="sticky top-[70px] z-30 px-6 py-3"
         style={{ background: "white", borderBottom: "1px solid #E5E7EB" }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }} className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              width="15" height="15" viewBox="0 0 24 24" fill="none"
-              stroke="#9CA3AF" strokeWidth="2.5"
-            >
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search member or business…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm"
-              style={{ border: "1.5px solid #E5E7EB", outline: "none" }}
-            />
-          </div>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }} className="flex flex-col gap-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-md min-w-[200px]">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="#9CA3AF" strokeWidth="2.5"
+              >
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search member or business…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm"
+                style={{ border: "1.5px solid #E5E7EB", outline: "none" }}
+              />
+            </div>
 
-          {search && (
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: "#F3F4F6", color: "var(--color-dark)" }}
+              >
+                Clear
+              </button>
+            )}
+
+            {!loading && (
+              <p className="text-xs hidden sm:block" style={{ color: "var(--color-gray)" }}>
+                {totalShown} member{totalShown !== 1 ? "s" : ""}
+                {search ? ` for "${search}"` : ""}
+              </p>
+            )}
+
             <button
-              onClick={() => setSearch("")}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ background: "#F3F4F6", color: "var(--color-dark)" }}
+              type="button"
+              onClick={downloadRosterPdf}
+              disabled={rosterDownloading || loading || allMembers.length === 0}
+              className="ml-auto flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white shrink-0"
+              style={{
+                background: "var(--color-primary)",
+                opacity: rosterDownloading || loading || allMembers.length === 0 ? 0.7 : 1,
+              }}
+              title={sessionMember ? "Download member roster as PDF" : "Sign in to download the roster PDF"}
             >
-              ✕ Clear
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" />
+              </svg>
+              {rosterDownloading ? "Generating…" : "Download Roster PDF"}
             </button>
-          )}
-
-          {!loading && (
-            <p className="text-xs hidden sm:block" style={{ color: "var(--color-gray)" }}>
-              {totalShown} member{totalShown !== 1 ? "s" : ""}
-              {search ? ` for "${search}"` : ""}
+          </div>
+          {rosterError ? (
+            <p className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>
+              {rosterError}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemberSession } from "@/components/MemberSessionContext";
 import type { Member } from "@/lib/supabase";
@@ -91,6 +92,22 @@ function MemberCardFront({
         <p className="text-sm font-medium mb-1" style={{ color: "var(--color-gray)" }}>
           {member.business_name}
         </p>
+        {member.crorepathi_giver && (
+          <p
+            className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold mb-1"
+            style={{ color: "var(--color-dark)" }}
+            title="Crorepathi Club Member"
+          >
+            <Image
+              src="/images/crorepathi-giver-pin.png"
+              alt=""
+              width={22}
+              height={22}
+              className="object-contain"
+            />
+            Crorepathi Club Member
+          </p>
+        )}
         {member.business_location && (
           <p
             className="text-xs flex items-center gap-1 justify-center"
