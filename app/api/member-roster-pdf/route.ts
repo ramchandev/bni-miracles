@@ -6,12 +6,17 @@ import { getMemberSession } from "@/lib/member-session";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { SITE_DOMAIN, SITE_NAME, SITE_TAGLINE } from "@/lib/seo";
 import {
+  buildRosterLeadership,
+  emptyRosterLeadership,
   fetchImageDataUrl,
   groupRosterByCategoryGroupContinuous,
   toRosterMember,
+  type RosterLeader,
+  type RosterLeadershipRoleInput,
   type RosterPayload,
 } from "@/lib/member-roster";
 import { MemberRosterPDF } from "@/components/roster/MemberRosterPDF";
+import { normalizeMember } from "@/lib/leadership-data";
 import type { Member } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -27,13 +32,32 @@ type CategoryRow = {
     | null;
 };
 
+async function hydrateLeaderPhotos(leaders: RosterLeader[]) {
+  const CONCURRENCY = 6;
+  for (let i = 0; i < leaders.length; i += CONCURRENCY) {
+    const slice = leaders.slice(i, i + CONCURRENCY);
+    const urls = await Promise.all(
+      slice.map((l) => fetchImageDataUrl(l.sourcePhotoUrl))
+    );
+    urls.forEach((dataUrl, idx) => {
+      slice[idx].photoDataUrl = dataUrl;
+    });
+  }
+}
+
 export async function GET() {
   const session = await getMemberSession();
   if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
   const admin = createSupabaseAdminClient();
 
-  const [{ data: membersData }, { data: catData }] = await Promise.all([
+  const [
+    { data: membersData },
+    { data: catData },
+    { data: groupsData },
+    { data: rolesData },
+    { data: categoryGroupsData },
+  ] = await Promise.all([
     admin
       .from("members")
       .select(
@@ -45,26 +69,124 @@ export async function GET() {
       .from("business_categories")
       .select("name, sort_order, category_groups(name, sort_order)")
       .order("sort_order"),
+    admin.from("leadership_groups").select("id, name, sort_order").order("sort_order"),
+    admin
+      .from("leadership_roles")
+      .select("id, name, description, group_id, sort_order")
+      .order("sort_order"),
+    admin.from("category_groups").select("name, sort_order").order("sort_order"),
   ]);
 
   const members = (membersData ?? []) as Member[];
+  const groups = (groupsData ?? []) as { id: string; name: string; sort_order: number }[];
+  const roles = (rolesData ?? []) as {
+    id: string;
+    name: string;
+    description: string | null;
+    group_id: string;
+    sort_order: number;
+  }[];
 
-  // Match members page: category → group name + group sort_order
+  const roleIds = roles.map((r) => r.id);
+  const { data: assignmentData } =
+    roleIds.length > 0
+      ? await admin
+          .from("leadership_assignments")
+          .select(
+            `
+            id,
+            role_id,
+            member_id,
+            assignee_name,
+            assignee_profile_picture_url,
+            members (
+              id,
+              name,
+              slug,
+              category,
+              business_name,
+              profile_picture_url
+            )
+          `
+          )
+          .in("role_id", roleIds)
+      : { data: [] };
+
+  const groupById = new Map(groups.map((g) => [g.id, g]));
+  const assignmentByRole = new Map<
+    string,
+    {
+      member_id: string | null;
+      assignee_name: string | null;
+      assignee_profile_picture_url: string | null;
+      members:
+        | Pick<Member, "id" | "name" | "slug" | "category" | "business_name" | "profile_picture_url">
+        | Pick<Member, "id" | "name" | "slug" | "category" | "business_name" | "profile_picture_url">[]
+        | null;
+    }
+  >();
+  for (const row of assignmentData ?? []) {
+    assignmentByRole.set(row.role_id, row);
+  }
+
+  const leadershipInputs: RosterLeadershipRoleInput[] = [];
+
+  for (const role of roles) {
+    const group = groupById.get(role.group_id);
+    if (!group) continue;
+    const assignment = assignmentByRole.get(role.id);
+    if (!assignment) continue;
+
+    const member = normalizeMember(assignment.members ?? null);
+    let name = "";
+    let category: string | null = null;
+    let businessName: string | null = null;
+    let phone: string | null = null;
+    let photoUrl: string | null = null;
+
+    if (assignment.member_id && member) {
+      name = member.name;
+      category = member.category ?? null;
+      businessName = member.business_name ?? null;
+      photoUrl = member.profile_picture_url ?? null;
+      phone = members.find((m) => m.id === assignment.member_id)?.phone ?? null;
+    } else if (assignment.assignee_name?.trim()) {
+      name = assignment.assignee_name.trim();
+      photoUrl = assignment.assignee_profile_picture_url ?? null;
+    } else {
+      continue;
+    }
+
+    leadershipInputs.push({
+      groupName: group.name,
+      roleName: role.name,
+      responsibility: role.description ?? null,
+      sortOrder: role.sort_order,
+      name,
+      category,
+      businessName,
+      phone,
+      photoUrl,
+    });
+  }
+
+  const leadership = buildRosterLeadership(leadershipInputs);
+  await hydrateLeaderPhotos([
+    ...leadership.executiveDirectors,
+    ...leadership.regionalSupportTeam,
+    ...leadership.headTable,
+    ...leadership.lvhTeam,
+  ]);
+
+  // Match members page: category → group name
   const categoryToGroup = new Map<string, string>();
-  const groupSortOrder = new Map<string, number>();
   for (const c of (catData ?? []) as CategoryRow[]) {
     const g = Array.isArray(c.category_groups) ? c.category_groups[0] : c.category_groups;
-    const groupName = g?.name ?? "Other";
-    categoryToGroup.set(c.name, groupName);
-    if (g?.name != null && typeof g.sort_order === "number") {
-      const prev = groupSortOrder.get(g.name);
-      if (prev == null || g.sort_order < prev) groupSortOrder.set(g.name, g.sort_order);
-    }
+    categoryToGroup.set(c.name, g?.name ?? "Other");
   }
 
   const rosterMembers = groupRosterByCategoryGroupContinuous(
-    members.map((m) => toRosterMember(m, categoryToGroup.get(m.category) ?? "Other")),
-    groupSortOrder
+    members.map((m) => toRosterMember(m, categoryToGroup.get(m.category) ?? "Other"))
   );
 
   const photoById = new Map(members.map((m) => [m.id, m.profile_picture_url] as const));
@@ -92,6 +214,17 @@ export async function GET() {
     year: "numeric",
   });
 
+  const usedGroupNames = new Set(rosterMembers.map((m) => m.categoryGroup));
+  const categoryGroups = (
+    (categoryGroupsData ?? []) as { name: string; sort_order: number }[]
+  )
+    .map((g) => g.name)
+    .filter((name) => usedGroupNames.has(name));
+  for (const name of usedGroupNames) {
+    if (!categoryGroups.includes(name) && name !== "Other") categoryGroups.push(name);
+  }
+  if (usedGroupNames.has("Other")) categoryGroups.push("Other");
+
   const payload: RosterPayload = {
     chapterName: SITE_NAME,
     tagline: SITE_TAGLINE,
@@ -99,6 +232,8 @@ export async function GET() {
     generatedAt,
     memberCount: rosterMembers.length,
     members: rosterMembers,
+    leadership: leadership ?? emptyRosterLeadership(),
+    categoryGroups,
   };
 
   const pdfElement = createElement(MemberRosterPDF, {

@@ -16,6 +16,28 @@ export type RosterMember = {
   initial: string;
 };
 
+export type RosterLeader = {
+  roleName: string;
+  /** Role description / responsibility from leadership_roles */
+  responsibility: string | null;
+  name: string;
+  category: string | null;
+  businessName: string | null;
+  phone: string | null;
+  /** Remote URL before PDF hydration */
+  sourcePhotoUrl?: string | null;
+  photoDataUrl: string | null;
+  initial: string;
+};
+
+export type RosterLeadership = {
+  executiveDirectors: RosterLeader[];
+  regionalSupportTeam: RosterLeader[];
+  headTable: RosterLeader[];
+  /** Visitors Host Team (LVH) */
+  lvhTeam: RosterLeader[];
+};
+
 export type RosterPayload = {
   chapterName: string;
   tagline: string;
@@ -23,6 +45,9 @@ export type RosterPayload = {
   generatedAt: string;
   memberCount: number;
   members: RosterMember[];
+  leadership: RosterLeadership;
+  /** Category group names for cover pills (admin sort order) */
+  categoryGroups: string[];
 };
 
 /** Horizontal person cards stacked on each roster page */
@@ -84,14 +109,109 @@ export function toRosterMember(
   };
 }
 
+export function emptyRosterLeadership(): RosterLeadership {
+  return {
+    executiveDirectors: [],
+    regionalSupportTeam: [],
+    headTable: [],
+    lvhTeam: [],
+  };
+}
+
+const HEAD_TABLE_ORDER: Record<string, number> = {
+  President: 1,
+  "Vice President": 2,
+  "Secretary & Treasurer": 3,
+  "Secretary Treasurer": 3,
+};
+
+export type RosterLeadershipRoleInput = {
+  groupName: string;
+  roleName: string;
+  responsibility: string | null;
+  sortOrder: number;
+  name: string;
+  category: string | null;
+  businessName: string | null;
+  phone: string | null;
+  photoUrl: string | null;
+};
+
+/** Map leadership assignments into ED / RST / Head Table buckets for the PDF. */
+export function buildRosterLeadership(
+  roles: RosterLeadershipRoleInput[]
+): RosterLeadership {
+  const toLeader = (r: RosterLeadershipRoleInput): RosterLeader => ({
+    roleName: r.roleName,
+    responsibility: r.responsibility,
+    name: r.name,
+    category: r.category,
+    businessName: r.businessName,
+    phone: r.phone,
+    sourcePhotoUrl: r.photoUrl,
+    photoDataUrl: null,
+    initial: memberInitial(r.name),
+  });
+
+  const eds = roles
+    .filter((r) => /executive\s*director/i.test(r.groupName) || /executive\s*director/i.test(r.roleName))
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map(toLeader);
+
+  const rst = roles
+    .filter((r) => /regional\s*support/i.test(r.groupName))
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map(toLeader);
+
+  const head = roles
+    .filter((r) => /^head\s*table$/i.test(r.groupName.trim()))
+    .sort(
+      (a, b) =>
+        (HEAD_TABLE_ORDER[a.roleName] ?? 50 + a.sortOrder) -
+        (HEAD_TABLE_ORDER[b.roleName] ?? 50 + b.sortOrder)
+    )
+    .map(toLeader);
+
+  const LVH_ROLE_ORDER: Record<string, number> = {
+    "Lead Visitor Host": 1,
+    "Visitor Host 1": 2,
+    "Visitor Host 2": 3,
+    "Visitor Host 3": 4,
+  };
+
+  const lvh = roles
+    .filter((r) => /visitors?\s*host\s*team/i.test(r.groupName))
+    .sort(
+      (a, b) =>
+        (LVH_ROLE_ORDER[a.roleName] ?? 50 + a.sortOrder) -
+        (LVH_ROLE_ORDER[b.roleName] ?? 50 + b.sortOrder)
+    )
+    .map(toLeader);
+
+  return {
+    executiveDirectors: eds,
+    regionalSupportTeam: rst,
+    headTable: head,
+    lvhTeam: lvh,
+  };
+}
+
+function shuffleList<T>(items: T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 /**
- * Same structure as the members page: bucket by category group, order groups by
- * sort_order (Other last), members A–Z within each group, then flatten into a
- * continuous card stream.
+ * Same as the members page list: shuffle category groups each generation, keep
+ * "Other" last, members A–Z within each group, then flatten into a continuous
+ * card stream.
  */
 export function groupRosterByCategoryGroupContinuous(
-  members: RosterMember[],
-  groupSortOrder?: Map<string, number>
+  members: RosterMember[]
 ): RosterMember[] {
   const buckets = new Map<string, RosterMember[]>();
   for (const member of members) {
@@ -101,14 +221,9 @@ export function groupRosterByCategoryGroupContinuous(
     buckets.set(key, list);
   }
 
-  const orderedGroups = [...buckets.keys()].sort((a, b) => {
-    if (a === "Other" && b !== "Other") return 1;
-    if (b === "Other" && a !== "Other") return -1;
-    const ao = groupSortOrder?.get(a) ?? 9999;
-    const bo = groupSortOrder?.get(b) ?? 9999;
-    if (ao !== bo) return ao - bo;
-    return a.localeCompare(b, "en", { sensitivity: "base" });
-  });
+  const named = [...buckets.keys()].filter((n) => n !== "Other");
+  const orderedGroups = shuffleList(named);
+  if (buckets.has("Other")) orderedGroups.push("Other");
 
   return orderedGroups.flatMap((group) =>
     [...(buckets.get(group) ?? [])].sort((a, b) => {

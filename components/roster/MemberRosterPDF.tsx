@@ -10,10 +10,20 @@ import {
   ROSTER_CARDS_PER_PAGE,
   ROSTER_CORE_VALUES,
   chunkMembers,
+  emptyRosterLeadership,
   type RosterMember,
   type RosterPayload,
 } from "@/lib/member-roster";
-import { GlobeIcon } from "@/components/roster/RosterIcons";
+import { GlobeIcon, GroupIcon } from "@/components/roster/RosterIcons";
+import { NetworkingNodes } from "@/components/roster/NetworkingNodes";
+import {
+  RosterLeadershipPages,
+  RosterCrorepathiPage,
+  RosterLvhTeamPage,
+  ROSTER_LEADERSHIP_PAGE_COUNT,
+  ROSTER_CROREPATHI_PAGE_COUNT,
+  ROSTER_LVH_PAGE_COUNT,
+} from "@/components/roster/RosterLeadershipPages";
 
 const RED = "#C8102E";
 const RED_SOFT = "#FECACA";
@@ -122,6 +132,8 @@ const s = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#F3F4F6",
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#000000",
   },
   photo: {
     width: 88,
@@ -280,30 +292,22 @@ const s = StyleSheet.create({
   /* ── Cover ── */
   cover: {
     backgroundColor: "#FFFFFF",
-    padding: 48,
+    paddingTop: 40,
+    paddingHorizontal: 40,
+    paddingBottom: 36,
     justifyContent: "space-between",
   },
   coverArtWrap: {
     position: "absolute",
-    top: 56,
-    right: 28,
-  },
-  coverGlobe: {
-    width: 240,
-    height: 240,
-    objectFit: "contain",
-  },
-  coverTopRule: {
-    height: 3,
-    backgroundColor: RED,
-    width: 56,
-    marginBottom: 28,
+    top: 48,
+    right: 24,
   },
   coverLogo: {
-    width: 148,
-    height: 60,
+    width: 160,
+    height: 66,
     objectFit: "contain",
-    marginBottom: 36,
+    alignSelf: "flex-start",
+    marginBottom: 28,
   },
   coverEyebrow: {
     color: MUTED,
@@ -311,7 +315,7 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     letterSpacing: 2.4,
     textTransform: "uppercase",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   coverTitle: {
     color: INK,
@@ -319,7 +323,7 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     letterSpacing: -0.6,
     lineHeight: 1.05,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   coverChapter: {
     color: SLATE,
@@ -329,22 +333,23 @@ const s = StyleSheet.create({
   coverTagline: {
     color: MUTED,
     fontSize: 11,
-    marginBottom: 32,
-    maxWidth: 300,
+    marginBottom: 22,
+    maxWidth: 280,
     lineHeight: 1.45,
   },
   coverMetaRow: {
     flexDirection: "row",
     gap: 12,
+    marginBottom: 22,
   },
   coverMetaCard: {
     backgroundColor: "#F9FAFB",
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minWidth: 108,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    minWidth: 100,
   },
   coverMetaLabel: {
     color: MUTED,
@@ -356,13 +361,43 @@ const s = StyleSheet.create({
   },
   coverMetaValue: {
     color: INK,
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: "Helvetica-Bold",
+  },
+  coverPillsLabel: {
+    color: MUTED,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  coverPills: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+    maxWidth: 340,
+  },
+  coverPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderColor: RED_BORDER,
+    backgroundColor: "#FFF8F8",
+    borderRadius: 14,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+  },
+  coverPillText: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: INK,
   },
   coverFooter: {
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
-    paddingTop: 16,
+    paddingTop: 14,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -555,12 +590,27 @@ export function MemberRosterPDF({
   globeBase64: string;
 }) {
   const memberPages = chunkMembers(payload.members, ROSTER_CARDS_PER_PAGE);
+  const leadership = payload.leadership ?? emptyRosterLeadership();
   const now = new Date();
   const year = now.getFullYear();
   const monthYear = now
     .toLocaleDateString("en-IN", { month: "long", year: "numeric" })
     .toUpperCase();
-  const totalPages = 1 + memberPages.length + 1;
+  const crorepathiMembers = payload.members
+    .filter((m) => m.crorepathiGiver)
+    .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+
+  // Cover + leadership + member grids + Crorepathi + LVH + thank you
+  const totalPages =
+    1 +
+    ROSTER_LEADERSHIP_PAGE_COUNT +
+    memberPages.length +
+    ROSTER_CROREPATHI_PAGE_COUNT +
+    ROSTER_LVH_PAGE_COUNT +
+    1;
+  const memberStartPage = 1 + ROSTER_LEADERSHIP_PAGE_COUNT + 1;
+  const crorepathiPageNumber = memberStartPage + memberPages.length;
+  const lvhPageNumber = crorepathiPageNumber + 1;
 
   return (
     <Document
@@ -571,10 +621,9 @@ export function MemberRosterPDF({
     >
       <Page size="A4" style={s.cover}>
         <View style={s.coverArtWrap}>
-          <Image src={globeBase64} style={s.coverGlobe} />
+          <NetworkingNodes size={250} />
         </View>
         <View>
-          <View style={s.coverTopRule} />
           <Image src={logoBase64} style={s.coverLogo} />
           <Text style={s.coverEyebrow}>Chapter Directory</Text>
           <Text style={s.coverTitle}>Member{"\n"}Roster</Text>
@@ -590,6 +639,19 @@ export function MemberRosterPDF({
               <Text style={s.coverMetaValue}>{monthYear}</Text>
             </View>
           </View>
+          {(payload.categoryGroups?.length ?? 0) > 0 ? (
+            <View>
+              <Text style={s.coverPillsLabel}>Category Groups</Text>
+              <View style={s.coverPills}>
+                {payload.categoryGroups.map((group) => (
+                  <View key={group} style={s.coverPill}>
+                    <GroupIcon name={group} size={10} color={RED} />
+                    <Text style={s.coverPillText}>{group}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
         </View>
         <View style={s.coverFooter}>
           <View style={s.coverFooterLeft}>
@@ -601,9 +663,15 @@ export function MemberRosterPDF({
         </View>
       </Page>
 
+      <RosterLeadershipPages
+        leadership={leadership}
+        startPage={2}
+        totalPages={totalPages}
+      />
+
       {memberPages.map((pageMembers, index) => {
         const core = ROSTER_CORE_VALUES[index % ROSTER_CORE_VALUES.length];
-        const pageNumber = index + 2;
+        const pageNumber = memberStartPage + index;
         return (
           <Page key={`roster-${index}`} size="A4" style={s.page}>
             <View style={s.pageHeader}>
@@ -658,6 +726,19 @@ export function MemberRosterPDF({
           </Page>
         );
       })}
+
+      <RosterCrorepathiPage
+        members={crorepathiMembers}
+        pinBase64={crorepathiPinBase64}
+        pageNumber={crorepathiPageNumber}
+        totalPages={totalPages}
+      />
+
+      <RosterLvhTeamPage
+        leaders={leadership.lvhTeam}
+        pageNumber={lvhPageNumber}
+        totalPages={totalPages}
+      />
 
       <Page size="A4" style={s.thanks}>
         <View style={s.thanksArtWrap}>
